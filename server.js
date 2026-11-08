@@ -1412,16 +1412,19 @@ function startModeRound(room, options = {}) {
     room.lastWaveResults = [];
 
     if (room.settings.clubSelectMode === 'random') {
-      // Auto-assign 1 random unique club per player (minimum 3 clubs on board)
-      const shuffled = [...CLUBS].sort(() => Math.random() - 0.5);
-      const count = Math.max(room.players.length, 3);
+      const isSingleClubMode = mode === 'club_battle';
+      // Prefer top major European clubs for random pool so there are rich multi-club player overlaps
+      const primaryPool = CLUBS.slice(0, 32);
+      const sourceClubs = primaryPool.length >= 10 ? primaryPool : CLUBS;
+      const shuffled = [...sourceClubs].sort(() => Math.random() - 0.5);
+      const count = isSingleClubMode ? 1 : room.players.length === 1 ? 3 : room.players.length;
       for (let i = 0; i < count; i++) {
         const p = room.players[i % room.players.length];
         room.pickedClubs.push({
           playerId: p.id,
           playerName: p.name,
           playerAvatar: p.avatar,
-          clubId: shuffled[i].id
+          clubId: shuffled[i % shuffled.length].id
         });
       }
       room.roundNumber += 1;
@@ -1469,7 +1472,7 @@ function handleApiAction(req, res, body) {
         gameMode: 'multi_club_pool',
         timeLimit: 15,
         duplicateRule: 'strict_unique',
-        clubSelectMode: 'both',
+        clubSelectMode: 'random',
         targetScore: 10 // Default 10 points for 1/2/3 point scoring!
       },
       players: [

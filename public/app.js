@@ -356,7 +356,7 @@ function renderRoom() {
   document.getElementById('headerTimeLimit').textContent = `${room.settings.timeLimit}s`;
   document.getElementById('lobbyTimeValue').textContent = room.settings.timeLimit;
   document.getElementById('duplicateRuleSelect').value = room.settings.duplicateRule || 'strict_unique';
-  document.getElementById('clubSelectModeInput').value = room.settings.clubSelectMode || 'both';
+  document.getElementById('clubSelectModeInput').value = room.settings.clubSelectMode || 'random';
 
   const targetScore = room.settings.targetScore !== undefined ? room.settings.targetScore : 10;
   document.getElementById('targetScoreSelect').value = String(targetScore);
@@ -1005,7 +1005,10 @@ function renderRevealView(room) {
       ? `กระดานสโมสร: ${clubNamesStr} • รอบย่อยที่ ${room.waveNumber}`
       : 'เฉลยคำตอบ';
     nextWaveBtn.textContent = '🔥 เล่นชุดสโมสรเดิมต่อ (ห้ามซ้ำชื่อเดิม!)';
-    changeBtn.textContent = '🔄 ให้ทุกคนเลือกสโมสรชุดใหม่!';
+    changeBtn.textContent =
+      room.settings.clubSelectMode === 'random'
+        ? '🎲 สุ่มชุดสโมสรใหม่ทันที!'
+        : '🔄 ให้ทุกคนเลือกสโมสรชุดใหม่!';
     changeBtn.classList.remove('hidden');
   } else if (mode === 'lineup_quiz') {
     document.getElementById('revealClubTitle').textContent = `${room.modeData?.title || ''} • รอบย่อยที่ ${room.waveNumber}`;
