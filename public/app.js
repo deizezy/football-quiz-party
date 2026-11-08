@@ -380,6 +380,10 @@ function renderRoom() {
   document.getElementById('lobbyTimeValue').textContent = room.settings.timeLimit;
   document.getElementById('duplicateRuleSelect').value = room.settings.duplicateRule || 'strict_unique';
   document.getElementById('clubSelectModeInput').value = room.settings.clubSelectMode || 'random';
+  const poolSizeRuleEl = document.getElementById('clubPoolSizeRuleSelect');
+  if (poolSizeRuleEl) {
+    poolSizeRuleEl.value = room.settings.clubPoolSizeRule || 'fixed_3';
+  }
   const diffSelect = document.getElementById('triviaDifficultySelect');
   if (diffSelect) {
     diffSelect.value = room.settings.triviaDifficulty || 'all';
@@ -1582,6 +1586,13 @@ function bindRoomEvents() {
   document.getElementById('clubSelectModeInput').addEventListener('change', (e) => {
     apiAction('update_settings', { clubSelectMode: e.target.value });
   });
+
+  const clubPoolSizeEl = document.getElementById('clubPoolSizeRuleSelect');
+  if (clubPoolSizeEl) {
+    clubPoolSizeEl.addEventListener('change', (e) => {
+      apiAction('update_settings', { clubPoolSizeRule: e.target.value });
+    });
+  }
 
   const triviaDiffEl = document.getElementById('triviaDifficultySelect');
   if (triviaDiffEl) {

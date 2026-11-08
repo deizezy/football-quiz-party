@@ -395,6 +395,13 @@ function serializeModeDataForClients(room) {
   return null;
 }
 
+function getTargetClubPoolSize(room) {
+  const isSingleClubMode = room.settings.gameMode === 'club_battle';
+  if (isSingleClubMode) return 1;
+  if (room.settings.clubPoolSizeRule === 'fixed_3') return 3;
+  return Math.max(room.players.length, 3);
+}
+
 function serializeRoomForClients(room) {
   const pickedClubs = (room.pickedClubs || []).map((pc) => {
     const clubObj = CLUBS.find((c) => c.id === pc.clubId);
@@ -416,7 +423,7 @@ function serializeRoomForClients(room) {
 
   const isSingleClubMode = room.settings.gameMode === 'club_battle';
   const maxClubsPerPlayer = isSingleClubMode ? 1 : room.players.length === 1 ? 3 : 1;
-  const targetClubPoolSize = isSingleClubMode ? 1 : Math.max(room.players.length, 3);
+  const targetClubPoolSize = getTargetClubPoolSize(room);
 
   return {
     code: room.code,
@@ -495,6 +502,8 @@ function scheduleBotClubPicks(room) {
       const delayMs = 1200 + idx * 900 + Math.floor(Math.random() * 900);
       const t = setTimeout(() => {
         if (room.state !== 'SELECTING_CLUB') return;
+        const targetPoolSize = getTargetClubPoolSize(room);
+        if ((room.pickedClubs || []).length >= targetPoolSize) return;
         const alreadyPicked = (room.pickedClubs || []).some((pc) => pc.playerId === bot.id);
         if (alreadyPicked) return;
 
@@ -545,7 +554,12 @@ function fillRemainingBonusClubs(room, minClubs = 3) {
 function checkAllClubsPicked(room) {
   if (room.state !== 'SELECTING_CLUB') return;
   const isSingleClubMode = room.settings.gameMode === 'club_battle';
-  const requiredPlayerPicks = isSingleClubMode ? 1 : room.players.length === 1 ? 3 : room.players.length;
+  const targetPoolSize = getTargetClubPoolSize(room);
+  const requiredPlayerPicks = isSingleClubMode
+    ? 1
+    : room.players.length === 1
+      ? 3
+      : Math.min(room.players.length, targetPoolSize);
   if ((room.pickedClubs || []).length >= requiredPlayerPicks) {
     if (!isSingleClubMode && room.pickedClubs.length < 3) {
       fillRemainingBonusClubs(room, 3);
@@ -1555,10 +1569,10 @@ function startModeRound(room, options = {}) {
       const primaryPool = CLUBS.slice(0, 32);
       const sourceClubs = primaryPool.length >= 10 ? primaryPool : CLUBS;
       const shuffled = [...sourceClubs].sort(() => Math.random() - 0.5);
-      const count = isSingleClubMode ? 1 : Math.max(room.players.length, 3);
+      const count = getTargetClubPoolSize(room);
       for (let i = 0; i < count; i++) {
         const isBonusClub = !isSingleClubMode && room.players.length === 2 && i >= room.players.length;
-        const p = room.players[i % room.players.length];
+        const p = room.players[(room.roundNumber + i) % room.players.length];
         room.pickedClubs.push({
           playerId: isBonusClub ? 'bonus_club_' + i : p.id,
           playerName: isBonusClub ? 'สโมสรโบนัสกลางกระดาน' : p.name,
@@ -1613,6 +1627,7 @@ function handleApiAction(req, res, body) {
         timeLimit: 15,
         duplicateRule: 'strict_unique',
         clubSelectMode: 'random',
+        clubPoolSizeRule: 'fixed_3',
         triviaDifficulty: 'all',
         targetScore: 10 // Default 10 points for 1/2/3 point scoring!
       },
@@ -1692,6 +1707,9 @@ function handleApiAction(req, res, body) {
     if (body.clubSelectMode) {
       room.settings.clubSelectMode = body.clubSelectMode;
     }
+    if (body.clubPoolSizeRule) {
+      room.settings.clubPoolSizeRule = body.clubPoolSizeRule;
+    }
     if (body.triviaDifficulty) {
       room.settings.triviaDifficulty = body.triviaDifficulty;
     }
@@ -1760,6 +1778,16 @@ function handleApiAction(req, res, body) {
     if (!room.pickedClubs) room.pickedClubs = [];
     const player = room.players.find((p) => p.id === playerId);
     const isSingleClubMode = room.settings.gameMode === 'club_battle';
+    const targetPoolSize = getTargetClubPoolSize(room);
+    if (room.pickedClubs.length >= targetPoolSize) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      return res.end(
+        JSON.stringify({
+          ok: false,
+          error: `เลือกสโมสรครบ ${targetPoolSize} ทีมบนกระดานแล้ว กำลังเริ่มเกม...`
+        })
+      );
+    }
     const maxAllowed = isSingleClubMode ? 1 : room.players.length === 1 ? 3 : 1;
     const myCurrentPicks = room.pickedClubs.filter((pc) => pc.playerId === playerId);
 
