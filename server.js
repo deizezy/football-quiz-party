@@ -350,10 +350,9 @@ function serializeRoomForClients(room) {
   const hasReachedTarget =
     targetScore > 0 && room.players.some((p) => p.score >= targetScore);
 
-  // Max clubs allowed per round: if solo (1 player), allow picking up to 3 clubs so they can test multi-club scoring!
-  // If 2+ players, each player picks 1 club.
-  const maxClubsPerPlayer = room.players.length === 1 ? 3 : 1;
-  const targetClubPoolSize = room.players.length === 1 ? 3 : room.players.length;
+  const isSingleClubMode = room.settings.gameMode === 'club_battle';
+  const maxClubsPerPlayer = isSingleClubMode ? 1 : room.players.length === 1 ? 3 : 1;
+  const targetClubPoolSize = isSingleClubMode ? 1 : room.players.length === 1 ? 3 : room.players.length;
 
   return {
     code: room.code,
@@ -456,7 +455,8 @@ function scheduleBotClubPicks(room) {
 
 function checkAllClubsPicked(room) {
   if (room.state !== 'SELECTING_CLUB') return;
-  const targetSize = room.players.length === 1 ? 3 : room.players.length;
+  const isSingleClubMode = room.settings.gameMode === 'club_battle';
+  const targetSize = isSingleClubMode ? 1 : room.players.length === 1 ? 3 : room.players.length;
   if ((room.pickedClubs || []).length >= targetSize) {
     setTimeout(() => {
       if (room.state === 'SELECTING_CLUB' && (room.pickedClubs || []).length > 0) {
@@ -465,13 +465,13 @@ function checkAllClubsPicked(room) {
         room.usedPlayers = [];
         startWave(room);
       }
-    }, 650);
+    }, 550);
   }
 }
 
 function scheduleBotActions(room) {
   room.botTimeouts = [];
-  const mode = room.settings.gameMode || 'club_battle';
+  const mode = room.settings.gameMode || 'multi_club_pool';
 
   room.players
     .filter((p) => p.isBot)
@@ -483,7 +483,7 @@ function scheduleBotActions(room) {
       const timeout = setTimeout(() => {
         if (room.state !== 'PLAYING' || room.submissions[bot.id]) return;
 
-        if (mode === 'club_battle') {
+        if (mode === 'club_battle' || mode === 'multi_club_pool') {
           const activeClubIds = (room.pickedClubs || []).map((pc) => pc.clubId);
           // Prefer players who match 2+ clubs if possible, or at least 1 club!
           const unusedPlayers = PLAYERS.filter(
@@ -1364,7 +1364,7 @@ function handleApiAction(req, res, body) {
       submissions: {},
       lastWaveResults: [],
       settings: {
-        gameMode: 'club_battle',
+        gameMode: 'multi_club_pool',
         timeLimit: 15,
         duplicateRule: 'strict_unique',
         clubSelectMode: 'both',
@@ -1510,7 +1510,8 @@ function handleApiAction(req, res, body) {
   if (action === 'select_club') {
     if (!room.pickedClubs) room.pickedClubs = [];
     const player = room.players.find((p) => p.id === playerId);
-    const maxAllowed = room.players.length === 1 ? 3 : 1;
+    const isSingleClubMode = room.settings.gameMode === 'club_battle';
+    const maxAllowed = isSingleClubMode ? 1 : room.players.length === 1 ? 3 : 1;
     const myCurrentPicks = room.pickedClubs.filter((pc) => pc.playerId === playerId);
 
     if (myCurrentPicks.length >= maxAllowed) {
@@ -1776,7 +1777,10 @@ const server = http.createServer((req, res) => {
       return res.end('404 Not Found');
     }
     const ext = path.extname(fullPath).toLowerCase();
-    res.writeHead(200, { 'Content-Type': MIME_TYPES[ext] || 'application/octet-stream' });
+    res.writeHead(200, {
+      'Content-Type': MIME_TYPES[ext] || 'application/octet-stream',
+      'Cache-Control': 'no-cache'
+    });
     res.end(content);
   });
 });

@@ -3,9 +3,13 @@
 const AVATARS = ['⚽', '🦁', '🔥', '⚡', '👑', '🦊', '🐯', '🦅', '🐉', '🌟', '🎯', '🛡️'];
 
 const MODE_META = {
-  club_battle: {
-    badge: '🏟️ โหมดที่ 1: ลงสโมสรล่าแต้มคูณ (Multi-Club Pool)',
+  multi_club_pool: {
+    badge: '🌟 โหมดใหม่: ลงสโมสรคนละทีม ล่าแต้มคูณ (Multi-Club Pool)',
     prompt: '👟 พิมพ์ชื่อนักฟุตบอลที่เคยอยู่สโมสรบนกระดาน! (ตรง 1 สโมสร = +1 แต้ม, ตรง 2 สโมสร = +2 แต้ม, ตรง 3 สโมสร = +3 แต้ม!):'
+  },
+  club_battle: {
+    badge: '🏟️ โหมดคลาสสิก: ทายนักเตะประจำสโมสร (1 ทีม)',
+    prompt: '👟 พิมพ์ชื่อนักฟุตบอลที่เคยค้าแข้งกับสโมสรนี้:'
   },
   lineup_quiz: {
     badge: '📋 โหมดที่ 2: ทายผัง 11 ตัวจริงในตำนาน',
@@ -342,7 +346,7 @@ function renderRoom() {
   const room = state.room;
   if (!room) return;
 
-  const gameMode = room.settings.gameMode || 'club_battle';
+  const gameMode = room.settings.gameMode || 'multi_club_pool';
 
   document.getElementById('headerTimeLimit').textContent = `${room.settings.timeLimit}s`;
   document.getElementById('lobbyTimeValue').textContent = room.settings.timeLimit;
@@ -589,10 +593,10 @@ function renderClubsGrid() {
 }
 
 function buildModeStageHTML(room, isReveal = false) {
-  const mode = room.settings.gameMode || 'club_battle';
+  const mode = room.settings.gameMode || 'multi_club_pool';
 
   // MODE 1: MULTI-CLUB POOL STAGE
-  if (mode === 'club_battle') {
+  if (mode === 'club_battle' || mode === 'multi_club_pool') {
     const picked = room.pickedClubs || [];
     if (picked.length === 0) return '';
 
@@ -811,14 +815,14 @@ function bindDynamicStageEvents(container, room) {
 }
 
 function renderPlayingView(room) {
-  const mode = room.settings.gameMode || 'club_battle';
-  const meta = MODE_META[mode] || MODE_META.club_battle;
+  const mode = room.settings.gameMode || 'multi_club_pool';
+  const meta = MODE_META[mode] || MODE_META.multi_club_pool;
   const banner = document.getElementById('activeClubBanner');
 
   document.getElementById('playingLeagueBadge').textContent = meta.badge;
   document.getElementById('answerPromptLabel').textContent = meta.prompt;
 
-  if (mode === 'club_battle') {
+  if (mode === 'club_battle' || mode === 'multi_club_pool') {
     const picked = room.pickedClubs || [];
     const firstClub = picked[0]?.club;
     banner.style.background = `linear-gradient(135deg, ${firstClub?.primaryColor || '#059669'}, #0f172a)`;
@@ -881,7 +885,7 @@ function renderPlayingView(room) {
   }
 
   const usedBoard = document.getElementById('clubUsedBoard');
-  if (mode === 'club_battle') {
+  if (mode === 'club_battle' || mode === 'multi_club_pool') {
     usedBoard.classList.remove('hidden');
     document.getElementById('usedCountLabel').textContent = room.usedPlayers.length;
     document.getElementById('totalClubPlayersLabel').textContent = room.totalPossibleForClub || 0;
@@ -910,13 +914,13 @@ function renderUsedPlayersChips(containerId, usedPlayers) {
 }
 
 function renderRevealView(room) {
-  const mode = room.settings.gameMode || 'club_battle';
+  const mode = room.settings.gameMode || 'multi_club_pool';
   const picked = room.pickedClubs || [];
 
   const nextWaveBtn = document.getElementById('nextWaveSameClubBtn');
   const changeBtn = document.getElementById('changeClubBtn');
 
-  if (mode === 'club_battle') {
+  if (mode === 'club_battle' || mode === 'multi_club_pool') {
     const clubNamesStr = picked.map((pc) => pc.club?.name || pc.clubId).join(' + ');
     document.getElementById('revealClubTitle').textContent = clubNamesStr
       ? `กระดานสโมสร: ${clubNamesStr} • รอบย่อยที่ ${room.waveNumber}`
@@ -990,7 +994,7 @@ function renderRevealView(room) {
   });
 
   const revealClubBoard = document.getElementById('revealClubUsedBoard');
-  if (mode === 'club_battle') {
+  if (mode === 'club_battle' || mode === 'multi_club_pool') {
     revealClubBoard.classList.remove('hidden');
     document.getElementById('revealUsedCount').textContent = room.usedPlayers.length;
     document.getElementById('revealTotalClubPlayers').textContent = room.totalPossibleForClub || 0;
