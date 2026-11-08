@@ -362,7 +362,7 @@ async function fetchJsonWithTimeout(url, timeoutMs = 4000) {
       signal: controller.signal,
       headers: {
         'User-Agent': USER_AGENT,
-        Accept: 'application/json'
+        Accept: 'application/json, application/sparql-results+json'
       }
     });
     if (!res.ok) return null;
@@ -942,60 +942,58 @@ async function initializeFootballApiData() {
     let legendsAdded = 0;
     let historiesEnriched = 0;
 
-    await Promise.allSettled(
-      qidBatches.map(async (qids) => {
-        const valuesStr = qids.map((q) => 'wd:' + q).join(' ');
-        const sparql = `SELECT ?player ?playerLabel ?club ?countryLabel WHERE { VALUES ?club { ${valuesStr} } ?player wdt:P31 wd:Q5 ; wdt:P106 wd:Q937857 ; wdt:P54 ?club ; wikibase:sitelinks ?sitelinks . FILTER(?sitelinks >= 38) OPTIONAL { ?player wdt:P27 ?country . } SERVICE wikibase:label { bd:serviceParam wikibase:language 'en'. } } LIMIT 3500`;
-        const url = `${WIKIDATA_SPARQL_URL}?format=json&query=${encodeURIComponent(sparql)}`;
-        const data = await fetchJsonWithTimeout(url, 8000);
-        const bindings = data?.results?.bindings || [];
+    for (const qids of qidBatches) {
+      const valuesStr = qids.map((q) => 'wd:' + q).join(' ');
+      const sparql = `SELECT ?player ?playerLabel ?club ?countryLabel WHERE { VALUES ?club { ${valuesStr} } ?player wdt:P31 wd:Q5 ; wdt:P106 wd:Q937857 ; wdt:P54 ?club ; wikibase:sitelinks ?sitelinks . FILTER(?sitelinks >= 40) OPTIONAL { ?player wdt:P27 ?country . } SERVICE wikibase:label { bd:serviceParam wikibase:language 'en'. } } LIMIT 3500`;
+      const url = `${WIKIDATA_SPARQL_URL}?format=json&query=${encodeURIComponent(sparql)}`;
+      const data = await fetchJsonWithTimeout(url, 12000);
+      const bindings = data?.results?.bindings || [];
 
-        for (const b of bindings) {
-          const fullName = (b.playerLabel?.value || '').trim();
-          if (!fullName || /^Q\d+$/.test(fullName)) continue;
+      for (const b of bindings) {
+        const fullName = (b.playerLabel?.value || '').trim();
+        if (!fullName || /^Q\d+$/.test(fullName)) continue;
 
-          const clubUri = b.club?.value || '';
-          const clubQid = clubUri.split('/').pop();
-          const cid = WIKIDATA_CLUB_QIDS[clubQid];
-          if (!cid) continue;
+        const clubUri = b.club?.value || '';
+        const clubQid = clubUri.split('/').pop();
+        const cid = WIKIDATA_CLUB_QIDS[clubQid];
+        if (!cid) continue;
 
-          const normName = normalizeText(fullName);
-          const natName = b.countryLabel?.value || '';
-          const natInfo = mapNationalityToFlagAndUrl(natName);
+        const normName = normalizeText(fullName);
+        const natName = b.countryLabel?.value || '';
+        const natInfo = mapNationalityToFlagAndUrl(natName);
 
-          if (!livePlayerMap.has(normName)) {
-            const parts = fullName.split(/\s+/);
-            const lastName = normalizeText(parts[parts.length - 1]);
-            const qid = (b.player?.value || '').split('/').pop() || normName.replace(/[^a-z0-9]/g, '_');
-            livePlayerMap.set(normName, {
-              id: 'wd_' + qid,
-              name: fullName,
-              flag: natInfo.flag,
-              flagUrl: natInfo.flagUrl || getFlagUrlFromEmoji(natInfo.flag),
-              photoUrl: null,
-              position: 'FW',
-              clubs: [cid],
-              rawTeams: [],
-              aliases: Array.from(new Set([lastName, normName, fullName.toLowerCase()].filter(Boolean))),
-              fromLiveApi: true,
-              isLegend: true,
-              apiSynced: false
-            });
-            legendsAdded++;
-          } else {
-            const existing = livePlayerMap.get(normName);
-            if (!existing.clubs.includes(cid)) {
-              existing.clubs.push(cid);
-              historiesEnriched++;
-            }
-            if ((existing.flag === '⚽' || !existing.flagUrl) && natInfo.flagUrl) {
-              existing.flag = natInfo.flag;
-              existing.flagUrl = natInfo.flagUrl;
-            }
+        if (!livePlayerMap.has(normName)) {
+          const parts = fullName.split(/\s+/);
+          const lastName = normalizeText(parts[parts.length - 1]);
+          const qid = (b.player?.value || '').split('/').pop() || normName.replace(/[^a-z0-9]/g, '_');
+          livePlayerMap.set(normName, {
+            id: 'wd_' + qid,
+            name: fullName,
+            flag: natInfo.flag,
+            flagUrl: natInfo.flagUrl || getFlagUrlFromEmoji(natInfo.flag),
+            photoUrl: null,
+            position: 'FW',
+            clubs: [cid],
+            rawTeams: [],
+            aliases: Array.from(new Set([lastName, normName, fullName.toLowerCase()].filter(Boolean))),
+            fromLiveApi: true,
+            isLegend: true,
+            apiSynced: false
+          });
+          legendsAdded++;
+        } else {
+          const existing = livePlayerMap.get(normName);
+          if (!existing.clubs.includes(cid)) {
+            existing.clubs.push(cid);
+            historiesEnriched++;
+          }
+          if ((existing.flag === '⚽' || !existing.flagUrl) && natInfo.flagUrl) {
+            existing.flag = natInfo.flag;
+            existing.flagUrl = natInfo.flagUrl;
           }
         }
-      })
-    );
+      }
+    }
     console.log(
       `🌟 Wikidata Legends Sync: Added ${legendsAdded} former/legend players & enriched ${historiesEnriched} historical club transfers!`
     );
