@@ -534,13 +534,15 @@ function renderPickedClubsPool(room) {
   // Render waiting slots
   const remaining = Math.max(0, targetSize - picked.length);
   for (let i = 0; i < remaining; i++) {
+    const slotNum = picked.length + i + 1;
+    const isAutoBonusSlot = room.players.length === 2 && slotNum === 3;
     const waitPill = document.createElement('div');
     waitPill.className = 'picked-club-pill waiting';
     waitPill.innerHTML = `
-      <span>⏳</span>
+      <span>${isAutoBonusSlot ? '🎲' : '⏳'}</span>
       <div>
-        <div style="font-weight:600;font-size:0.88rem;">รอเลือกสโมสรที่ ${picked.length + i + 1}...</div>
-        <div style="font-size:0.72rem;color:#94a3b8;">ห้ามซ้ำกับทีมบนกระดาน</div>
+        <div style="font-weight:600;font-size:0.88rem;">${isAutoBonusSlot ? 'สโมสรโบนัสทีมที่ 3 (สุ่มให้อัตโนมัติ)' : `รอเลือกสโมสรที่ ${slotNum}...`}</div>
+        <div style="font-size:0.72rem;color:#94a3b8;">${isAutoBonusSlot ? 'เพื่อให้มีอย่างน้อย 3 สโมสรบนกระดานล่าแต้มคูณ x3!' : 'ห้ามซ้ำกับทีมบนกระดาน'}</div>
       </div>
     `;
     listEl.appendChild(waitPill);

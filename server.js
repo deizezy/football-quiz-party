@@ -391,7 +391,7 @@ function serializeRoomForClients(room) {
 
   const isSingleClubMode = room.settings.gameMode === 'club_battle';
   const maxClubsPerPlayer = isSingleClubMode ? 1 : room.players.length === 1 ? 3 : 1;
-  const targetClubPoolSize = isSingleClubMode ? 1 : room.players.length === 1 ? 3 : room.players.length;
+  const targetClubPoolSize = isSingleClubMode ? 1 : Math.max(room.players.length, 3);
 
   return {
     code: room.code,
@@ -492,11 +492,40 @@ function scheduleBotClubPicks(room) {
     });
 }
 
+function fillRemainingBonusClubs(room, minClubs = 3) {
+  const isSingleClubMode = room.settings.gameMode === 'club_battle';
+  if (isSingleClubMode) return;
+  if (!room.pickedClubs) room.pickedClubs = [];
+  const usedClubIds = new Set(room.pickedClubs.map((pc) => pc.clubId));
+  const primaryPool = CLUBS.slice(0, 32).filter((c) => !usedClubIds.has(c.id));
+  const fallbackPool = CLUBS.filter((c) => !usedClubIds.has(c.id));
+  const pool = primaryPool.length >= minClubs ? primaryPool : fallbackPool;
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+
+  let idx = 0;
+  while (room.pickedClubs.length < minClubs && idx < shuffled.length) {
+    const bonusClub = shuffled[idx++];
+    if (!usedClubIds.has(bonusClub.id)) {
+      usedClubIds.add(bonusClub.id);
+      room.pickedClubs.push({
+        playerId: 'bonus_club_' + room.pickedClubs.length,
+        playerName: 'สโมสรโบนัสกลางกระดาน',
+        playerAvatar: '🎲',
+        clubId: bonusClub.id
+      });
+    }
+  }
+}
+
 function checkAllClubsPicked(room) {
   if (room.state !== 'SELECTING_CLUB') return;
   const isSingleClubMode = room.settings.gameMode === 'club_battle';
-  const targetSize = isSingleClubMode ? 1 : room.players.length === 1 ? 3 : room.players.length;
-  if ((room.pickedClubs || []).length >= targetSize) {
+  const requiredPlayerPicks = isSingleClubMode ? 1 : room.players.length === 1 ? 3 : room.players.length;
+  if ((room.pickedClubs || []).length >= requiredPlayerPicks) {
+    if (!isSingleClubMode && room.pickedClubs.length < 3) {
+      fillRemainingBonusClubs(room, 3);
+      broadcastRoom(room.code, 'club_picked');
+    }
     setTimeout(() => {
       if (room.state === 'SELECTING_CLUB' && (room.pickedClubs || []).length > 0) {
         room.roundNumber += 1;
@@ -1417,13 +1446,14 @@ function startModeRound(room, options = {}) {
       const primaryPool = CLUBS.slice(0, 32);
       const sourceClubs = primaryPool.length >= 10 ? primaryPool : CLUBS;
       const shuffled = [...sourceClubs].sort(() => Math.random() - 0.5);
-      const count = isSingleClubMode ? 1 : room.players.length === 1 ? 3 : room.players.length;
+      const count = isSingleClubMode ? 1 : Math.max(room.players.length, 3);
       for (let i = 0; i < count; i++) {
+        const isBonusClub = !isSingleClubMode && room.players.length === 2 && i >= room.players.length;
         const p = room.players[i % room.players.length];
         room.pickedClubs.push({
-          playerId: p.id,
-          playerName: p.name,
-          playerAvatar: p.avatar,
+          playerId: isBonusClub ? 'bonus_club_' + i : p.id,
+          playerName: isBonusClub ? 'สโมสรโบนัสกลางกระดาน' : p.name,
+          playerAvatar: isBonusClub ? '🎲' : p.avatar,
           clubId: shuffled[i % shuffled.length].id
         });
       }
@@ -1680,6 +1710,9 @@ function handleApiAction(req, res, body) {
     if ((room.pickedClubs || []).length === 0) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ ok: false, error: 'กรุณาเลือกอย่างน้อย 1 สโมสรก่อนเริ่มรอบ' }));
+    }
+    if (room.settings.gameMode !== 'club_battle' && room.pickedClubs.length < 3) {
+      fillRemainingBonusClubs(room, 3);
     }
     room.roundNumber += 1;
     room.waveNumber = 1;
