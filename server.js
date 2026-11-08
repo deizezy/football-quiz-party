@@ -10,6 +10,7 @@ const {
   TRIVIA_QUESTIONS,
   FOOTY_GRIDS
 } = require('./data/quizModesData');
+const { searchPlayersFromApi, enrichPlayerClubHistory } = require('./services/footballApi');
 
 const PORT = process.env.PORT || 3000;
 
@@ -598,15 +599,25 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
   if (room.state !== 'PLAYING') return false;
   if (room.submissions[playerId]) return false;
 
+  const cleanInput = (rawInput || '').toString().trim();
   const timeTakenMs = Math.max(100, Date.now() - room.waveStartTime);
+
+  const mode = room.settings.gameMode || 'multi_club_pool';
+  let enrichPromise = Promise.resolve(null);
+  if (mode === 'multi_club_pool' || mode === 'club_battle' || mode === 'footy_grid') {
+    const initialMatch = findPlayerByInput(cleanInput, selectedPlayerId);
+    enrichPromise = enrichPlayerClubHistory(initialMatch, cleanInput);
+  }
+
   room.submissions[playerId] = {
     playerId,
-    rawInput: (rawInput || '').toString().trim(),
+    rawInput: cleanInput,
     selectedPlayerId: selectedPlayerId || null,
     choiceIndex: extra.choiceIndex !== undefined ? Number(extra.choiceIndex) : null,
     cellIndex: extra.cellIndex !== undefined ? Number(extra.cellIndex) : 0,
     timeTakenMs,
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    enrichPromise
   };
 
   broadcastRoom(room.code, 'player_submitted', { submittedPlayerId: playerId });
@@ -647,13 +658,28 @@ function recordPlayerResultStats(player, isCorrect, timeTakenMs, footballerName)
   }
 }
 
-function finishWave(room) {
+async function finishWave(room) {
   if (room.state !== 'PLAYING') return;
   clearRoomTimers(room);
   room.state = 'REVEAL';
   room.timeLeft = 0;
 
-  const mode = room.settings.gameMode || 'club_battle';
+  // Wait for any live API player club-history lookups to finish
+  const subsList = Object.values(room.submissions || {});
+  await Promise.all(
+    subsList.map(async (sub) => {
+      if (sub.enrichPromise) {
+        try {
+          const enriched = await sub.enrichPromise;
+          if (enriched && enriched.id) {
+            sub.selectedPlayerId = enriched.id;
+          }
+        } catch (e) {}
+      }
+    })
+  );
+
+  const mode = room.settings.gameMode || 'multi_club_pool';
   if (mode === 'lineup_quiz') {
     finishLineupWave(room);
   } else if (mode === 'top10_stats') {
@@ -737,11 +763,13 @@ function finishClubBattleWave(room) {
     const matched = pickedClubs.filter((pc) => footballer.clubs.includes(pc.clubId));
 
     if (matched.length === 0) {
-      const actualClubNames = footballer.clubs
-        .map((cid) => CLUBS.find((c) => c.id === cid)?.name)
-        .filter(Boolean)
-        .slice(0, 4)
-        .join(', ');
+      const actualClubNames =
+        footballer.clubs
+          .map((cid) => CLUBS.find((c) => c.id === cid)?.name)
+          .filter(Boolean)
+          .slice(0, 4)
+          .join(', ') ||
+        (footballer.rawTeams || []).slice(0, 4).join(', ');
       return {
         playerId: player.id,
         playerName: player.name,
@@ -1691,10 +1719,37 @@ const server = http.createServer((req, res) => {
           name: p.name,
           flag: p.flag,
           position: p.position,
-          aliases: p.aliases
+          aliases: p.aliases,
+          fromLiveApi: Boolean(p.fromLiveApi)
         }))
       })
     );
+  }
+
+  if (pathname === '/api/live-search' && req.method === 'GET') {
+    const q = (parsedUrl.searchParams.get('q') || '').trim();
+    searchPlayersFromApi(q)
+      .then((found) => {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(
+          JSON.stringify({
+            ok: true,
+            players: found.map((p) => ({
+              id: p.id,
+              name: p.name,
+              flag: p.flag,
+              position: p.position,
+              aliases: p.aliases,
+              fromLiveApi: true
+            }))
+          })
+        );
+      })
+      .catch(() => {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: false, players: [] }));
+      });
+    return;
   }
 
   if (pathname === '/api/stream' && req.method === 'GET') {

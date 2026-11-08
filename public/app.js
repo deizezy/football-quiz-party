@@ -1079,8 +1079,11 @@ function renderGameOverView(room) {
   });
 }
 
-// AUTOCOMPLETE SEARCH LOGIC
-function updateAutocomplete(query) {
+// AUTOCOMPLETE SEARCH LOGIC (WITH LIVE API FALLBACK)
+let liveSearchTimeout = null;
+const liveSearchFetchedQueries = new Set();
+
+function updateAutocomplete(query, skipLiveFetch = false) {
   const dropdown = document.getElementById('playerAutocompleteList');
   const norm = normalizeText(query);
 
@@ -1110,6 +1113,32 @@ function updateAutocomplete(query) {
   matches.sort((a, b) => a.priority - b.priority || a.player.name.localeCompare(b.player.name));
   const topMatches = matches.slice(0, 8);
 
+  if (!skipLiveFetch && norm.length >= 3 && !liveSearchFetchedQueries.has(norm)) {
+    if (liveSearchTimeout) clearTimeout(liveSearchTimeout);
+    liveSearchTimeout = setTimeout(async () => {
+      try {
+        liveSearchFetchedQueries.add(norm);
+        const res = await fetch(`/api/live-search?q=${encodeURIComponent(query.trim())}`);
+        const data = await res.json();
+        if (data && data.ok && Array.isArray(data.players) && data.players.length > 0) {
+          let addedNew = false;
+          for (const lp of data.players) {
+            if (!state.players.some((existing) => existing.id === lp.id || normalizeText(existing.name) === normalizeText(lp.name))) {
+              state.players.push(lp);
+              addedNew = true;
+            }
+          }
+          const currentInput = document.getElementById('playerGuessInput')?.value || '';
+          if (addedNew && normalizeText(currentInput) === norm) {
+            updateAutocomplete(currentInput, true);
+          }
+        }
+      } catch (e) {
+        // Ignore offline/network errors gracefully
+      }
+    }, 220);
+  }
+
   if (topMatches.length === 0) {
     hideAutocomplete();
     return;
@@ -1127,13 +1156,17 @@ function updateAutocomplete(query) {
       (idx === state.autocompleteIndex ? ' active' : '') +
       (m.alreadyUsed ? ' already-used' : '');
 
+    const liveBadge = p.fromLiveApi
+      ? '<span class="ac-pos" style="background:rgba(16,185,129,0.2);color:#34d399;margin-right:4px;">🌐 Live</span>'
+      : '';
+
     row.innerHTML = `
       <div class="ac-left">
         <span class="ac-flag">${p.flag}</span>
         <span class="ac-name">${p.name}</span>
       </div>
       <div>
-        ${m.alreadyUsed ? '<span class="ac-pos" style="background:#ef4444;color:#fff;">ถูกใช้แล้ว</span>' : `<span class="ac-pos">${p.position}</span>`}
+        ${liveBadge}${m.alreadyUsed ? '<span class="ac-pos" style="background:#ef4444;color:#fff;">ถูกใช้แล้ว</span>' : `<span class="ac-pos">${p.position}</span>`}
       </div>
     `;
 
