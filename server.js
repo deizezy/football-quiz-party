@@ -10,7 +10,14 @@ const {
   TRIVIA_QUESTIONS,
   FOOTY_GRIDS
 } = require('./data/quizModesData');
-const { searchPlayersFromApi, enrichPlayerClubHistory } = require('./services/footballApi');
+const {
+  searchPlayersFromApi,
+  enrichPlayerClubHistory,
+  initializeFootballApiData,
+  getFlagUrlFromEmoji,
+  getPlayerPhotoByName,
+  mapApiTeamNameToClubId
+} = require('./services/footballApi');
 
 const PORT = process.env.PORT || 3000;
 
@@ -258,17 +265,22 @@ function serializeModeDataForClients(room) {
       formation: lineup.formation,
       clubColor: lineup.clubColor,
       availableLineups: LINEUPS.map((l) => ({ id: l.id, title: l.title, subtitle: l.subtitle })),
-      slots: lineup.slots.map((s) => ({
-        slotId: s.slotId,
-        pos: s.pos,
-        number: s.number,
-        flag: s.flag,
-        row: s.row,
-        col: s.col,
-        unlocked: !!unlockedMap[s.slotId],
-        playerName: unlockedMap[s.slotId] ? s.playerId : null,
-        answeredBy: unlockedMap[s.slotId] ? unlockedMap[s.slotId].answeredBy : null
-      }))
+      slots: lineup.slots.map((s) => {
+        const u = unlockedMap[s.slotId];
+        return {
+          slotId: s.slotId,
+          pos: s.pos,
+          number: s.number,
+          flag: s.flag,
+          flagUrl: getFlagUrlFromEmoji(s.flag),
+          row: s.row,
+          col: s.col,
+          unlocked: !!u,
+          playerName: u ? s.playerId : null,
+          photoUrl: u ? u.photoUrl || null : null,
+          answeredBy: u ? u.answeredBy : null
+        };
+      })
     };
   }
 
@@ -280,28 +292,43 @@ function serializeModeDataForClients(room) {
       title: list.title,
       category: list.category,
       availableLists: TOP10_LISTS.map((l) => ({ id: l.id, title: l.title, category: l.category })),
-      items: list.items.map((it) => ({
-        rank: it.rank,
-        flag: it.flag,
-        stat: it.stat,
-        points: it.points,
-        unlocked: !!unlockedRanks[it.rank],
-        name: unlockedRanks[it.rank] ? it.name : null,
-        answeredBy: unlockedRanks[it.rank] ? unlockedRanks[it.rank].answeredBy : null
-      }))
+      items: list.items.map((it) => {
+        const u = unlockedRanks[it.rank];
+        return {
+          rank: it.rank,
+          flag: it.flag,
+          flagUrl: getFlagUrlFromEmoji(it.flag),
+          stat: it.stat,
+          points: it.points,
+          unlocked: !!u,
+          name: u ? it.name : null,
+          photoUrl: u ? u.photoUrl || null : null,
+          answeredBy: u ? u.answeredBy : null
+        };
+      })
     };
   }
 
   if (mode === 'career_path') {
     const cp = CAREER_PATHS.find((c) => c.id === room.currentCareerId) || CAREER_PATHS[0];
     const isRevealed = room.state === 'REVEAL';
+    const matchedAnsPlayer = PLAYERS.find((p) => normalizeText(p.name) === normalizeText(cp.answerName));
     return {
       careerId: cp.id,
       flag: cp.flag,
+      flagUrl: getFlagUrlFromEmoji(cp.flag),
       position: cp.position,
       hint: cp.hint,
-      steps: cp.steps,
-      answerName: isRevealed ? cp.answerName : null
+      steps: cp.steps.map((st) => {
+        const cid = mapApiTeamNameToClubId(st.club);
+        const clubObj = cid ? CLUBS.find((c) => c.id === cid) : null;
+        return {
+          ...st,
+          clubBadgeUrl: clubObj?.badgeUrl || null
+        };
+      }),
+      answerName: isRevealed ? cp.answerName : null,
+      photoUrl: isRevealed ? matchedAnsPlayer?.photoUrl || room.currentCareerPhotoUrl || null : null
     };
   }
 
@@ -319,11 +346,21 @@ function serializeModeDataForClients(room) {
 
   if (mode === 'footy_grid') {
     const grid = FOOTY_GRIDS.find((g) => g.id === room.currentGridId) || FOOTY_GRIDS[0];
+    const enrichHeader = (hdr) => {
+      if (hdr.type === 'club') {
+        const clubObj = CLUBS.find((c) => c.id === hdr.value);
+        return { ...hdr, badgeUrl: clubObj?.badgeUrl || null };
+      }
+      if (hdr.type === 'flag') {
+        return { ...hdr, flagUrl: getFlagUrlFromEmoji(hdr.value) };
+      }
+      return hdr;
+    };
     return {
       gridId: grid.id,
       title: grid.title,
-      cols: grid.cols,
-      rows: grid.rows,
+      cols: grid.cols.map(enrichHeader),
+      rows: grid.rows.map(enrichHeader),
       availableGrids: FOOTY_GRIDS.map((g) => ({ id: g.id, title: g.title })),
       cells: room.gridCells || Array(9).fill(null)
     };
@@ -604,7 +641,7 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
 
   const mode = room.settings.gameMode || 'multi_club_pool';
   let enrichPromise = Promise.resolve(null);
-  if (mode === 'multi_club_pool' || mode === 'club_battle' || mode === 'footy_grid') {
+  if (mode !== 'trivia_quiz') {
     const initialMatch = findPlayerByInput(cleanInput, selectedPlayerId);
     enrichPromise = enrichPlayerClubHistory(initialMatch, cleanInput);
   }
@@ -800,6 +837,13 @@ function finishClubBattleWave(room) {
       rawInput: sub.rawInput,
       footballer,
       matchedClubs: matched.map((m) => m.club?.name || m.clubId),
+      matchedClubObjs: matched.map((m) => ({
+        id: m.clubId,
+        name: m.club?.name || m.clubId,
+        short: m.club?.short || 'FC',
+        badgeUrl: m.club?.badgeUrl || null,
+        primaryColor: m.club?.primaryColor || '#10b981'
+      })),
       status: 'PENDING_DUPLICATE_CHECK',
       pointsEarned: 0,
       timeTakenMs: sub.timeTakenMs,
@@ -835,6 +879,8 @@ function finishClubBattleWave(room) {
         id: res.footballer.id,
         name: res.footballer.name,
         flag: res.footballer.flag,
+        flagUrl: res.footballer.flagUrl || getFlagUrlFromEmoji(res.footballer.flag),
+        photoUrl: res.footballer.photoUrl || null,
         position: `${matchedCount} สโมสร`,
         answeredBy: res.playerName,
         wave: room.waveNumber
@@ -880,6 +926,8 @@ function finishClubBattleWave(room) {
           id: res.footballer.id,
           name: res.footballer.name,
           flag: res.footballer.flag,
+          flagUrl: res.footballer.flagUrl || getFlagUrlFromEmoji(res.footballer.flag),
+          photoUrl: res.footballer.photoUrl || null,
           position: `${matchedCount} สโมสร`,
           answeredBy: claims[0].playerName,
           wave: room.waveNumber
@@ -936,6 +984,10 @@ function finishLineupWave(room) {
       };
     }
 
+    const knownPlayer = findPlayerByInput(matchedSlot.playerId, sub.selectedPlayerId);
+    const slotPhoto = knownPlayer?.photoUrl || null;
+    const slotFlagUrl = getFlagUrlFromEmoji(matchedSlot.flag);
+
     if (room.unlockedLineupSlots[matchedSlot.slotId]) {
       const prevOwner = room.unlockedLineupSlots[matchedSlot.slotId].answeredBy;
       recordPlayerResultStats(player, false, null, null);
@@ -944,7 +996,7 @@ function finishLineupWave(room) {
         playerName: player.name,
         playerAvatar: player.avatar,
         rawInput: matchedSlot.playerId,
-        footballer: { name: matchedSlot.playerId, flag: matchedSlot.flag, position: matchedSlot.pos },
+        footballer: { name: matchedSlot.playerId, flag: matchedSlot.flag, flagUrl: slotFlagUrl, photoUrl: slotPhoto, position: matchedSlot.pos },
         status: 'ALREADY_USED',
         pointsEarned: 0,
         timeTakenMs: sub.timeTakenMs,
@@ -954,7 +1006,8 @@ function finishLineupWave(room) {
 
     room.unlockedLineupSlots[matchedSlot.slotId] = {
       answeredBy: player.name,
-      playerId: matchedSlot.playerId
+      playerId: matchedSlot.playerId,
+      photoUrl: slotPhoto
     };
 
     const pts = 1;
@@ -966,7 +1019,7 @@ function finishLineupWave(room) {
       playerName: player.name,
       playerAvatar: player.avatar,
       rawInput: matchedSlot.playerId,
-      footballer: { name: matchedSlot.playerId, flag: matchedSlot.flag, position: `${matchedSlot.pos} #${matchedSlot.number}` },
+      footballer: { name: matchedSlot.playerId, flag: matchedSlot.flag, flagUrl: slotFlagUrl, photoUrl: slotPhoto, position: `${matchedSlot.pos} #${matchedSlot.number}` },
       status: 'CORRECT',
       pointsEarned: pts,
       timeTakenMs: sub.timeTakenMs,
@@ -1022,6 +1075,10 @@ function finishTop10Wave(room) {
       };
     }
 
+    const knownPlayer = findPlayerByInput(matchedItem.name, sub.selectedPlayerId);
+    const itemPhoto = knownPlayer?.photoUrl || null;
+    const itemFlagUrl = getFlagUrlFromEmoji(matchedItem.flag);
+
     if (room.unlockedTop10Ranks[matchedItem.rank]) {
       const prevOwner = room.unlockedTop10Ranks[matchedItem.rank].answeredBy;
       recordPlayerResultStats(player, false, null, null);
@@ -1030,7 +1087,7 @@ function finishTop10Wave(room) {
         playerName: player.name,
         playerAvatar: player.avatar,
         rawInput: matchedItem.name,
-        footballer: { name: matchedItem.name, flag: matchedItem.flag, position: `อันดับ #${matchedItem.rank}` },
+        footballer: { name: matchedItem.name, flag: matchedItem.flag, flagUrl: itemFlagUrl, photoUrl: itemPhoto, position: `อันดับ #${matchedItem.rank}` },
         status: 'ALREADY_USED',
         pointsEarned: 0,
         timeTakenMs: sub.timeTakenMs,
@@ -1039,7 +1096,8 @@ function finishTop10Wave(room) {
     }
 
     room.unlockedTop10Ranks[matchedItem.rank] = {
-      answeredBy: player.name
+      answeredBy: player.name,
+      photoUrl: itemPhoto
     };
 
     const pts = 1;
@@ -1051,7 +1109,7 @@ function finishTop10Wave(room) {
       playerName: player.name,
       playerAvatar: player.avatar,
       rawInput: matchedItem.name,
-      footballer: { name: matchedItem.name, flag: matchedItem.flag, position: `อันดับ #${matchedItem.rank}` },
+      footballer: { name: matchedItem.name, flag: matchedItem.flag, flagUrl: itemFlagUrl, photoUrl: itemPhoto, position: `อันดับ #${matchedItem.rank}` },
       status: 'CORRECT',
       pointsEarned: pts,
       timeTakenMs: sub.timeTakenMs,
@@ -1066,6 +1124,9 @@ function finishTop10Wave(room) {
 // MODE 4: CAREER PATH (WHO AM I?)
 function finishCareerPathWave(room) {
   const cp = CAREER_PATHS.find((c) => c.id === room.currentCareerId) || CAREER_PATHS[0];
+  const ansPlayer = findPlayerByInput(cp.answerName, null);
+  const ansPhoto = ansPlayer?.photoUrl || room.currentCareerPhotoUrl || null;
+  const ansFlagUrl = getFlagUrlFromEmoji(cp.flag);
 
   const subs = room.players
     .map((pl) => ({ player: pl, sub: room.submissions[pl.id] || null }))
@@ -1112,7 +1173,7 @@ function finishCareerPathWave(room) {
       playerName: player.name,
       playerAvatar: player.avatar,
       rawInput: cp.answerName,
-      footballer: { name: cp.answerName, flag: cp.flag, position: cp.position },
+      footballer: { name: cp.answerName, flag: cp.flag, flagUrl: ansFlagUrl, photoUrl: ansPhoto, position: cp.position },
       status: 'CORRECT',
       pointsEarned: pts,
       timeTakenMs: sub.timeTakenMs,
@@ -1259,7 +1320,9 @@ function finishFootyGridWave(room) {
       ownerName: player.name,
       ownerAvatar: player.avatar,
       playerName: footballer.name,
-      playerFlag: footballer.flag
+      playerFlag: footballer.flag,
+      flagUrl: footballer.flagUrl || getFlagUrlFromEmoji(footballer.flag),
+      photoUrl: footballer.photoUrl || null
     };
 
     const gotBingo = checkGridBingo(room.gridCells, player.id);
@@ -1274,7 +1337,13 @@ function finishFootyGridWave(room) {
       playerName: player.name,
       playerAvatar: player.avatar,
       rawInput: footballer.name,
-      footballer: { name: footballer.name, flag: footballer.flag, position: `${rowCrit.label} x ${colCrit.label}` },
+      footballer: {
+        name: footballer.name,
+        flag: footballer.flag,
+        flagUrl: footballer.flagUrl || getFlagUrlFromEmoji(footballer.flag),
+        photoUrl: footballer.photoUrl || null,
+        position: `${rowCrit.label} x ${colCrit.label}`
+      },
       status: 'CORRECT',
       pointsEarned: pts,
       timeTakenMs: sub.timeTakenMs,
@@ -1313,6 +1382,10 @@ function startModeRound(room, options = {}) {
     const pool = CAREER_PATHS.filter((c) => c.id !== room.currentCareerId);
     const nextCp = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : CAREER_PATHS[0];
     room.currentCareerId = nextCp.id;
+    room.currentCareerPhotoUrl = null;
+    getPlayerPhotoByName(nextCp.answerName).then((photo) => {
+      if (photo) room.currentCareerPhotoUrl = photo;
+    });
     startWave(room);
   } else if (mode === 'trivia_quiz') {
     room.roundNumber += 1;
@@ -1718,6 +1791,8 @@ const server = http.createServer((req, res) => {
           id: p.id,
           name: p.name,
           flag: p.flag,
+          flagUrl: p.flagUrl || getFlagUrlFromEmoji(p.flag),
+          photoUrl: p.photoUrl || null,
           position: p.position,
           aliases: p.aliases,
           fromLiveApi: Boolean(p.fromLiveApi)
@@ -1738,9 +1813,11 @@ const server = http.createServer((req, res) => {
               id: p.id,
               name: p.name,
               flag: p.flag,
+              flagUrl: p.flagUrl || getFlagUrlFromEmoji(p.flag),
+              photoUrl: p.photoUrl || null,
               position: p.position,
               aliases: p.aliases,
-              fromLiveApi: true
+              fromLiveApi: Boolean(p.fromLiveApi)
             }))
           })
         );
@@ -1842,4 +1919,5 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`⚽ Football Club Quiz Server running at http://localhost:${PORT}`);
+  initializeFootballApiData().catch(() => {});
 });

@@ -461,6 +461,36 @@ function renderScoreboard(room) {
   });
 }
 
+function renderFlagHTML(flagEmoji, flagUrl) {
+  if (flagUrl) {
+    return `<img class="flag-img" src="${flagUrl}" alt="${flagEmoji || ''}" loading="lazy" onerror="this.outerHTML='<span>${flagEmoji || '⚽'}</span>'" />`;
+  }
+  return `<span>${flagEmoji || '⚽'}</span>`;
+}
+
+function renderClubCrestHTML(club, sizePx = 44) {
+  const shortText = club?.short || 'FC';
+  const c1 = club?.primaryColor || '#10b981';
+  const c2 = club?.secondaryColor === '#FFFFFF' ? '#1e293b' : club?.secondaryColor || '#0f172a';
+  const fallbackStyle = `width:${sizePx}px;height:${sizePx}px;font-size:${Math.round(sizePx * 0.34)}px;background:linear-gradient(135deg, ${c1}, ${c2});`;
+
+  if (club?.badgeUrl) {
+    return `
+      <div class="club-crest has-badge" style="width:${sizePx}px;height:${sizePx}px;">
+        <img class="club-badge-img" src="${club.badgeUrl}" alt="${club.name || shortText}" loading="lazy" onerror="this.parentElement.classList.remove('has-badge');this.parentElement.style.background='linear-gradient(135deg, ${c1}, ${c2})';this.outerHTML='${shortText}';" />
+      </div>
+    `;
+  }
+  return `<div class="club-crest" style="${fallbackStyle}">${shortText}</div>`;
+}
+
+function renderPlayerPhotoHTML(photoUrl, fallbackIcon = '⚽', className = 'player-photo-avatar') {
+  if (photoUrl) {
+    return `<img class="${className}" src="${photoUrl}" alt="Player" loading="lazy" onerror="this.outerHTML='<span class=\\'player-photo-fallback\\'>${fallbackIcon}</span>'" />`;
+  }
+  return `<span class="player-photo-fallback">${fallbackIcon}</span>`;
+}
+
 function renderPickedClubsPool(room) {
   const picked = room.pickedClubs || [];
   const targetSize = room.targetClubPoolSize || Math.max(room.players.length, 3);
@@ -487,9 +517,7 @@ function renderPickedClubsPool(room) {
     const pill = document.createElement('div');
     pill.className = 'picked-club-pill';
     pill.innerHTML = `
-      <div class="club-crest" style="width:36px;height:36px;font-size:0.76rem;background:linear-gradient(135deg, ${c?.primaryColor || '#10b981'}, ${c?.secondaryColor === '#FFFFFF' ? '#1e293b' : c?.secondaryColor || '#0f172a'});">
-        ${c?.short || 'FC'}
-      </div>
+      ${renderClubCrestHTML(c, 38)}
       <div>
         <div style="font-weight:700;font-size:0.95rem;">${c?.name || pc.clubId}</div>
         <div style="font-size:0.74rem;color:#34d399;">เลือกโดย ${pc.playerAvatar} ${pc.playerName}</div>
@@ -521,7 +549,7 @@ function renderLeagueTabs() {
 
   const allBtn = document.createElement('button');
   allBtn.className = 'league-tab' + (state.selectedLeagueFilter === 'all' ? ' active' : '');
-  allBtn.textContent = '🌍 ทั้งหมด (5 ลีกใหญ่)';
+  allBtn.innerHTML = '🌍 ทั้งหมด (5 ลีกใหญ่)';
   allBtn.addEventListener('click', () => {
     state.selectedLeagueFilter = 'all';
     renderLeagueTabs();
@@ -532,7 +560,7 @@ function renderLeagueTabs() {
   state.leagues.forEach((lg) => {
     const btn = document.createElement('button');
     btn.className = 'league-tab' + (state.selectedLeagueFilter === lg.id ? ' active' : '');
-    btn.textContent = `${lg.flag} ${lg.name}`;
+    btn.innerHTML = `${renderFlagHTML(lg.flag, lg.flagUrl)} <span style="margin-left:4px;">${lg.name}</span>`;
     btn.addEventListener('click', () => {
       state.selectedLeagueFilter = lg.id;
       renderLeagueTabs();
@@ -571,9 +599,7 @@ function renderClubsGrid() {
     const card = document.createElement('div');
     card.className = 'club-card' + (pickedInfo ? ' already-picked' : '');
     card.innerHTML = `
-      <div class="club-crest" style="background: linear-gradient(135deg, ${club.primaryColor}, ${club.secondaryColor === '#FFFFFF' ? '#1e293b' : club.secondaryColor});">
-        ${club.short}
-      </div>
+      ${renderClubCrestHTML(club, 44)}
       <div class="club-card-info">
         <h4>${club.name}</h4>
         <p>${pickedInfo ? `🔒 เลือกโดย ${pickedInfo.playerName}` : club.nameTh}</p>
@@ -605,9 +631,7 @@ function buildModeStageHTML(room, isReveal = false) {
         const c = pc.club;
         return `
           <div class="picked-club-pill">
-            <div class="club-crest" style="width:40px;height:40px;font-size:0.8rem;background:linear-gradient(135deg, ${c?.primaryColor || '#10b981'}, ${c?.secondaryColor === '#FFFFFF' ? '#1e293b' : c?.secondaryColor || '#0f172a'});">
-              ${c?.short || 'FC'}
-            </div>
+            ${renderClubCrestHTML(c, 42)}
             <div>
               <div style="font-weight:700;font-size:1rem;">${c?.name || pc.clubId}</div>
               <div style="font-size:0.75rem;color:#94a3b8;">${c?.nameTh || ''} • เลือกโดย ${pc.playerAvatar} ${pc.playerName}</div>
@@ -634,13 +658,18 @@ function buildModeStageHTML(room, isReveal = false) {
   if (mode === 'lineup_quiz') {
     const slotsHtml = (md.slots || [])
       .map((s) => {
+        const photoHtml =
+          s.unlocked && s.photoUrl
+            ? `<img src="${s.photoUrl}" alt="${s.playerName}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1.5px solid #fbbf24;margin:2px auto;display:block;" onerror="this.style.display='none'" />`
+            : '';
         return `
           <div class="pitch-slot ${s.unlocked ? 'unlocked' : ''}" style="grid-row:${s.row}; grid-column:${s.col};">
             <div class="slot-top">
-              <span>${s.flag}</span>
+              ${renderFlagHTML(s.flag, s.flagUrl)}
               <span>${s.pos}</span>
               <span>#${s.number}</span>
             </div>
+            ${photoHtml}
             <div class="slot-name">${s.unlocked ? s.playerName : '❓ ???'}</div>
             ${s.unlocked ? `<div class="slot-by">เปิดโดย ${s.answeredBy}</div>` : ''}
           </div>
@@ -659,12 +688,20 @@ function buildModeStageHTML(room, isReveal = false) {
   if (mode === 'top10_stats') {
     const rowsHtml = (md.items || [])
       .map((it) => {
+        const photoHtml =
+          it.unlocked && it.photoUrl
+            ? `<img src="${it.photoUrl}" alt="${it.name}" class="player-photo-avatar" style="width:32px;height:32px;" onerror="this.style.display='none'" />`
+            : '';
         return `
           <div class="top10-row ${it.unlocked ? 'unlocked' : ''}">
             <div class="top10-left">
               <div class="top10-rank">#${it.rank}</div>
+              ${photoHtml}
               <div>
-                <div style="font-weight:700;">${it.flag} ${it.unlocked ? it.name : '❓ ??? (ยังไม่ถูกเปิด)'}</div>
+                <div style="font-weight:700;display:flex;align-items:center;gap:6px;">
+                  ${renderFlagHTML(it.flag, it.flagUrl)}
+                  <span>${it.unlocked ? it.name : '❓ ??? (ยังไม่ถูกเปิด)'}</span>
+                </div>
                 ${it.unlocked ? `<small style="color:#6ee7b7;">ตอบโดย ${it.answeredBy}</small>` : ''}
               </div>
             </div>
@@ -680,23 +717,42 @@ function buildModeStageHTML(room, isReveal = false) {
   // MODE 4: CAREER PATH
   if (mode === 'career_path') {
     const trHtml = (md.steps || [])
-      .map(
-        (st) => `
+      .map((st) => {
+        const badgeImg = st.clubBadgeUrl
+          ? `<img src="${st.clubBadgeUrl}" alt="${st.club}" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:6px;" onerror="this.style.display='none'" />`
+          : '';
+        return `
           <tr>
             <td>${st.years}</td>
-            <td><strong>${st.club}</strong></td>
+            <td>${badgeImg}<strong>${st.club}</strong></td>
             <td>${st.apps} นัด</td>
             <td>⚽ ${st.goals} ประตู</td>
           </tr>
-        `
-      )
+        `;
+      })
       .join('');
+
+    const revealedHero =
+      isReveal && md.answerName
+        ? `
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;margin-bottom:10px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);border-radius:12px;">
+            ${md.photoUrl ? `<img src="${md.photoUrl}" class="reveal-player-photo" alt="${md.answerName}" onerror="this.style.display='none'" />` : ''}
+            <div>
+              <div style="font-size:0.78rem;color:#6ee7b7;">เฉลยนักเตะปริศนา:</div>
+              <div style="font-size:1.15rem;font-weight:800;display:flex;align-items:center;gap:6px;">
+                ${renderFlagHTML(md.flag, md.flagUrl)} ${md.answerName}
+              </div>
+            </div>
+          </div>
+        `
+        : '';
 
     return `
       <div class="career-card">
+        ${revealedHero}
         <div class="career-hint-bar">
           <span>💡 <strong>คำใบ้:</strong> ${md.hint}</span>
-          <span>สัญชาติ: <strong>${md.flag}</strong> • ตำแหน่ง: <strong>${md.position}</strong></span>
+          <span>สัญชาติ: ${renderFlagHTML(md.flag, md.flagUrl)} • ตำแหน่ง: <strong>${md.position}</strong></span>
         </div>
         <div class="table-responsive">
           <table class="standings-table">
@@ -746,23 +802,38 @@ function buildModeStageHTML(room, isReveal = false) {
       if (firstOpen >= 0) state.selectedGridCellIndex = firstOpen;
     }
 
+    const renderHdrIcon = (hdr) => {
+      if (hdr.badgeUrl) {
+        return `<img src="${hdr.badgeUrl}" alt="${hdr.label}" style="width:26px;height:26px;object-fit:contain;margin:0 auto 4px;" onerror="this.style.display='none'" />`;
+      }
+      if (hdr.flagUrl) {
+        return `<div style="margin-bottom:4px;">${renderFlagHTML(hdr.value, hdr.flagUrl)}</div>`;
+      }
+      return '';
+    };
+
     let html = `<div class="footy-grid-wrapper"><div class="footy-grid-board">`;
     html += `<div class="grid-header-cell"><strong>XO 3x3</strong><small>คลิกเลือกช่อง</small></div>`;
     (md.cols || []).forEach((col) => {
-      html += `<div class="grid-header-cell"><strong>${col.label}</strong><small>${col.sub}</small></div>`;
+      html += `<div class="grid-header-cell">${renderHdrIcon(col)}<strong>${col.label}</strong><small>${col.sub}</small></div>`;
     });
 
     (md.rows || []).forEach((row, rIdx) => {
-      html += `<div class="grid-header-cell"><strong>${row.label}</strong><small>${row.sub}</small></div>`;
+      html += `<div class="grid-header-cell">${renderHdrIcon(row)}<strong>${row.label}</strong><small>${row.sub}</small></div>`;
       for (let cIdx = 0; cIdx < 3; cIdx++) {
         const cellIdx = rIdx * 3 + cIdx;
         const claimed = cells[cellIdx];
         const isSelected = !isReveal && !claimed && state.selectedGridCellIndex === cellIdx;
         if (claimed) {
+          const cellPhoto = claimed.photoUrl
+            ? `<img src="${claimed.photoUrl}" class="player-photo-avatar" style="width:32px;height:32px;margin-bottom:3px;" onerror="this.style.display='none'" />`
+            : `<div style="font-size:1.1rem;">${claimed.ownerAvatar}</div>`;
           html += `
             <div class="grid-play-cell claimed">
-              <div style="font-size:1.2rem;">${claimed.ownerAvatar}</div>
-              <strong style="font-size:0.84rem;color:#fde68a;">${claimed.playerFlag} ${claimed.playerName}</strong>
+              ${cellPhoto}
+              <strong style="font-size:0.82rem;color:#fde68a;display:flex;align-items:center;gap:4px;">
+                ${renderFlagHTML(claimed.playerFlag, claimed.flagUrl)} ${claimed.playerName}
+              </strong>
               <small style="font-size:0.7rem;color:#6ee7b7;">ยึดโดย ${claimed.ownerName}</small>
             </div>
           `;
@@ -908,7 +979,10 @@ function renderUsedPlayersChips(containerId, usedPlayers) {
   usedPlayers.forEach((u) => {
     const chip = document.createElement('div');
     chip.className = 'used-chip';
-    chip.innerHTML = `<span>${u.flag || '⚽'}</span> <strong>${u.name}</strong> <small>(${u.position} • โดย ${u.answeredBy})</small>`;
+    const miniPhoto = u.photoUrl
+      ? `<img src="${u.photoUrl}" alt="${u.name}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid #34d399;" onerror="this.style.display='none'" />`
+      : '';
+    chip.innerHTML = `${miniPhoto} ${renderFlagHTML(u.flag, u.flagUrl)} <strong>${u.name}</strong> <small>(${u.position} • โดย ${u.answeredBy})</small>`;
     container.appendChild(chip);
   });
 }
@@ -939,7 +1013,7 @@ function renderRevealView(room) {
     changeBtn.textContent = '🔄 เปลี่ยนหัวข้อ Top 10 ใหม่';
     changeBtn.classList.remove('hidden');
   } else if (mode === 'career_path') {
-    document.getElementById('revealClubTitle').textContent = `เฉลยนักเตะปริศนา: ${room.modeData?.flag || ''} ${room.modeData?.answerName || ''}`;
+    document.getElementById('revealClubTitle').textContent = `เฉลยนักเตะปริศนา: ${room.modeData?.answerName || ''}`;
     nextWaveBtn.textContent = '🕵️‍♂️ ไปข้อต่อไป (สุ่มนักเตะปริศนาคนใหม่!)';
     changeBtn.classList.add('hidden');
   } else if (mode === 'trivia_quiz') {
@@ -969,11 +1043,28 @@ function renderRevealView(room) {
     item.className = `reveal-item status-${res.status}`;
 
     const timeTag = res.timeTakenMs ? `⏱️ ${(res.timeTakenMs / 1000).toFixed(1)} วิ` : '⏱️ หมดเวลา';
-    const answerTitle = res.footballer
-      ? `${res.footballer.flag} ${res.footballer.name} <small style="font-weight:400;opacity:0.75;">(${res.footballer.position})</small>`
+    const fb = res.footballer;
+    const playerPhotoHtml =
+      fb && fb.photoUrl
+        ? `<img src="${fb.photoUrl}" alt="${fb.name}" class="reveal-player-photo" loading="lazy" onerror="this.style.display='none'" />`
+        : '';
+
+    const answerTitle = fb
+      ? `<span style="display:inline-flex;align-items:center;gap:6px;">${renderFlagHTML(fb.flag, fb.flagUrl)} ${fb.name} <small style="font-weight:400;opacity:0.75;">(${fb.position})</small></span>`
       : res.rawInput
       ? `"${res.rawInput}"`
       : '— ไม่ได้ตอบ —';
+
+    let matchedBadgesHtml = '';
+    if (Array.isArray(res.matchedClubObjs) && res.matchedClubObjs.length > 0) {
+      const chips = res.matchedClubObjs
+        .map((mc) => {
+          const bImg = mc.badgeUrl ? `<img src="${mc.badgeUrl}" alt="${mc.name}" onerror="this.style.display='none'" />` : '';
+          return `<span class="mini-club-chip">${bImg} ${mc.name}</span>`;
+        })
+        .join('');
+      matchedBadgesHtml = `<div class="matched-clubs-badges">${chips}</div>`;
+    }
 
     const ptsText = res.pointsEarned > 0 ? `+${res.pointsEarned}` : '0';
 
@@ -983,8 +1074,14 @@ function renderRevealView(room) {
           <span>${res.playerAvatar} <strong>${res.playerName}</strong></span>
           <span>• ${timeTag}</span>
         </div>
-        <div class="reveal-answer-name">${answerTitle}</div>
-        <div class="reveal-msg">${res.message}</div>
+        <div class="reveal-answer-card">
+          ${playerPhotoHtml}
+          <div>
+            <div class="reveal-answer-name">${answerTitle}</div>
+            ${matchedBadgesHtml}
+            <div class="reveal-msg">${res.message}</div>
+          </div>
+        </div>
       </div>
       <div class="reveal-points ${res.pointsEarned === 0 ? 'zero' : ''}">
         ${ptsText} <small style="font-size:0.75rem;">คะแนน</small>
@@ -1113,7 +1210,7 @@ function updateAutocomplete(query, skipLiveFetch = false) {
   matches.sort((a, b) => a.priority - b.priority || a.player.name.localeCompare(b.player.name));
   const topMatches = matches.slice(0, 8);
 
-  if (!skipLiveFetch && norm.length >= 3 && !liveSearchFetchedQueries.has(norm)) {
+  if (!skipLiveFetch && norm.length >= 2 && !liveSearchFetchedQueries.has(norm)) {
     if (liveSearchTimeout) clearTimeout(liveSearchTimeout);
     liveSearchTimeout = setTimeout(async () => {
       try {
@@ -1121,22 +1218,34 @@ function updateAutocomplete(query, skipLiveFetch = false) {
         const res = await fetch(`/api/live-search?q=${encodeURIComponent(query.trim())}`);
         const data = await res.json();
         if (data && data.ok && Array.isArray(data.players) && data.players.length > 0) {
-          let addedNew = false;
+          let updatedAny = false;
           for (const lp of data.players) {
-            if (!state.players.some((existing) => existing.id === lp.id || normalizeText(existing.name) === normalizeText(lp.name))) {
+            const existing = state.players.find(
+              (ex) => ex.id === lp.id || normalizeText(ex.name) === normalizeText(lp.name)
+            );
+            if (!existing) {
               state.players.push(lp);
-              addedNew = true;
+              updatedAny = true;
+            } else {
+              if (lp.photoUrl && !existing.photoUrl) {
+                existing.photoUrl = lp.photoUrl;
+                updatedAny = true;
+              }
+              if (lp.flagUrl && !existing.flagUrl) {
+                existing.flagUrl = lp.flagUrl;
+                updatedAny = true;
+              }
             }
           }
           const currentInput = document.getElementById('playerGuessInput')?.value || '';
-          if (addedNew && normalizeText(currentInput) === norm) {
+          if (updatedAny && normalizeText(currentInput) === norm) {
             updateAutocomplete(currentInput, true);
           }
         }
       } catch (e) {
         // Ignore offline/network errors gracefully
       }
-    }, 220);
+    }, 200);
   }
 
   if (topMatches.length === 0) {
@@ -1157,12 +1266,13 @@ function updateAutocomplete(query, skipLiveFetch = false) {
       (m.alreadyUsed ? ' already-used' : '');
 
     const liveBadge = p.fromLiveApi
-      ? '<span class="ac-pos" style="background:rgba(16,185,129,0.2);color:#34d399;margin-right:4px;">🌐 Live</span>'
+      ? '<span class="ac-pos" style="background:rgba(16,185,129,0.2);color:#34d399;margin-right:4px;">🌐 API</span>'
       : '';
 
     row.innerHTML = `
       <div class="ac-left">
-        <span class="ac-flag">${p.flag}</span>
+        ${renderPlayerPhotoHTML(p.photoUrl, '⚽', 'player-photo-avatar')}
+        ${renderFlagHTML(p.flag, p.flagUrl)}
         <span class="ac-name">${p.name}</span>
       </div>
       <div>
