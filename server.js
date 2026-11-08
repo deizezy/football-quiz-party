@@ -293,6 +293,8 @@ function serializeModeDataForClients(room) {
   if (mode === 'top10_stats') {
     const list = TOP10_LISTS.find((l) => l.id === room.currentTop10Id) || TOP10_LISTS[0];
     const unlockedRanks = room.unlockedTop10Ranks || {};
+    const hintedRanks = room.hintedTop10Ranks || {};
+
     return {
       listId: list.id,
       title: list.title,
@@ -300,13 +302,28 @@ function serializeModeDataForClients(room) {
       availableLists: TOP10_LISTS.map((l) => ({ id: l.id, title: l.title, category: l.category })),
       items: list.items.map((it) => {
         const u = unlockedRanks[it.rank];
+        const isHinted = !!hintedRanks[it.rank];
+        const cleanStat = it.rawStat || (it.stat || '').replace(/\s*\([^)]*\)/g, '').trim();
+        const parenMatch = (it.stat || '').match(/\(([^)]+)\)/);
+        const clubHint = it.teamName || (parenMatch ? parenMatch[1] : '');
+        const words = (it.name || '').trim().split(/\s+/);
+        const initialsHint = words
+          .map((w) => w.charAt(0).toUpperCase() + '_'.repeat(Math.max(2, w.length - 1)))
+          .join(' ');
+        const hintText = clubHint
+          ? `${clubHint} • ชื่อ: ${initialsHint}`
+          : `ชื่อ: ${initialsHint} (${words.length} พยางค์)`;
+
         return {
           rank: it.rank,
-          flag: it.flag,
-          flagUrl: getFlagUrlFromEmoji(it.flag),
-          stat: it.stat,
-          points: it.points,
+          flag: u || isHinted ? it.flag : '❓',
+          flagUrl: u || isHinted ? it.flagUrl || getFlagUrlFromEmoji(it.flag) : null,
+          stat: u || isHinted ? it.stat : cleanStat,
+          points: 1,
           unlocked: !!u,
+          revealed: u ? !!u.revealed : false,
+          hinted: isHinted,
+          hintText: isHinted ? hintText : null,
           name: u ? it.name : null,
           photoUrl: u ? u.photoUrl || null : null,
           answeredBy: u ? u.answeredBy : null
@@ -343,6 +360,8 @@ function serializeModeDataForClients(room) {
     const isRevealed = room.state === 'REVEAL';
     return {
       triviaId: tr.id,
+      difficulty: tr.difficulty || 'medium',
+      selectedDifficulty: room.settings.triviaDifficulty || 'all',
       question: tr.question,
       options: tr.options,
       correctIndex: isRevealed ? tr.correctIndex : null,
@@ -649,33 +668,108 @@ function startWave(room) {
   room.submissions = {};
   room.lastWaveResults = [];
   room.waveStartTime = Date.now();
-  room.timeLeft = room.settings.timeLimit;
+  const mode = room.settings.gameMode || 'multi_club_pool';
+  const isUntimedMode = mode === 'top10_stats';
+  room.timeLeft = isUntimedMode ? 0 : room.settings.timeLimit;
   room.totalWavesPlayed = (room.totalWavesPlayed || 0) + 1;
 
   broadcastRoom(room.code, 'wave_started');
-  scheduleBotActions(room);
+  if (!isUntimedMode) {
+    scheduleBotActions(room);
 
-  room.timerInterval = setInterval(() => {
-    const elapsedSec = Math.floor((Date.now() - room.waveStartTime) / 1000);
-    const remaining = Math.max(0, room.settings.timeLimit - elapsedSec);
-    room.timeLeft = remaining;
+    room.timerInterval = setInterval(() => {
+      const elapsedSec = Math.floor((Date.now() - room.waveStartTime) / 1000);
+      const remaining = Math.max(0, room.settings.timeLimit - elapsedSec);
+      room.timeLeft = remaining;
 
-    broadcastRoom(room.code, 'timer_tick', { timeLeft: remaining });
+      broadcastRoom(room.code, 'timer_tick', { timeLeft: remaining });
 
-    if (remaining <= 0) {
-      finishWave(room);
-    }
-  }, 250);
+      if (remaining <= 0) {
+        finishWave(room);
+      }
+    }, 250);
+  }
 }
 
 function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extra = {}) {
   if (room.state !== 'PLAYING') return false;
+  const mode = room.settings.gameMode || 'multi_club_pool';
+  const cleanInput = (rawInput || '').toString().trim();
+
+  // Continuous untimed mode for Mode 3 (Top 10 Stats): anyone can answer all 10 ranks!
+  if (mode === 'top10_stats') {
+    if (!cleanInput) return { ok: false, feedback: 'กรุณาพิมพ์ชื่อนักเตะก่อนกดส่ง' };
+    const list = TOP10_LISTS.find((l) => l.id === room.currentTop10Id) || TOP10_LISTS[0];
+    if (!room.unlockedTop10Ranks) room.unlockedTop10Ranks = {};
+    const player = room.players.find((p) => p.id === playerId);
+
+    const matchedItem = list.items.find((it) =>
+      matchesNameOrAlias(cleanInput, it.name, it.aliases)
+    );
+
+    if (!matchedItem) {
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `❌ "${cleanInput}" ไม่ได้อยู่ใน Top 10 ของหัวข้อนี้ ลองทายคนอื่นต่อได้เลย!`
+        }
+      };
+    }
+
+    if (room.unlockedTop10Ranks[matchedItem.rank]) {
+      const owner = room.unlockedTop10Ranks[matchedItem.rank].answeredBy;
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `⚠️ อันดับ #${matchedItem.rank} (${matchedItem.name}) ถูกเปิดไปแล้ว (${owner})`
+        }
+      };
+    }
+
+    const knownPlayer = findPlayerByInput(matchedItem.name, selectedPlayerId);
+    const itemPhoto = knownPlayer?.photoUrl || null;
+
+    room.unlockedTop10Ranks[matchedItem.rank] = {
+      answeredBy: player ? player.name : 'ผู้เล่น',
+      playerId: player ? player.id : null,
+      revealed: false,
+      photoUrl: itemPhoto
+    };
+
+    if (player) {
+      player.score += 1;
+      recordPlayerResultStats(player, true, null, matchedItem.name);
+    }
+
+    if (!itemPhoto) {
+      getPlayerPhotoByName(matchedItem.name).then((photo) => {
+        if (photo && room.unlockedTop10Ranks && room.unlockedTop10Ranks[matchedItem.rank]) {
+          room.unlockedTop10Ranks[matchedItem.rank].photoUrl = photo;
+          broadcastRoom(room.code, 'top10_updated');
+        }
+      });
+    }
+
+    broadcastRoom(room.code, 'top10_updated', {
+      toastMessage: `🎉 ${player ? player.name : 'ผู้เล่น'} ตอบถูก! อันดับ #${matchedItem.rank}: ${matchedItem.name} (+1 คะแนน)`
+    });
+
+    return {
+      ok: true,
+      top10Feedback: {
+        correct: true,
+        rank: matchedItem.rank,
+        name: matchedItem.name,
+        message: `✅ ถูกต้อง! อันดับ #${matchedItem.rank}: ${matchedItem.name} (+1 คะแนน)`
+      }
+    };
+  }
+
   if (room.submissions[playerId]) return false;
 
-  const cleanInput = (rawInput || '').toString().trim();
   const timeTakenMs = Math.max(100, Date.now() - room.waveStartTime);
-
-  const mode = room.settings.gameMode || 'multi_club_pool';
   let enrichPromise = Promise.resolve(null);
   if (mode !== 'trivia_quiz') {
     const initialMatch = findPlayerByInput(cleanInput, selectedPlayerId);
@@ -1411,6 +1505,7 @@ function startModeRound(room, options = {}) {
       : TOP10_LISTS[(room.roundNumber - 1) % TOP10_LISTS.length];
     room.currentTop10Id = (chosen || TOP10_LISTS[0]).id;
     room.unlockedTop10Ranks = {};
+    room.hintedTop10Ranks = {};
     startWave(room);
   } else if (mode === 'career_path') {
     room.roundNumber += 1;
@@ -1426,9 +1521,17 @@ function startModeRound(room, options = {}) {
   } else if (mode === 'trivia_quiz') {
     room.roundNumber += 1;
     room.waveNumber = 1;
-    const pool = TRIVIA_QUESTIONS.filter((q) => q.id !== room.currentTriviaId);
-    const nextTr =
-      pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : TRIVIA_QUESTIONS[0];
+    if (options.triviaDifficulty) {
+      room.settings.triviaDifficulty = options.triviaDifficulty;
+    }
+    const diff = room.settings.triviaDifficulty || 'all';
+    const byDiff =
+      diff === 'all'
+        ? TRIVIA_QUESTIONS
+        : TRIVIA_QUESTIONS.filter((q) => (q.difficulty || 'medium') === diff);
+    const basePool = byDiff.length > 0 ? byDiff : TRIVIA_QUESTIONS;
+    const pool = basePool.filter((q) => q.id !== room.currentTriviaId);
+    const nextTr = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : basePool[0];
     room.currentTriviaId = nextTr.id;
     startWave(room);
   } else if (mode === 'footy_grid') {
@@ -1499,6 +1602,7 @@ function handleApiAction(req, res, body) {
       currentGridId: FOOTY_GRIDS[0].id,
       unlockedLineupSlots: {},
       unlockedTop10Ranks: {},
+      hintedTop10Ranks: {},
       gridCells: Array(9).fill(null),
       timeLeft: 15,
       usedPlayers: [],
@@ -1509,6 +1613,7 @@ function handleApiAction(req, res, body) {
         timeLimit: 15,
         duplicateRule: 'strict_unique',
         clubSelectMode: 'random',
+        triviaDifficulty: 'all',
         targetScore: 10 // Default 10 points for 1/2/3 point scoring!
       },
       players: [
@@ -1586,6 +1691,9 @@ function handleApiAction(req, res, body) {
     }
     if (body.clubSelectMode) {
       room.settings.clubSelectMode = body.clubSelectMode;
+    }
+    if (body.triviaDifficulty) {
+      room.settings.triviaDifficulty = body.triviaDifficulty;
     }
     if (body.targetScore !== undefined) {
       const ts = parseInt(body.targetScore, 10);
@@ -1740,13 +1848,71 @@ function handleApiAction(req, res, body) {
     return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
   }
 
+  if (action === 'top10_hint_rank') {
+    const rank = parseInt(body.rank, 10);
+    if (!room.hintedTop10Ranks) room.hintedTop10Ranks = {};
+    if (rank >= 1 && rank <= 10) {
+      room.hintedTop10Ranks[rank] = true;
+      broadcastRoom(code, 'top10_updated');
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+  }
+
+  if (action === 'top10_reveal_rank') {
+    const rank = parseInt(body.rank, 10);
+    const list = TOP10_LISTS.find((l) => l.id === room.currentTop10Id) || TOP10_LISTS[0];
+    const item = list.items.find((it) => it.rank === rank);
+    if (!room.unlockedTop10Ranks) room.unlockedTop10Ranks = {};
+    if (item && !room.unlockedTop10Ranks[rank]) {
+      const knownPlayer = findPlayerByInput(item.name, null);
+      const itemPhoto = knownPlayer?.photoUrl || null;
+      room.unlockedTop10Ranks[rank] = {
+        answeredBy: '👁️ เปิดเฉลย',
+        revealed: true,
+        photoUrl: itemPhoto
+      };
+      if (!itemPhoto) {
+        getPlayerPhotoByName(item.name).then((photo) => {
+          if (photo && room.unlockedTop10Ranks && room.unlockedTop10Ranks[rank]) {
+            room.unlockedTop10Ranks[rank].photoUrl = photo;
+            broadcastRoom(code, 'top10_updated');
+          }
+        });
+      }
+      broadcastRoom(code, 'top10_updated');
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+  }
+
+  if (action === 'top10_reveal_all') {
+    const list = TOP10_LISTS.find((l) => l.id === room.currentTop10Id) || TOP10_LISTS[0];
+    if (!room.unlockedTop10Ranks) room.unlockedTop10Ranks = {};
+    list.items.forEach((item) => {
+      if (!room.unlockedTop10Ranks[item.rank]) {
+        const knownPlayer = findPlayerByInput(item.name, null);
+        room.unlockedTop10Ranks[item.rank] = {
+          answeredBy: '👁️ เปิดเฉลย',
+          revealed: true,
+          photoUrl: knownPlayer?.photoUrl || null
+        };
+      }
+    });
+    broadcastRoom(code, 'top10_updated');
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+  }
+
   if (action === 'submit_answer') {
-    const ok = handlePlayerSubmission(room, playerId, body.playerInput, body.selectedPlayerId, {
+    const result = handlePlayerSubmission(room, playerId, body.playerInput, body.selectedPlayerId, {
       choiceIndex: body.choiceIndex,
       cellIndex: body.cellIndex
     });
+    const ok = typeof result === 'object' ? result.ok : Boolean(result);
+    const top10Feedback = typeof result === 'object' ? result.top10Feedback || null : null;
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ ok, room: serializeRoomForClients(room) }));
+    return res.end(JSON.stringify({ ok, top10Feedback, room: serializeRoomForClients(room) }));
   }
 
   if (action === 'end_match') {

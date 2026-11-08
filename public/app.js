@@ -312,6 +312,11 @@ function connectStream(roomCode) {
           sfx.lockIn();
         }
 
+        if (payload.type === 'top10_updated' && payload.toastMessage) {
+          sfx.success();
+          showToast(payload.toastMessage);
+        }
+
         if (payload.type === 'wave_revealed' && prevState !== 'REVEAL') {
           const myRes = (state.room.lastWaveResults || []).find((r) => r.playerId === state.playerId);
           if (myRes && myRes.pointsEarned > 0) {
@@ -336,11 +341,23 @@ function connectStream(roomCode) {
 
 function updateTimerOnly() {
   if (!state.room) return;
-  const t = state.room.timeLeft;
-  const total = state.room.totalTime || 15;
+  const mode = state.room.settings?.gameMode || 'multi_club_pool';
   const numEl = document.getElementById('countdownNumber');
   const circleEl = document.getElementById('countdownCircle');
   const barEl = document.getElementById('timerProgressBar');
+
+  if (mode === 'top10_stats') {
+    if (numEl) numEl.textContent = '∞';
+    if (circleEl) circleEl.classList.remove('urgent');
+    if (barEl) {
+      barEl.style.width = '100%';
+      barEl.classList.remove('urgent');
+    }
+    return;
+  }
+
+  const t = state.room.timeLeft;
+  const total = state.room.totalTime || 15;
 
   if (numEl) numEl.textContent = t;
   if (circleEl) {
@@ -363,6 +380,10 @@ function renderRoom() {
   document.getElementById('lobbyTimeValue').textContent = room.settings.timeLimit;
   document.getElementById('duplicateRuleSelect').value = room.settings.duplicateRule || 'strict_unique';
   document.getElementById('clubSelectModeInput').value = room.settings.clubSelectMode || 'random';
+  const diffSelect = document.getElementById('triviaDifficultySelect');
+  if (diffSelect) {
+    diffSelect.value = room.settings.triviaDifficulty || 'all';
+  }
 
   const targetScore = room.settings.targetScore !== undefined ? room.settings.targetScore : 10;
   document.getElementById('targetScoreSelect').value = String(targetScore);
@@ -697,34 +718,87 @@ function buildModeStageHTML(room, isReveal = false) {
     `;
   }
 
-  // MODE 3: TOP 10 STATS
+  // MODE 3: TOP 10 STATS (Untimed Continuous Board with Per-Item Hint & Reveal!)
   if (mode === 'top10_stats') {
-    const rowsHtml = (md.items || [])
+    const items = md.items || [];
+    const unlockedCount = items.filter((it) => it.unlocked).length;
+    const listOptionsHtml = (md.availableLists || [])
+      .map(
+        (l) =>
+          `<option value="${l.id}" ${l.id === md.listId ? 'selected' : ''}>${l.title}</option>`
+      )
+      .join('');
+
+    const toolbarHtml = !isReveal
+      ? `
+        <div class="top10-toolbar">
+          <div class="top10-toolbar-left">
+            <select id="top10TopicSelect" class="select-input" style="max-width:340px;padding:6px 10px;font-size:0.84rem;">
+              ${listOptionsHtml}
+            </select>
+            <span class="top10-progress-pill">เปิดแล้ว <strong>${unlockedCount}/10</strong> อันดับ</span>
+          </div>
+          <div class="top10-toolbar-actions">
+            <button type="button" class="btn btn-outline btn-sm" data-top10-reveal-all="1">👁️ เฉลยทั้งหมด</button>
+            <button type="button" class="btn btn-accent btn-sm" data-top10-next-list="1">🔄 เปลี่ยนหัวข้อถัดไป</button>
+          </div>
+        </div>
+      `
+      : '';
+
+    const rowsHtml = items
       .map((it) => {
         const photoHtml =
           it.unlocked && it.photoUrl
             ? `<img src="${it.photoUrl}" alt="${it.name}" class="player-photo-avatar" style="width:32px;height:32px;" onerror="this.style.display='none'" />`
             : '';
+
+        let statusSubHtml = '';
+        if (it.unlocked) {
+          statusSubHtml = it.revealed
+            ? `<small style="color:#fbbf24;">👁️ เปิดเฉลยแล้ว (0 คะแนน)</small>`
+            : `<small style="color:#6ee7b7;">✅ ตอบถูกโดย ${it.answeredBy} (+1 คะแนน)</small>`;
+        } else if (it.hinted && it.hintText) {
+          statusSubHtml = `<small style="color:#fde68a;font-weight:600;">💡 คำใบ้: ${it.hintText}</small>`;
+        }
+
+        const rowActionsHtml =
+          !it.unlocked && !isReveal
+            ? `
+              <div class="top10-row-actions">
+                ${
+                  !it.hinted
+                    ? `<button type="button" class="btn-mini-action hint-btn" data-top10-hint="${it.rank}" title="ดูคำใบ้ข้อนี้">💡 คำใบ้</button>`
+                    : ''
+                }
+                <button type="button" class="btn-mini-action reveal-btn" data-top10-reveal="${it.rank}" title="กดเปิดเฉลยข้อนี้">👁️ เฉลย</button>
+              </div>
+            `
+            : '';
+
         return `
-          <div class="top10-row ${it.unlocked ? 'unlocked' : ''}">
+          <div class="top10-row ${it.unlocked ? (it.revealed ? 'unlocked revealed-only' : 'unlocked') : it.hinted ? 'hinted' : ''}">
             <div class="top10-left">
               <div class="top10-rank">#${it.rank}</div>
               ${photoHtml}
               <div>
                 <div style="font-weight:700;display:flex;align-items:center;gap:6px;">
-                  ${renderFlagHTML(it.flag, it.flagUrl)}
-                  <span>${it.unlocked ? it.name : '❓ ??? (ยังไม่ถูกเปิด)'}</span>
+                  ${it.unlocked || it.hinted ? renderFlagHTML(it.flag, it.flagUrl) : '<span>🔒</span>'}
+                  <span>${it.unlocked ? it.name : '❓ ??? (พิมพ์ทายได้เลย)'}</span>
                 </div>
-                ${it.unlocked ? `<small style="color:#6ee7b7;">ตอบโดย ${it.answeredBy}</small>` : ''}
+                ${statusSubHtml}
               </div>
             </div>
-            <div class="top10-stat">${it.stat}</div>
+            <div class="top10-right">
+              <div class="top10-stat">${it.stat}</div>
+              ${rowActionsHtml}
+            </div>
           </div>
         `;
       })
       .join('');
 
-    return `<div class="top10-grid">${rowsHtml}</div>`;
+    return `${toolbarHtml}<div class="top10-grid">${rowsHtml}</div>`;
   }
 
   // MODE 4: CAREER PATH
@@ -787,6 +861,28 @@ function buildModeStageHTML(room, isReveal = false) {
   // MODE 5: 4-CHOICE TRIVIA
   if (mode === 'trivia_quiz') {
     const letters = ['A', 'B', 'C', 'D'];
+    const diffLabels = {
+      easy: { text: '🟢 ระดับง่าย (Easy)', color: '#10b981' },
+      medium: { text: '🟡 ระดับปานกลาง (Medium)', color: '#f59e0b' },
+      hard: { text: '🔴 ระดับยาก (Hard - แฟนพันธุ์แท้)', color: '#ef4444' }
+    };
+    const qDiff = diffLabels[md.difficulty] || diffLabels.medium;
+    const selDiff = md.selectedDifficulty || room.settings?.triviaDifficulty || 'all';
+
+    const diffFilterBar = !isReveal
+      ? `
+        <div class="trivia-diff-bar">
+          <span>🎚️ ความยากคำถาม:</span>
+          <div class="trivia-diff-pills">
+            <button type="button" class="diff-pill ${selDiff === 'all' ? 'active' : ''}" data-trivia-diff="all">🎲 รวมทุกระดับ</button>
+            <button type="button" class="diff-pill ${selDiff === 'easy' ? 'active' : ''}" data-trivia-diff="easy">🟢 ง่าย</button>
+            <button type="button" class="diff-pill ${selDiff === 'medium' ? 'active' : ''}" data-trivia-diff="medium">🟡 ปานกลาง</button>
+            <button type="button" class="diff-pill ${selDiff === 'hard' ? 'active' : ''}" data-trivia-diff="hard">🔴 ยาก</button>
+          </div>
+        </div>
+      `
+      : '';
+
     const optsHtml = (md.options || [])
       .map((opt, idx) => {
         const isCorrectClass = isReveal && md.correctIndex === idx ? 'correct' : '';
@@ -801,6 +897,10 @@ function buildModeStageHTML(room, isReveal = false) {
 
     return `
       <div class="trivia-box">
+        ${diffFilterBar}
+        <div style="margin-bottom:8px;">
+          <span class="trivia-diff-tag" style="border-color:${qDiff.color};color:${qDiff.color};">${qDiff.text}</span>
+        </div>
         <div class="trivia-question-text">❓ ${md.question}</div>
         <div class="trivia-options-grid">${optsHtml}</div>
       </div>
@@ -873,7 +973,57 @@ function bindDynamicStageEvents(container, room) {
   if (!container) return;
   const mode = room.settings.gameMode || 'club_battle';
 
+  if (mode === 'top10_stats') {
+    container.querySelectorAll('[data-top10-hint]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const rank = parseInt(btn.dataset.top10Hint, 10);
+        sfx.beep(520, 0.08);
+        await apiAction('top10_hint_rank', { rank });
+      });
+    });
+
+    container.querySelectorAll('[data-top10-reveal]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const rank = parseInt(btn.dataset.top10Reveal, 10);
+        sfx.beep(360, 0.09);
+        await apiAction('top10_reveal_rank', { rank });
+      });
+    });
+
+    const revealAllBtn = container.querySelector('[data-top10-reveal-all]');
+    if (revealAllBtn) {
+      revealAllBtn.addEventListener('click', async () => {
+        sfx.beep(330, 0.12);
+        await apiAction('top10_reveal_all');
+      });
+    }
+
+    const nextListBtn = container.querySelector('[data-top10-next-list]');
+    if (nextListBtn) {
+      nextListBtn.addEventListener('click', async () => {
+        sfx.lockIn();
+        await apiAction('start_mode_round');
+      });
+    }
+
+    const topicSelect = container.querySelector('#top10TopicSelect');
+    if (topicSelect) {
+      topicSelect.addEventListener('change', async (e) => {
+        sfx.lockIn();
+        await apiAction('start_mode_round', { listId: e.target.value });
+      });
+    }
+  }
+
   if (mode === 'trivia_quiz') {
+    container.querySelectorAll('[data-trivia-diff]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const diff = btn.dataset.triviaDiff;
+        sfx.lockIn();
+        await apiAction('start_mode_round', { triviaDifficulty: diff });
+      });
+    });
+
     container.querySelectorAll('[data-trivia-choice]').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const idx = parseInt(btn.dataset.triviaChoice, 10);
@@ -920,7 +1070,7 @@ function renderPlayingView(room) {
   } else if (mode === 'top10_stats') {
     banner.style.background = `linear-gradient(135deg, #2563eb, #0f172a)`;
     document.getElementById('playingClubName').textContent = room.modeData?.title || 'Top 10 Stats';
-    document.getElementById('playingClubSub').textContent = `${room.modeData?.category || ''} • รอบย่อยที่ ${room.waveNumber}`;
+    document.getElementById('playingClubSub').textContent = `${room.modeData?.category || ''} • ไม่จำกัดเวลา ตอบได้ทุกข้อ!`;
   } else if (mode === 'career_path') {
     banner.style.background = `linear-gradient(135deg, #7c3aed, #0f172a)`;
     document.getElementById('playingClubName').textContent = 'นักเตะปริศนาคนนี้คือใคร? (Who Am I?)';
@@ -942,7 +1092,7 @@ function renderPlayingView(room) {
   bindDynamicStageEvents(stageEl, room);
 
   const me = room.players.find((p) => p.id === state.playerId);
-  const hasSubmitted = me && me.hasSubmitted;
+  const hasSubmitted = mode !== 'top10_stats' && me && me.hasSubmitted;
 
   const inputZone = document.getElementById('answerInputZone');
   const lockedZone = document.getElementById('answerLockedZone');
@@ -1342,11 +1492,28 @@ async function submitCurrentGuess() {
   document.getElementById('lockedAnswerText').textContent = `👟 "${input.value}"`;
   hideAutocomplete();
 
-  await apiAction('submit_answer', {
-    playerInput: input.value,
+  const submittedText = input.value;
+  const mode = state.room?.settings?.gameMode || 'multi_club_pool';
+  if (mode === 'top10_stats') {
+    input.value = '';
+    state.selectedAutocompletePlayerId = null;
+    setTimeout(() => input.focus(), 40);
+  }
+
+  const res = await apiAction('submit_answer', {
+    playerInput: submittedText,
     selectedPlayerId: chosenId,
     cellIndex: state.selectedGridCellIndex
   });
+
+  if (mode === 'top10_stats' && res && res.top10Feedback) {
+    if (res.top10Feedback.correct) {
+      sfx.success();
+    } else {
+      sfx.beep(220, 0.14, 'sawtooth', 0.08);
+    }
+    showToast(res.top10Feedback.message);
+  }
 }
 
 function bindRoomEvents() {
@@ -1415,6 +1582,13 @@ function bindRoomEvents() {
   document.getElementById('clubSelectModeInput').addEventListener('change', (e) => {
     apiAction('update_settings', { clubSelectMode: e.target.value });
   });
+
+  const triviaDiffEl = document.getElementById('triviaDifficultySelect');
+  if (triviaDiffEl) {
+    triviaDiffEl.addEventListener('change', (e) => {
+      apiAction('update_settings', { triviaDifficulty: e.target.value });
+    });
+  }
 
   document.getElementById('addBotBtn').addEventListener('click', async () => {
     const res = await apiAction('add_bot');

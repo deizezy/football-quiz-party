@@ -1076,6 +1076,8 @@ async function initializeFootballApiData() {
               name,
               flag: seed?.flag || natInfo.flag,
               flagUrl: natInfo.flagUrl,
+              rawStat: `${ldr.value} ประตู`,
+              teamName,
               stat: `${ldr.value} ประตู (${teamName})`,
               points: 1,
               aliases: Array.from(new Set([ath.lastName?.toLowerCase() || '', ...(seed?.aliases || [])].filter(Boolean)))
@@ -1101,6 +1103,8 @@ async function initializeFootballApiData() {
               name,
               flag: seed?.flag || natInfo.flag,
               flagUrl: natInfo.flagUrl,
+              rawStat: `${ldr.value} แอสซิสต์`,
+              teamName,
               stat: `${ldr.value} แอสซิสต์ (${teamName})`,
               points: 1,
               aliases: Array.from(new Set([ath.lastName?.toLowerCase() || '', ...(seed?.aliases || [])].filter(Boolean)))
@@ -1112,9 +1116,11 @@ async function initializeFootballApiData() {
   );
 
   if (liveTop10Lists.length > 0) {
+    const classicTop10 = TOP10_LISTS.filter((l) => !l.id.startsWith('live_'));
     TOP10_LISTS.length = 0;
     liveTop10Lists.forEach((l) => TOP10_LISTS.push(l));
-    console.log(`✅ Replaced TOP10_LISTS with ${TOP10_LISTS.length} live 2026-27 leaderboards!`);
+    classicTop10.forEach((l) => TOP10_LISTS.push(l));
+    console.log(`✅ Loaded ${TOP10_LISTS.length} Top 10 leaderboards (${liveTop10Lists.length} Live 2026-27 + ${classicTop10.length} All-Time)!`);
   }
 
   // 4. Fetch Live 2026-27 Match Lineups (11 Starting XI) from ESPN Scoreboard + Summary API
@@ -1199,29 +1205,34 @@ async function initializeFootballApiData() {
     console.log(`✅ Replaced CAREER_PATHS with ${CAREER_PATHS.length} live 2026-27 player career timelines!`);
   }
 
-  // 6. Build Live 2026-27 Trivia Questions from the live leaderboards
+  // 6. Build Live 2026-27 Trivia Questions from the live leaderboards (without spoiling club names!)
   if (liveTop10Lists.length >= 2) {
+    const baseQuestions = TRIVIA_QUESTIONS.filter((q) => !q.id.startsWith('live_tr_'));
     const liveTrivia = [];
     liveTop10Lists.forEach((list, idx) => {
       if (list.items.length >= 4) {
         const top1 = list.items[0];
+        const cleanStat = top1.rawStat || top1.stat.replace(/\s*\([^)]*\)/g, '');
         const opts = [top1.name, list.items[1].name, list.items[2].name, list.items[3].name];
         const correctName = top1.name;
         const shuffled = [...opts].sort((a, b) => a.localeCompare(b));
         const correctIdx = shuffled.indexOf(correctName);
+        const diff = idx % 3 === 0 ? 'easy' : idx % 3 === 1 ? 'medium' : 'hard';
         liveTrivia.push({
           id: `live_tr_${idx + 1}`,
-          question: `[Live 2026-27] ใครคือผู้นำอันดับ 1 ในหัวข้อ "${list.title}" ณ ปัจจุบันด้วยสถิติ ${top1.stat}?`,
+          difficulty: diff,
+          question: `[สถิติฤดูกาล 2026-27] ใครคือผู้นำอันดับ 1 ในหัวข้อ "${list.title}" ณ ปัจจุบันด้วยผลงาน ${cleanStat}?`,
           options: shuffled,
           correctIndex: correctIdx,
-          explanation: `${top1.name} นำเป็นอันดับ 1 ในฤดูกาลล่าสุดด้วยสถิติ ${top1.stat}`
+          explanation: `${top1.name} นำเป็นอันดับ 1 ในฤดูกาลล่าสุดด้วยผลงาน ${top1.stat}`
         });
       }
     });
     if (liveTrivia.length >= 4) {
       TRIVIA_QUESTIONS.length = 0;
+      baseQuestions.forEach((q) => TRIVIA_QUESTIONS.push(q));
       liveTrivia.forEach((q) => TRIVIA_QUESTIONS.push(q));
-      console.log(`✅ Replaced TRIVIA_QUESTIONS with ${TRIVIA_QUESTIONS.length} live 2026-27 season trivia questions!`);
+      console.log(`✅ Loaded ${TRIVIA_QUESTIONS.length} Trivia Questions (Easy/Medium/Hard + Live 2026-27)!`);
     }
   }
 

@@ -154,8 +154,8 @@
               <div class="mode-card" data-mode="top10_stats">
                 <div class="mode-icon">📊</div>
                 <div class="mode-info">
-                  <h4>3. ทายท็อป 10 สถิติลูกหนัง</h4>
-                  <p>ทาย 10 อันดับดาวซัลโว, จอมแอสซิสต์, แข้งค่าตัวแพงสุดในประวัติศาสตร์</p>
+                  <h4>3. ทายท็อป 10 สถิติลูกหนัง (ไม่จำกัดเวลา!)</h4>
+                  <p>ช่วยกันหรือแย่งกันตอบให้ครบทั้ง 10 อันดับ ใครตอบได้ได้แต้มทันที มีปุ่มกดดูคำใบ้ & เปิดเฉลยทีละข้อ!</p>
                 </div>
               </div>
 
@@ -171,7 +171,7 @@
                 <div class="mode-icon">⚡</div>
                 <div class="mode-info">
                   <h4>5. ควิซแฟนพันธุ์แท้ 4 ตัวเลือก</h4>
-                  <p>คำถามสถิติและประวัติศาสตร์ลูกหนัง 4 ตัวเลือก วัดความไวสไตล์ Kahoot!</p>
+                  <p>เลือกระดับความยาก (ง่าย / ปานกลาง / ยาก) วัดความรู้และสปีดคำถามลูกหนัง 4 ตัวเลือก!</p>
                 </div>
               </div>
 
@@ -225,6 +225,14 @@
                 <select id="clubSelectModeInput" class="select-input">
                   <option value="random" selected>🎲 สุ่มสโมสรให้ผู้เล่นแต่ละคนอัตโนมัติ (ค่าเริ่มต้น - เริ่มไว!)</option>
                   <option value="both">⌨️ ให้ผู้เล่นพิมพ์/คลิกเลือกสโมสรเองคนละทีม</option>
+                </select>
+
+                <label style="margin-top: 16px;">🎚️ ระดับความยากคำถาม (โหมด 5: ควิซแฟนพันธุ์แท้ 4 ตัวเลือก)</label>
+                <select id="triviaDifficultySelect" class="select-input">
+                  <option value="all" selected>🎲 รวมทุกระดับความยาก (ง่าย + ปานกลาง + ยาก)</option>
+                  <option value="easy">🟢 ระดับง่าย (Easy - แฟนบอลทั่วไปตอบสนุก)</option>
+                  <option value="medium">🟡 ระดับปานกลาง (Medium - แฟนบอลตัวยง)</option>
+                  <option value="hard">🔴 ระดับยาก (Hard - แฟนพันธุ์แท้ตัวจริง!)</option>
                 </select>
               </div>
             </div>

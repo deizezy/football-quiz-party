@@ -327,61 +327,202 @@ const CAREER_PATHS = [
 ];
 
 const TRIVIA_QUESTIONS = [
+  // ================= EASY (ระดับง่าย) =================
   {
-    id: 'tr_1',
-    question: 'สโมสรใดคว้าแชมป์ ยูฟ่า แชมเปียนส์ลีก (รวมยูโรเปียนคัพ) มากที่สุดเป็นอันดับ 2 รองจาก เรอัล มาดริด?',
-    options: ['Liverpool (6 สมัย)', 'AC Milan (7 สมัย)', 'Bayern Munich (6 สมัย)', 'Barcelona (5 สมัย)'],
-    correctIndex: 1,
-    explanation: 'AC Milan คว้าแชมป์ไปถึง 7 สมัย รองจาก Real Madrid (15 สมัย)'
-  },
-  {
-    id: 'tr_2',
-    question: 'ใครคือผู้เล่นที่ทำ "แฮตทริกเร็วที่สุด" ในประวัติศาสตร์พรีเมียร์ลีก อังกฤษ (ใช้เวลาเพียง 2 นาที 56 วินาที)?',
-    options: ['Sadio Mané', 'Robbie Fowler', 'Sergio Agüero', 'Erling Haaland'],
-    correctIndex: 0,
-    explanation: 'Sadio Mané ทำแฮตทริกในเวลา 2 นาที 56 วินาที สมัยอยู่ Southampton นัดพบ Aston Villa ปี 2015'
-  },
-  {
-    id: 'tr_3',
-    question: 'ในนัดชิงชนะเลิศฟุตบอลโลก 2022 (อาร์เจนตินา ชนะจุดโทษ ฝรั่งเศส) คีลิยัน เอ็มบัปเป้ ยิงในเวลา 120 นาทีไปกี่ประตู?',
-    options: ['2 ประตู', '3 ประตู (แฮตทริก)', '4 ประตู', '1 ประตู'],
-    correctIndex: 1,
-    explanation: 'Mbappé ยิงแฮตทริก 3 ประตูในเกมนัดชิงบอลโลก 2022 (เป็นคนที่ 2 ในประวัติศาสตร์ต่อจาก Geoff Hurst ปี 1966)'
-  },
-  {
-    id: 'tr_4',
-    question: 'สโมสรเดียวในพรีเมียร์ลีกยุค 38 นัด ที่คว้าแชมป์โดย "ไม่แพ้ใครเลยตลอดทั้งฤดูกาล" (ชนะ 26 เสมอ 12) คือทีมใด?',
-    options: ['Chelsea (2004/05)', 'Manchester United (1998/99)', 'Arsenal (2003/04)', 'Manchester City (2017/18)'],
+    id: 'tr_easy_1',
+    difficulty: 'easy',
+    question: 'สโมสรเดียวในพรีเมียร์ลีกยุค 38 นัด ที่คว้าแชมป์โดย "ไม่แพ้ใครเลยตลอดทั้งฤดูกาล" (The Invincibles) คือทีมใด?',
+    options: ['Chelsea', 'Manchester United', 'Arsenal', 'Manchester City'],
     correctIndex: 2,
-    explanation: 'Arsenal ยุคไร้พ่าย (The Invincibles 2003/04) จบฤดูกาลด้วยสถิติ ชนะ 26 เสมอ 12 แพ้ 0'
+    explanation: 'Arsenal ยุคไร้พ่าย (ฤดูกาล 2003/04) จบฤดูกาลด้วยสถิติ ชนะ 26 เสมอ 12 แพ้ 0'
   },
   {
-    id: 'tr_5',
-    question: 'นักเตะคนใดเป็นเจ้าของสถิติยิงประตูใน 1 ปีปฏิทิน (Calendar Year) สูงที่สุดในโลกถึง 91 ประตู ในปี 2012?',
-    options: ['Cristiano Ronaldo', 'Lionel Messi', 'Robert Lewandowski', 'Gerd Müller'],
-    correctIndex: 1,
-    explanation: 'Lionel Messi ยิงไปถึง 91 ประตูในปี 2012 ทำลายสถิติเดิมของ Gerd Müller (85 ประตู)'
+    id: 'tr_easy_2',
+    difficulty: 'easy',
+    question: 'ในนัดชิงชนะเลิศฟุตบอลโลก 2022 (อาร์เจนตินา พบ ฝรั่งเศส) คีลิยัน เอ็มบัปเป้ ยิงในเวลา 120 นาทีไปกี่ประตู?',
+    options: ['1 ประตู', '2 ประตู', '3 ประตู', '4 ประตู'],
+    correctIndex: 2,
+    explanation: 'Kylian Mbappé ยิงแฮตทริก 3 ประตูในเกมนัดชิงบอลโลก 2022 ก่อนตัดสินที่จุดโทษ'
   },
   {
-    id: 'tr_6',
+    id: 'tr_easy_3',
+    difficulty: 'easy',
+    question: 'ใครคือผู้ยิงประตูชัยในนาที 93:20 พา แมนเชสเตอร์ ซิตี้ แซงคว้าแชมป์พรีเมียร์ลีกฤดูกาล 2011/12?',
+    options: ['Edin Džeko', 'David Silva', 'Yaya Touré', 'Sergio Agüero'],
+    correctIndex: 3,
+    explanation: 'Sergio "Kun" Agüero ยิงประตูชัยนาที 93:20 ในเกมชนะ QPR 3-2'
+  },
+  {
+    id: 'tr_easy_4',
+    difficulty: 'easy',
     question: 'สโมสรใดคว้าแชมป์ บุนเดสลีกา เยอรมนี ฤดูกาล 2023/24 แบบไร้พ่ายตลอดทั้งฤดูกาลเป็นครั้งแรกในประวัติศาสตร์ลีก?',
     options: ['Bayern Munich', 'Borussia Dortmund', 'Bayer Leverkusen', 'RB Leipzig'],
     correctIndex: 2,
     explanation: 'Bayer Leverkusen ของกุนซือ Xabi Alonso คว้าแชมป์บุนเดสลีกา 2023/24 แบบไม่แพ้ใครเลยตลอด 34 นัด'
   },
   {
-    id: 'tr_7',
-    question: 'ใครคือผู้ยิงประตูชัยในนาที 93:20 พา แมนเชสเตอร์ ซิตี้ แซงคว้าแชมป์พรีเมียร์ลีกปี 2011/12?',
-    options: ['Edin Džeko', 'David Silva', 'Yaya Touré', 'Sergio Agüero'],
+    id: 'tr_easy_5',
+    difficulty: 'easy',
+    question: 'ชาติใดเป็นเจ้าของสถิติคว้าแชมป์ฟุตบอลโลก (FIFA World Cup) มากที่สุดในประวัติศาสตร์ถึง 5 สมัย?',
+    options: ['เยอรมนี', 'อิตาลี', 'อาร์เจนตินา', 'บราซิล'],
     correctIndex: 3,
-    explanation: 'Sergio "Kun" Agüero ยิงประตูชัยนาที 93:20 ในเกมชนะ QPR 3-2 ("AGUEROOOO!")'
+    explanation: 'ทีมชาติบราซิลคว้าแชมป์โลก 5 สมัย (1958, 1962, 1970, 1994, 2002)'
   },
   {
-    id: 'tr_8',
+    id: 'tr_easy_6',
+    difficulty: 'easy',
+    question: 'นักเตะคนใดเป็นเจ้าของสถิติค่าตัวแพงที่สุดในประวัติศาสตร์ฟุตบอลโลก (222 ล้านยูโร)?',
+    options: ['Kylian Mbappé', 'Neymar Jr', 'Philippe Coutinho', 'Jude Bellingham'],
+    correctIndex: 1,
+    explanation: 'Neymar Jr ย้ายจาก Barcelona ไป Paris Saint-Germain ในปี 2017 ด้วยค่าฉีกสัญญา 222 ล้านยูโร'
+  },
+  {
+    id: 'tr_easy_7',
+    difficulty: 'easy',
+    question: 'สนามเหย้าของสโมสร เรอัล มาดริด มีชื่อว่าอะไร?',
+    options: ['Camp Nou', 'Santiago Bernabéu', 'Wanda Metropolitano', 'Mestalla'],
+    correctIndex: 1,
+    explanation: 'Santiago Bernabéu คือสนามเหย้าคู่บุญของสโมสร Real Madrid'
+  },
+  {
+    id: 'tr_easy_8',
+    difficulty: 'easy',
+    question: 'นักเตะคนใดคว้ารางวัล บัลลงดอร์ (Ballon d\'Or) มากที่สุดในประวัติศาสตร์ถึง 8 สมัย?',
+    options: ['Cristiano Ronaldo', 'Lionel Messi', 'Michel Platini', 'Johan Cruyff'],
+    correctIndex: 1,
+    explanation: 'Lionel Messi คว้ารางวัล Ballon d\'Or ไปครองถึง 8 สมัย'
+  },
+
+  // ================= MEDIUM (ระดับปานกลาง) =================
+  {
+    id: 'tr_med_1',
+    difficulty: 'medium',
+    question: 'สโมสรใดคว้าแชมป์ ยูฟ่า แชมเปียนส์ลีก (รวมยูโรเปียนคัพ) มากที่สุดเป็นอันดับ 2 รองจาก เรอัล มาดริด?',
+    options: ['Liverpool', 'AC Milan', 'Bayern Munich', 'Barcelona'],
+    correctIndex: 1,
+    explanation: 'AC Milan คว้าแชมป์ไปถึง 7 สมัย รองจาก Real Madrid (15 สมัย)'
+  },
+  {
+    id: 'tr_med_2',
+    difficulty: 'medium',
+    question: 'ใครคือผู้เล่นที่ทำ "แฮตทริกเร็วที่สุด" ในประวัติศาสตร์พรีเมียร์ลีก อังกฤษ (ใช้เวลาเพียง 2 นาที 56 วินาที)?',
+    options: ['Sadio Mané', 'Robbie Fowler', 'Sergio Agüero', 'Erling Haaland'],
+    correctIndex: 0,
+    explanation: 'Sadio Mané ทำแฮตทริกในเวลา 2 นาที 56 วินาที สมัยอยู่ Southampton นัดพบ Aston Villa ปี 2015'
+  },
+  {
+    id: 'tr_med_3',
+    difficulty: 'medium',
+    question: 'นักเตะคนใดเป็นเจ้าของสถิติยิงประตูใน 1 ปีปฏิทิน (Calendar Year) สูงที่สุดในโลกถึง 91 ประตู ในปี 2012?',
+    options: ['Cristiano Ronaldo', 'Lionel Messi', 'Robert Lewandowski', 'Gerd Müller'],
+    correctIndex: 1,
+    explanation: 'Lionel Messi ยิงไปถึง 91 ประตูในปี 2012 ทำลายสถิติเดิมของ Gerd Müller (85 ประตู)'
+  },
+  {
+    id: 'tr_med_4',
+    difficulty: 'medium',
+    question: 'ใครคือเจ้าของสถิติดาวซัลโวสูงสุดตลอดกาลของศึก พรีเมียร์ลีก อังกฤษ ด้วยผลงาน 260 ประตู?',
+    options: ['Wayne Rooney', 'Harry Kane', 'Alan Shearer', 'Thierry Henry'],
+    correctIndex: 2,
+    explanation: 'Alan Shearer คือนักเตะที่ยิงประตูในพรีเมียร์ลีกสูงสุดตลอดกาลที่ 260 ประตู'
+  },
+  {
+    id: 'tr_med_5',
+    difficulty: 'medium',
+    question: 'กุนซือคนใดพาทีมคว้าแชมป์ ยูฟ่า แชมเปียนส์ลีก ในฐานะผู้จัดการทีมมากที่สุดในประวัติศาสตร์ (5 สมัย)?',
+    options: ['Pep Guardiola', 'Sir Alex Ferguson', 'Carlo Ancelotti', 'Zinedine Zidane'],
+    correctIndex: 2,
+    explanation: 'Carlo Ancelotti คว้าแชมป์ UCL ในฐานะกุนซือถึง 5 สมัย (กับ AC Milan 2 สมัย และ Real Madrid 3 สมัย)'
+  },
+  {
+    id: 'tr_med_6',
+    difficulty: 'medium',
+    question: 'โรเบิร์ต เลวานดอฟสกี้ เคยเปลี่ยนตัวลงมาเป็นสำรองแล้วยิงคนเดียว 5 ประตูภายในเวลาเพียง 9 นาที ในเกมพบกับทีมใด?',
+    options: ['Borussia Dortmund', 'VfL Wolfsburg', 'Schalke 04', 'Hamburger SV'],
+    correctIndex: 1,
+    explanation: 'Lewandowski ยิง 5 ประตูใน 9 นาทีให้ Bayern Munich ในเกมพบ VfL Wolfsburg เมื่อปี 2015'
+  },
+  {
+    id: 'tr_med_7',
+    difficulty: 'medium',
+    question: 'สโมสร เลสเตอร์ ซิตี้ สร้างเทพนิยายคว้าแชมป์พรีเมียร์ลีก อังกฤษ ครั้งประวัติศาสตร์ในฤดูกาลใด?',
+    options: ['2014/15', '2015/16', '2016/17', '2017/18'],
+    correctIndex: 1,
+    explanation: 'Leicester City ของกุนซือ Claudio Ranieri คว้าแชมป์พรีเมียร์ลีกในฤดูกาล 2015/16'
+  },
+  {
+    id: 'tr_med_8',
+    difficulty: 'medium',
+    question: 'ใครคือนักเตะที่ทำแอสซิสต์สูงสุดตลอดกาลของศึก พรีเมียร์ลีก อังกฤษ (162 แอสซิสต์)?',
+    options: ['Kevin De Bruyne', 'Cesc Fàbregas', 'Ryan Giggs', 'Frank Lampard'],
+    correctIndex: 2,
+    explanation: 'Ryan Giggs เป็นเจ้าของสถิติแอสซิสต์สูงสุดตลอดกาลของพรีเมียร์ลีกที่ 162 ครั้ง'
+  },
+
+  // ================= HARD (ระดับยาก - แฟนพันธุ์แท้!) =================
+  {
+    id: 'tr_hard_1',
+    difficulty: 'hard',
     question: 'ผู้รักษาประตูคนเดียวในประวัติศาสตร์ที่เคยคว้ารางวัล บัลลงดอร์ (Ballon d\'Or) มาครองได้คือใคร?',
     options: ['Lev Yashin', 'Gianluigi Buffon', 'Manuel Neuer', 'Iker Casillas'],
     correctIndex: 0,
     explanation: 'Lev Yashin ตำนานนายทวารฉายา "แมงมุมดำ" แห่งสหภาพโซเวียต คว้าบัลลงดอร์ในปี 1963'
+  },
+  {
+    id: 'tr_hard_2',
+    difficulty: 'hard',
+    question: 'นักเตะคนเดียวในประวัติศาสตร์ที่คว้าแชมป์ ยูฟ่า แชมเปียนส์ลีก กับ 3 สโมสรที่แตกต่างกัน คือใคร?',
+    options: ['Cristiano Ronaldo', 'Clarence Seedorf', 'Samuel Eto\'o', 'Zlatan Ibrahimović'],
+    correctIndex: 1,
+    explanation: 'Clarence Seedorf คว้าแชมป์ UCL กับ 3 สโมสร ได้แก่ Ajax (1995), Real Madrid (1998) และ AC Milan (2003, 2007)'
+  },
+  {
+    id: 'tr_hard_3',
+    difficulty: 'hard',
+    question: 'สโมสรใดเป็นเจ้าของสถิติเสียประตูน้อยที่สุดต่อ 1 ฤดูกาลในประวัติศาสตร์พรีเมียร์ลีก (เสียเพียง 15 ประตูจาก 38 นัด)?',
+    options: ['Arsenal (2003/04)', 'Chelsea (2004/05)', 'Manchester United (2007/08)', 'Liverpool (2018/19)'],
+    correctIndex: 1,
+    explanation: 'Chelsea ยุคของ José Mourinho ในฤดูกาล 2004/05 เสียไปเพียง 15 ประตูตลอดทั้งฤดูกาล'
+  },
+  {
+    id: 'tr_hard_4',
+    difficulty: 'hard',
+    question: 'ใครคือผู้ยิงประตูที่เร็วที่สุดในประวัติศาสตร์ พรีเมียร์ลีก อังกฤษ ด้วยเวลาเพียง 7.69 วินาที หลังเริ่มเขี่ยบอล?',
+    options: ['Shane Long', 'Ledley King', 'Alan Shearer', 'Christian Eriksen'],
+    correctIndex: 0,
+    explanation: 'Shane Long (Southampton) ยิงประตูใส่ Watford ในปี 2019 ด้วยเวลาเพียง 7.69 วินาที'
+  },
+  {
+    id: 'tr_hard_5',
+    difficulty: 'hard',
+    question: 'ใครคือเจ้าของสถิติดาวซัลโวสูงสุดตลอดกาลในศึกฟุตบอลโลก รอบสุดท้าย (ยิงรวม 16 ประตู)?',
+    options: ['Ronaldo Nazário', 'Miroslav Klose', 'Gerd Müller', 'Just Fontaine'],
+    correctIndex: 1,
+    explanation: 'Miroslav Klose กองหน้าทีมชาติเยอรมนี ทำสถิติยิงในฟุตบอลโลกรอบสุดท้ายรวม 16 ประตู'
+  },
+  {
+    id: 'tr_hard_6',
+    difficulty: 'hard',
+    question: 'ในเกมนัดชิง UCL ปี 2005 ที่อิสตันบูล (ลิเวอร์พูล ตามหลัง เอซี มิลาน 0-3 ในครึ่งแรก) ใครคือคนยิงประตูตีไข่แตก 1-3 ให้ลิเวอร์พูล?',
+    options: ['Vladimír Šmicer', 'Xabi Alonso', 'Steven Gerrard', 'John Arne Riise'],
+    correctIndex: 2,
+    explanation: 'กัปตันทีม Steven Gerrard โหม่งประตูตีไข่แตกในนาทีที่ 54 จุดประกายคัมแบ็กตีเสมอ 3-3'
+  },
+  {
+    id: 'tr_hard_7',
+    difficulty: 'hard',
+    question: 'นักเตะคนใดครองสถิติยิงประตูติดต่อกันทุกนัดยาวนานที่สุดในพรีเมียร์ลีก (11 นัดติดต่อกัน)?',
+    options: ['Ruud van Nistelrooy', 'Jamie Vardy', 'Erling Haaland', 'Mohamed Salah'],
+    correctIndex: 1,
+    explanation: 'Jamie Vardy ยิงประตู 11 นัดติดต่อกันในพรีเมียร์ลีกฤดูกาล 2015/16 ทำลายสถิติเดิมของ Van Nistelrooy (10 นัด)'
+  },
+  {
+    id: 'tr_hard_8',
+    difficulty: 'hard',
+    question: 'สโมสรจากประเทศอังกฤษทีมแรกที่สามารถคว้าแชมป์ ยูโรเปียนคัพ (UCL) มาครองได้สำเร็จคือทีมใด (ในปี 1968)?',
+    options: ['Liverpool', 'Manchester United', 'Nottingham Forest', 'Aston Villa'],
+    correctIndex: 1,
+    explanation: 'Manchester United ของกุนซือ Sir Matt Busby เป็นทีมแรกของอังกฤษที่คว้าแชมป์ยูโรเปียนคัพในปี 1968 (ทีมแรกของสหราชอาณาจักรคือ Celtic ปี 1967)'
   }
 ];
 
