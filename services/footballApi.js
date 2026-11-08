@@ -1,54 +1,83 @@
-// Multi-Source Free Football API Engine:
-// 1. TheSportsDB API (Free key "123") -> Live player search, cutout photos, team badges, former teams
-// 2. Wikipedia REST API -> High-res club crests, player portrait thumbnails, Wikidata QID resolution
-// 3. Wikidata SPARQL API -> Complete career club history (P54), appearances (P1350), goals (P1351)
-// 4. FlagCDN -> Crisp country flag images (PNG) for all nationalities and leagues
+// 100% Live Football API Data Engine (2026-27 Season)
+// Sources (100% Free, No API Key Required):
+// 1. ESPN Soccer API v2/v3 -> Live 2026-27 clubs, 500px club logos, full active squad rosters,
+//    athlete career teamHistory (/bio), live 2026-27 match Starting XIs (/summary), and live 2026-27 Top 10 stats (/statistics)
+// 2. TheSportsDB API (Free Key "123") -> Player cutout/thumb photos, additional player search & former teams
+// 3. Wikipedia REST API & Wikidata SPARQL -> High-res player portraits & deep historical club verification
+// 4. FlagCDN -> Crisp country flag images for all nationalities
 
 const { LEAGUES, CLUBS, PLAYERS } = require('../data/footballData');
+const {
+  LINEUPS,
+  TOP10_LISTS,
+  CAREER_PATHS,
+  TRIVIA_QUESTIONS
+} = require('../data/quizModesData');
 
+const ESPN_SITE_API = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
+const ESPN_WEB_API = 'https://site.web.api.espn.com/apis/common/v3/sports/soccer';
+const ESPN_SEARCH_API = 'https://site.web.api.espn.com/apis/common/v3/search';
 const SPORTSDB_BASE = 'https://www.thesportsdb.com/api/v1/json/123';
 const WIKI_SUMMARY_BASE = 'https://en.wikipedia.org/api/rest_v1/page/summary';
 const WIKIDATA_SPARQL_URL = 'https://query.wikidata.org/sparql';
 
-const USER_AGENT = 'FootballQuizParty/2.0 (https://football-quiz-party.onrender.com)';
+const USER_AGENT = 'FootballQuizParty/3.0';
 
-// Verified default API badge URLs from TheSportsDB & Wikimedia Commons for instant startup availability
-const DEFAULT_CLUB_BADGES = {
-  man_utd: 'https://thumb.wikimedia.org/wikipedia/en/thumb/7/7a/Manchester_United_FC_crest.svg/330px-Manchester_United_FC_crest.svg.png',
-  liverpool: 'https://thumb.wikimedia.org/wikipedia/en/thumb/0/0c/Liverpool_FC.svg/330px-Liverpool_FC.svg.png',
-  arsenal: 'https://r2.thesportsdb.com/images/media/team/badge/uyhbfe1612467038.png',
-  chelsea: 'https://r2.thesportsdb.com/images/media/team/badge/pbf4ul1782638263.png',
-  man_city: 'https://thumb.wikimedia.org/wikipedia/en/thumb/e/eb/Manchester_City_FC_badge.svg/330px-Manchester_City_FC_badge.svg.png',
-  tottenham: 'https://thumb.wikimedia.org/wikipedia/en/thumb/b/b4/Tottenham_Hotspur.svg/330px-Tottenham_Hotspur.svg.png',
-  newcastle: 'https://thumb.wikimedia.org/wikipedia/en/thumb/8/87/Newcastle_United_FC_2026_crest.svg/330px-Newcastle_United_FC_2026_crest.svg.png',
-  aston_villa: 'https://r2.thesportsdb.com/images/media/team/badge/uwzw561787679026.png',
-  everton: 'https://r2.thesportsdb.com/images/media/team/badge/eqayrf1523184794.png',
-  west_ham: 'https://thumb.wikimedia.org/wikipedia/en/thumb/c/c2/West_Ham_United_FC_logo.svg/330px-West_Ham_United_FC_logo.svg.png',
-  real_madrid: 'https://thumb.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/330px-Real_Madrid_CF.svg.png',
-  barcelona: 'https://r2.thesportsdb.com/images/media/team/badge/wq9sir1639406443.png',
-  atletico: 'https://r2.thesportsdb.com/images/media/team/badge/0ulh3q1719984315.png',
-  sevilla: 'https://thumb.wikimedia.org/wikipedia/en/thumb/3/3b/Sevilla_FC_logo.svg/330px-Sevilla_FC_logo.svg.png',
-  valencia: 'https://thumb.wikimedia.org/wikipedia/en/thumb/c/ce/Valenciacf.svg/330px-Valenciacf.svg.png',
-  villarreal: 'https://thumb.wikimedia.org/wikipedia/en/thumb/b/b9/Villarreal_CF_logo-en.svg/330px-Villarreal_CF_logo-en.svg.png',
-  juventus: 'https://r2.thesportsdb.com/images/media/team/badge/uxf0gr1742983727.png',
-  ac_milan: 'https://r2.thesportsdb.com/images/media/team/badge/wvspur1448806617.png',
-  inter_milan: 'https://r2.thesportsdb.com/images/media/team/badge/ryhu6d1617113103.png',
-  roma: 'https://thumb.wikimedia.org/wikipedia/en/thumb/f/f7/AS_Roma_logo_%282017%29.svg/330px-AS_Roma_logo_%282017%29.svg.png',
-  napoli: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4d/SSC_Napoli_2025_%28white_and_azure%29.svg/330px-SSC_Napoli_2025_%28white_and_azure%29.svg.png',
-  lazio: 'https://thumb.wikimedia.org/wikipedia/en/thumb/c/ce/S.S._Lazio_badge.svg/330px-S.S._Lazio_badge.svg.png',
-  fiorentina: 'https://r2.thesportsdb.com/images/media/team/badge/hc8nhu1656098030.png',
-  bayern: 'https://r2.thesportsdb.com/images/media/team/badge/01ogkh1716960412.png',
-  dortmund: 'https://r2.thesportsdb.com/images/media/team/badge/tqo8ge1716960353.png',
-  leverkusen: 'https://r2.thesportsdb.com/images/media/team/badge/3x9k851726760113.png',
-  leipzig: 'https://thumb.wikimedia.org/wikipedia/en/thumb/0/04/RB_Leipzig_2014_logo.svg/330px-RB_Leipzig_2014_logo.svg.png',
-  psg: 'https://thumb.wikimedia.org/wikipedia/en/thumb/a/a7/Paris_Saint-Germain_F.C..svg/330px-Paris_Saint-Germain_F.C..svg.png',
-  monaco: 'https://thumb.wikimedia.org/wikipedia/en/thumb/c/cf/LogoASMonacoFC2021.svg/330px-LogoASMonacoFC2021.svg.png',
-  lyon: 'https://r2.thesportsdb.com/images/media/team/badge/blk9771656932845.png',
-  marseille: 'https://r2.thesportsdb.com/images/media/team/badge/c6bazh1779212287.png',
-  lille: 'https://r2.thesportsdb.com/images/media/team/badge/2giize1534005340.png'
+const LEAGUE_ESPN_SLUGS = {
+  premier_league: { slug: 'eng.1', name: 'Premier League', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', iso: 'gb-eng' },
+  la_liga: { slug: 'esp.1', name: 'La Liga', flag: '🇪🇸', iso: 'es' },
+  serie_a: { slug: 'ita.1', name: 'Serie A', flag: '🇮🇹', iso: 'it' },
+  bundesliga: { slug: 'ger.1', name: 'Bundesliga', flag: '🇩🇪', iso: 'de' },
+  ligue_1: { slug: 'fra.1', name: 'Ligue 1', flag: '🇫🇷', iso: 'fr' }
 };
 
-// Map nationality names to Flag Emoji + FlagCDN ISO code
+// Preserve Thai aliases and known past club links from initial seed data so Thai search & multi-club history work seamlessly
+const seedPlayerLookup = new Map();
+PLAYERS.forEach((p) => {
+  const norm = normalizeText(p.name);
+  seedPlayerLookup.set(norm, {
+    clubs: [...(p.clubs || [])],
+    aliases: [...(p.aliases || [])],
+    flag: p.flag
+  });
+});
+
+// Verified default API badge URLs for instant startup availability before async refresh finishes
+const DEFAULT_CLUB_BADGES = {
+  man_utd: 'https://a.espncdn.com/i/teamlogos/soccer/500/360.png',
+  liverpool: 'https://a.espncdn.com/i/teamlogos/soccer/500/364.png',
+  arsenal: 'https://a.espncdn.com/i/teamlogos/soccer/500/359.png',
+  chelsea: 'https://a.espncdn.com/i/teamlogos/soccer/500/363.png',
+  man_city: 'https://a.espncdn.com/i/teamlogos/soccer/500/382.png',
+  tottenham: 'https://a.espncdn.com/i/teamlogos/soccer/500/367.png',
+  newcastle: 'https://a.espncdn.com/i/teamlogos/soccer/500/361.png',
+  aston_villa: 'https://a.espncdn.com/i/teamlogos/soccer/500/362.png',
+  everton: 'https://a.espncdn.com/i/teamlogos/soccer/500/368.png',
+  west_ham: 'https://a.espncdn.com/i/teamlogos/soccer/500/371.png',
+  real_madrid: 'https://a.espncdn.com/i/teamlogos/soccer/500/86.png',
+  barcelona: 'https://a.espncdn.com/i/teamlogos/soccer/500/83.png',
+  atletico: 'https://a.espncdn.com/i/teamlogos/soccer/500/1068.png',
+  sevilla: 'https://a.espncdn.com/i/teamlogos/soccer/500/243.png',
+  valencia: 'https://a.espncdn.com/i/teamlogos/soccer/500/94.png',
+  villarreal: 'https://a.espncdn.com/i/teamlogos/soccer/500/102.png',
+  juventus: 'https://a.espncdn.com/i/teamlogos/soccer/500/111.png',
+  ac_milan: 'https://a.espncdn.com/i/teamlogos/soccer/500/103.png',
+  inter_milan: 'https://a.espncdn.com/i/teamlogos/soccer/500/110.png',
+  roma: 'https://a.espncdn.com/i/teamlogos/soccer/500/104.png',
+  napoli: 'https://a.espncdn.com/i/teamlogos/soccer/500/114.png',
+  lazio: 'https://a.espncdn.com/i/teamlogos/soccer/500/112.png',
+  fiorentina: 'https://a.espncdn.com/i/teamlogos/soccer/500/109.png',
+  bayern: 'https://a.espncdn.com/i/teamlogos/soccer/500/132.png',
+  dortmund: 'https://a.espncdn.com/i/teamlogos/soccer/500/124.png',
+  leverkusen: 'https://a.espncdn.com/i/teamlogos/soccer/500/131.png',
+  leipzig: 'https://a.espncdn.com/i/teamlogos/soccer/500/11420.png',
+  psg: 'https://a.espncdn.com/i/teamlogos/soccer/500/160.png',
+  monaco: 'https://a.espncdn.com/i/teamlogos/soccer/500/174.png',
+  lyon: 'https://a.espncdn.com/i/teamlogos/soccer/500/167.png',
+  marseille: 'https://a.espncdn.com/i/teamlogos/soccer/500/176.png',
+  lille: 'https://a.espncdn.com/i/teamlogos/soccer/500/166.png'
+};
+
 const NATIONALITY_MAP = {
   england: { flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', iso: 'gb-eng' },
   scotland: { flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', iso: 'gb-sct' },
@@ -132,6 +161,15 @@ Object.values(NATIONALITY_MAP).forEach((entry) => {
   EMOJI_TO_ISO[entry.flag] = entry.iso;
 });
 
+function normalizeText(str) {
+  return (str || '')
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
 function flagEmojiToIso(flagEmoji) {
   if (!flagEmoji) return null;
   const trimmed = flagEmoji.trim();
@@ -157,20 +195,26 @@ function getFlagUrlFromEmoji(flagEmoji) {
   return iso ? `https://flagcdn.com/w40/${iso}.png` : null;
 }
 
-function mapNationalityToFlagAndUrl(nat) {
-  if (!nat) return { flag: '⚽', flagUrl: null };
-  const key = nat.toString().trim().toLowerCase();
-  const matched = NATIONALITY_MAP[key];
-  if (matched) {
+function mapNationalityToFlagAndUrl(nat, espnFlagHref = null) {
+  if (nat) {
+    const key = nat.toString().trim().toLowerCase();
+    const matched = NATIONALITY_MAP[key];
+    if (matched) {
+      return {
+        flag: matched.flag,
+        flagUrl: `https://flagcdn.com/w40/${matched.iso}.png`
+      };
+    }
+  }
+  if (espnFlagHref) {
     return {
-      flag: matched.flag,
-      flagUrl: `https://flagcdn.com/w40/${matched.iso}.png`
+      flag: '🏳️',
+      flagUrl: espnFlagHref
     };
   }
-  return { flag: '🌐', flagUrl: null };
+  return { flag: '⚽', flagUrl: null };
 }
 
-// Synchronously initialize default badges & flagUrls so they are ready immediately
 CLUBS.forEach((c) => {
   if (!c.badgeUrl && DEFAULT_CLUB_BADGES[c.id]) {
     c.badgeUrl = DEFAULT_CLUB_BADGES[c.id];
@@ -190,22 +234,17 @@ PLAYERS.forEach((p) => {
 function mapPositionShort(pos) {
   if (!pos) return 'FW';
   const p = pos.toString().toLowerCase();
-  if (p.includes('goal') || p === 'gk' || p.includes('keeper')) return 'GK';
-  if (p.includes('defen') || p.includes('back') || p.includes('cb') || p.includes('lb') || p.includes('rb')) return 'DF';
-  if (p.includes('midfield') || p.includes('cm') || p.includes('dm') || p.includes('am') || p.includes('wing')) return 'MF';
+  if (p === 'g' || p === 'gk' || p.includes('goal') || p.includes('keeper')) return 'GK';
+  if (p === 'd' || p === 'df' || p.includes('defen') || p.includes('back') || p.includes('cb') || p.includes('lb') || p.includes('rb')) return 'DF';
+  if (p === 'm' || p === 'mf' || p.includes('midfield') || p.includes('cm') || p.includes('dm') || p.includes('am') || p.includes('wing')) return 'MF';
   return 'FW';
 }
 
-function normalizeText(str) {
-  return (str || '')
-    .toString()
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-}
-
-function mapApiTeamNameToClubId(teamName) {
+function mapApiTeamNameToClubId(teamName, espnTeamId = null) {
+  if (espnTeamId) {
+    const byEspn = CLUBS.find((c) => String(c.espnTeamId) === String(espnTeamId));
+    if (byEspn) return byEspn.id;
+  }
   const norm = normalizeText(teamName);
   if (!norm || norm.includes('retired') || norm.includes('free agent')) return null;
   if (norm.includes('national') || norm.includes('under-') || norm.includes('u21') || norm.includes('u19') || norm.includes('u23')) {
@@ -236,6 +275,7 @@ function mapApiTeamNameToClubId(teamName) {
   }
 
   if (norm.includes('paris sg') || norm.includes('paris saint')) return 'psg';
+  if (norm === 'paris fc') return null;
   if (norm === 'inter' || norm.includes('internazionale')) return 'inter_milan';
   if (norm.includes('bayern')) return 'bayern';
   if (norm.includes('dortmund')) return 'dortmund';
@@ -263,10 +303,18 @@ function mapApiTeamNameToClubId(teamName) {
   if (norm.includes('lazio')) return 'lazio';
   if (norm.includes('fiorentina')) return 'fiorentina';
 
+  // Fallback fuzzy match for newly added 2026-27 clubs in CLUBS
+  for (const club of CLUBS) {
+    const cName = normalizeText(club.name);
+    if (norm.length >= 5 && (cName.includes(norm) || norm.includes(cName))) {
+      return club.id;
+    }
+  }
+
   return null;
 }
 
-async function fetchJsonWithTimeout(url, timeoutMs = 3500) {
+async function fetchJsonWithTimeout(url, timeoutMs = 4000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -319,8 +367,14 @@ async function fetchWikidataCareerClubs(qid) {
   }));
 }
 
+// Fetch ESPN Athlete Bio (returns teamHistory across entire career!)
+async function fetchEspnAthleteBio(espnId) {
+  if (!espnId) return null;
+  return fetchJsonWithTimeout(`${ESPN_WEB_API}/athletes/${encodeURIComponent(espnId)}/bio`, 3000);
+}
+
 const searchCache = new Map();
-const photoCache = new Map(); // normalized player name -> photoUrl
+const photoCache = new Map();
 
 async function getPlayerPhotoByName(playerName) {
   if (!playerName) return null;
@@ -331,6 +385,19 @@ async function getPlayerPhotoByName(playerName) {
   if (localPlayer && localPlayer.photoUrl) {
     photoCache.set(norm, localPlayer.photoUrl);
     return localPlayer.photoUrl;
+  }
+
+  // Try TheSportsDB cutout first, then Wikipedia portrait
+  const q = playerName.trim().replace(/\s+/g, '_');
+  const sdb = await fetchJsonWithTimeout(`${SPORTSDB_BASE}/searchplayers.php?p=${encodeURIComponent(q)}`, 2500);
+  if (sdb && Array.isArray(sdb.player)) {
+    const sp = sdb.player.find((x) => x.strSport === 'Soccer');
+    const photo = sp?.strCutout || sp?.strThumb || sp?.strRender || null;
+    if (photo) {
+      photoCache.set(norm, photo);
+      if (localPlayer) localPlayer.photoUrl = photo;
+      return photo;
+    }
   }
 
   const wiki = await fetchWikipediaSummary(playerName);
@@ -344,6 +411,7 @@ async function getPlayerPhotoByName(playerName) {
   return photo;
 }
 
+// Live player search (ESPN Search API + TheSportsDB + Wikipedia photo enrichment)
 async function searchPlayersFromApi(query) {
   const cleanQ = (query || '').trim();
   if (cleanQ.length < 2) return [];
@@ -353,16 +421,65 @@ async function searchPlayersFromApi(query) {
     return searchCache.get(cacheKey);
   }
 
-  const apiQuery = cleanQ.replace(/\s+/g, '_');
-  const data = await fetchJsonWithTimeout(
-    `${SPORTSDB_BASE}/searchplayers.php?p=${encodeURIComponent(apiQuery)}`,
-    3000
-  );
-
   const results = [];
 
-  if (data && Array.isArray(data.player)) {
-    const soccerPlayers = data.player.filter((p) => p.strSport === 'Soccer').slice(0, 8);
+  // 1. Search ESPN Live Soccer Player API + TheSportsDB in parallel
+  const apiQuery = cleanQ.replace(/\s+/g, '_');
+  const [espnSearch, sdbData] = await Promise.all([
+    fetchJsonWithTimeout(
+      `${ESPN_SEARCH_API}?query=${encodeURIComponent(cleanQ)}&limit=8&type=player`,
+      2800
+    ),
+    fetchJsonWithTimeout(
+      `${SPORTSDB_BASE}/searchplayers.php?p=${encodeURIComponent(apiQuery)}`,
+      2800
+    )
+  ]);
+
+  if (espnSearch && Array.isArray(espnSearch.items)) {
+    const soccerItems = espnSearch.items.filter((it) => it.sport === 'soccer' && !it.isRetired).slice(0, 6);
+    for (const item of soccerItems) {
+      const espnId = String(item.id);
+      const natInfo = mapNationalityToFlagAndUrl(item.flag?.alt, item.flag?.href);
+      const teamLabel = (item.label || '').split(' - ')[1] || '';
+      const currentClubId = mapApiTeamNameToClubId(teamLabel);
+
+      let existing = PLAYERS.find(
+        (loc) => String(loc.espnId) === espnId || normalizeText(loc.name) === normalizeText(item.displayName)
+      );
+
+      if (existing) {
+        existing.espnId = espnId;
+        if (natInfo.flagUrl && !existing.flagUrl) existing.flagUrl = natInfo.flagUrl;
+        if (currentClubId && !existing.clubs.includes(currentClubId)) {
+          existing.clubs.push(currentClubId);
+        }
+        results.push(existing);
+      } else {
+        const seed = seedPlayerLookup.get(normalizeText(item.displayName));
+        const clubs = Array.from(new Set([...(currentClubId ? [currentClubId] : []), ...(seed?.clubs || [])]));
+        const newPlayer = {
+          id: 'espn_' + espnId,
+          espnId,
+          name: item.displayName.trim(),
+          flag: seed?.flag || natInfo.flag,
+          flagUrl: natInfo.flagUrl,
+          photoUrl: null,
+          position: 'FW',
+          clubs,
+          rawTeams: teamLabel ? [teamLabel] : [],
+          aliases: seed?.aliases || (item.shortName ? [item.shortName] : []),
+          fromLiveApi: true,
+          apiSynced: false
+        };
+        PLAYERS.push(newPlayer);
+        results.push(newPlayer);
+      }
+    }
+  }
+
+  if (sdbData && Array.isArray(sdbData.player)) {
+    const soccerPlayers = sdbData.player.filter((p) => p.strSport === 'Soccer').slice(0, 6);
     for (const p of soccerPlayers) {
       const photoUrl = p.strCutout || p.strThumb || p.strRender || null;
       const natInfo = mapNationalityToFlagAndUrl(p.strNationality);
@@ -374,25 +491,30 @@ async function searchPlayersFromApi(query) {
 
       if (existing) {
         existing.apiId = p.idPlayer;
-        if (photoUrl) existing.photoUrl = photoUrl;
+        if (photoUrl) {
+          existing.photoUrl = photoUrl;
+          photoCache.set(normalizeText(existing.name), photoUrl);
+        }
         if (natInfo.flagUrl && !existing.flagUrl) existing.flagUrl = natInfo.flagUrl;
         if (currentClubId && !existing.clubs.includes(currentClubId)) {
           existing.clubs.push(currentClubId);
         }
-        if (photoUrl) photoCache.set(normalizeText(existing.name), photoUrl);
-        results.push(existing);
+        if (!results.some((r) => r.id === existing.id)) {
+          results.push(existing);
+        }
       } else {
+        const seed = seedPlayerLookup.get(normalizeText(p.strPlayer));
         const newPlayer = {
           id: 'api_' + p.idPlayer,
           apiId: p.idPlayer,
           name: p.strPlayer.trim(),
-          flag: natInfo.flag,
+          flag: seed?.flag || natInfo.flag,
           flagUrl: natInfo.flagUrl,
           photoUrl,
           position: mapPositionShort(p.strPosition),
-          clubs: currentClubId ? [currentClubId] : [],
+          clubs: Array.from(new Set([...(currentClubId ? [currentClubId] : []), ...(seed?.clubs || [])])),
           rawTeams: p.strTeam && !p.strTeam.includes('Retired') ? [p.strTeam] : [],
-          aliases: [],
+          aliases: seed?.aliases || [],
           fromLiveApi: true,
           apiSynced: false
         };
@@ -403,7 +525,7 @@ async function searchPlayersFromApi(query) {
     }
   }
 
-  // Also enrich matching local players with photos via Wikipedia REST API
+  // Enrich top local/live matches missing photos via Wikipedia REST API
   const localMatches = PLAYERS.filter((p) => {
     const n = normalizeText(p.name);
     const aliasMatch = p.aliases && p.aliases.some((a) => normalizeText(a).includes(cacheKey));
@@ -432,84 +554,98 @@ async function searchPlayersFromApi(query) {
   return results;
 }
 
+// Enrich a player's full club history (ESPN /bio teamHistory + TheSportsDB + Wikidata) and photoUrl
 async function enrichPlayerClubHistory(playerObj, rawNameQuery) {
   try {
-    let targetApiId = playerObj?.apiId || null;
-    let apiPlayerRecord = null;
     const queryName = (playerObj ? playerObj.name : rawNameQuery || '').trim();
 
-    if (!targetApiId && queryName) {
-      const q = queryName.replace(/\s+/g, '_');
-      const searchData = await fetchJsonWithTimeout(
-        `${SPORTSDB_BASE}/searchplayers.php?p=${encodeURIComponent(q)}`,
-        2800
-      );
-      if (searchData && Array.isArray(searchData.player)) {
-        apiPlayerRecord = searchData.player.find((p) => p.strSport === 'Soccer');
-        if (apiPlayerRecord) {
-          targetApiId = apiPlayerRecord.idPlayer;
-        }
+    // If player not yet in memory, search live APIs first
+    if (!playerObj && queryName) {
+      const found = await searchPlayersFromApi(queryName);
+      if (found.length > 0) {
+        playerObj =
+          found.find((p) => normalizeText(p.name) === normalizeText(queryName)) || found[0];
       }
     }
 
-    if (!playerObj && apiPlayerRecord) {
-      const currentClubId = mapApiTeamNameToClubId(apiPlayerRecord.strTeam);
-      const natInfo = mapNationalityToFlagAndUrl(apiPlayerRecord.strNationality);
-      playerObj = {
-        id: 'api_' + apiPlayerRecord.idPlayer,
-        apiId: apiPlayerRecord.idPlayer,
-        name: apiPlayerRecord.strPlayer.trim(),
-        flag: natInfo.flag,
-        flagUrl: natInfo.flagUrl,
-        photoUrl: apiPlayerRecord.strCutout || apiPlayerRecord.strThumb || null,
-        position: mapPositionShort(apiPlayerRecord.strPosition),
-        clubs: currentClubId ? [currentClubId] : [],
-        rawTeams:
-          apiPlayerRecord.strTeam && !apiPlayerRecord.strTeam.includes('Retired')
-            ? [apiPlayerRecord.strTeam]
-            : [],
-        aliases: [],
-        fromLiveApi: true,
-        apiSynced: false
-      };
-      PLAYERS.push(playerObj);
-    }
-
-    if (!playerObj) {
-      if (queryName) {
-        await getPlayerPhotoByName(queryName);
-      }
-      return null;
-    }
+    if (!playerObj) return null;
 
     if (!playerObj.flagUrl) {
       playerObj.flagUrl = getFlagUrlFromEmoji(playerObj.flag);
     }
 
-    if (apiPlayerRecord) {
-      playerObj.apiId = targetApiId;
-      const photo = apiPlayerRecord.strCutout || apiPlayerRecord.strThumb || apiPlayerRecord.strRender;
-      if (photo) {
-        playerObj.photoUrl = photo;
-        photoCache.set(normalizeText(playerObj.name), photo);
-      }
-      if (apiPlayerRecord.strTeam) {
-        const curId = mapApiTeamNameToClubId(apiPlayerRecord.strTeam);
-        if (curId && !playerObj.clubs.includes(curId)) {
-          playerObj.clubs.push(curId);
-        }
-      }
-    }
-
     if (!playerObj.apiSynced) {
       const tasks = [];
 
-      if (targetApiId) {
-        tasks.push(
-          fetchJsonWithTimeout(
-            `${SPORTSDB_BASE}/lookupformerteams.php?id=${encodeURIComponent(targetApiId)}`,
-            2800
-          ).then((formerData) => {
+      // 1. ESPN Bio teamHistory (fastest & most accurate 2026-27 career club list!)
+      tasks.push(
+        (async () => {
+          let espnId = playerObj.espnId;
+          if (!espnId) {
+            const sData = await fetchJsonWithTimeout(
+              `${ESPN_SEARCH_API}?query=${encodeURIComponent(playerObj.name)}&limit=3&type=player`,
+              2400
+            );
+            const matchItem = sData?.items?.find((it) => it.sport === 'soccer');
+            if (matchItem) {
+              espnId = String(matchItem.id);
+              playerObj.espnId = espnId;
+              if (matchItem.flag?.href && !playerObj.flagUrl) {
+                playerObj.flagUrl = matchItem.flag.href;
+              }
+            }
+          }
+          if (espnId) {
+            const bio = await fetchEspnAthleteBio(espnId);
+            if (bio && Array.isArray(bio.teamHistory)) {
+              if (!playerObj.rawTeams) playerObj.rawTeams = [];
+              bio.teamHistory.forEach((th) => {
+                // Skip national teams (slugs without a dot like 'esp', 'eng', 'fra') unless club
+                const isNational = th.slug && !th.slug.includes('.');
+                if (isNational) return;
+                if (th.displayName && !playerObj.rawTeams.includes(th.displayName)) {
+                  playerObj.rawTeams.push(th.displayName);
+                }
+                const cid = mapApiTeamNameToClubId(th.displayName, th.id);
+                if (cid && !playerObj.clubs.includes(cid)) {
+                  playerObj.clubs.push(cid);
+                }
+              });
+            }
+          }
+        })()
+      );
+
+      // 2. TheSportsDB photo + former teams
+      tasks.push(
+        (async () => {
+          let targetApiId = playerObj.apiId;
+          if (!targetApiId) {
+            const q = playerObj.name.replace(/\s+/g, '_');
+            const sdb = await fetchJsonWithTimeout(
+              `${SPORTSDB_BASE}/searchplayers.php?p=${encodeURIComponent(q)}`,
+              2500
+            );
+            const rec = sdb?.player?.find((p) => p.strSport === 'Soccer');
+            if (rec) {
+              targetApiId = rec.idPlayer;
+              playerObj.apiId = targetApiId;
+              const photo = rec.strCutout || rec.strThumb || rec.strRender;
+              if (photo) {
+                playerObj.photoUrl = photo;
+                photoCache.set(normalizeText(playerObj.name), photo);
+              }
+              const curCid = mapApiTeamNameToClubId(rec.strTeam);
+              if (curCid && !playerObj.clubs.includes(curCid)) {
+                playerObj.clubs.push(curCid);
+              }
+            }
+          }
+          if (targetApiId) {
+            const formerData = await fetchJsonWithTimeout(
+              `${SPORTSDB_BASE}/lookupformerteams.php?id=${encodeURIComponent(targetApiId)}`,
+              2500
+            );
             if (formerData && Array.isArray(formerData.formerteams)) {
               if (!playerObj.rawTeams) playerObj.rawTeams = [];
               formerData.formerteams.forEach((ft) => {
@@ -523,10 +659,11 @@ async function enrichPlayerClubHistory(playerObj, rawNameQuery) {
                 }
               });
             }
-          })
-        );
-      }
+          }
+        })()
+      );
 
+      // 3. Wikipedia photo + Wikidata SPARQL career clubs
       tasks.push(
         (async () => {
           const wiki = await fetchWikipediaSummary(playerObj.name);
@@ -563,45 +700,371 @@ async function enrichPlayerClubHistory(playerObj, rawNameQuery) {
   }
 }
 
-async function initializeFootballApiData() {
-  // Refresh club badges from TheSportsDB in background
-  const leagueMap = {
-    premier_league: 'English Premier League',
-    la_liga: 'Spanish La Liga',
-    serie_a: 'Italian Serie A',
-    bundesliga: 'German Bundesliga',
-    ligue_1: 'French Ligue 1'
+// Convert 11 ESPN starters into visual pitch slots (row 1..4, col 1..5)
+function buildPitchSlotsFromEspnStarters(starters) {
+  const gk = [];
+  const df = [];
+  const mf = [];
+  const fw = [];
+
+  starters.slice(0, 11).forEach((s) => {
+    const pos = mapPositionShort(s.position?.abbreviation || s.position?.name);
+    if (pos === 'GK' && gk.length === 0) gk.push(s);
+    else if (pos === 'DF') df.push(s);
+    else if (pos === 'MF') mf.push(s);
+    else fw.push(s);
+  });
+
+  // Balance rows if needed
+  const assignCols = (count) => {
+    if (count === 1) return [3];
+    if (count === 2) return [2, 4];
+    if (count === 3) return [1, 3, 5];
+    if (count === 4) return [1, 2, 4, 5];
+    return [1, 2, 3, 4, 5].slice(0, count);
   };
 
-  for (const [, apiLeagueName] of Object.entries(leagueMap)) {
-    const data = await fetchJsonWithTimeout(
-      `${SPORTSDB_BASE}/search_all_teams.php?l=${encodeURIComponent(apiLeagueName)}`,
-      3500
-    );
-    if (data && Array.isArray(data.teams)) {
-      data.teams.forEach((t) => {
-        const cid = mapApiTeamNameToClubId(t.strTeam) || mapApiTeamNameToClubId(t.strTeamAlternate);
-        if (cid) {
-          const clubObj = CLUBS.find((c) => c.id === cid);
-          if (clubObj && t.strBadge) {
-            clubObj.badgeUrl = t.strBadge;
-          }
-        }
+  const slots = [];
+  const pushRow = (group, rowNum) => {
+    const cols = assignCols(group.length);
+    group.forEach((item, idx) => {
+      const ath = item.athlete || {};
+      const name = ath.displayName || ath.fullName || 'Unknown';
+      const lastName = ath.lastName || name.split(' ').slice(-1)[0];
+      const seed = seedPlayerLookup.get(normalizeText(name));
+      const flagUrl = ath.flag?.href || (seed?.flag ? getFlagUrlFromEmoji(seed.flag) : null);
+      slots.push({
+        slotId: `s_${rowNum}_${idx + 1}`,
+        pos: item.position?.abbreviation || mapPositionShort(item.position?.name),
+        number: item.jersey || idx + 1,
+        flag: seed?.flag || '⚽',
+        flagUrl,
+        row: rowNum,
+        col: cols[idx] || idx + 1,
+        playerId: name,
+        aliases: Array.from(new Set([lastName.toLowerCase(), ...(seed?.aliases || [])]))
       });
-    }
-  }
+    });
+  };
 
-  // Pre-warm photos for top 50 players in background
-  const topStars = PLAYERS.slice(0, 50);
-  for (const star of topStars) {
-    if (!star.photoUrl) {
-      const wiki = await fetchWikipediaSummary(star.name);
-      if (wiki && wiki.thumbnail?.source) {
-        star.photoUrl = wiki.thumbnail.source;
-        photoCache.set(normalizeText(star.name), star.photoUrl);
+  pushRow(gk.length ? gk : starters.slice(0, 1), 4);
+  pushRow(df, 3);
+  pushRow(mf, 2);
+  pushRow(fw, 1);
+
+  return slots;
+}
+
+// Master Startup Loader: Replaces static datasets with 100% Live 2026-27 Season Data from ESPN + TheSportsDB + Wikipedia
+async function initializeFootballApiData() {
+  console.log('🌐 Syncing 100% Live 2026-27 Season Data from ESPN Soccer API & TheSportsDB...');
+
+  // 1. Fetch all 2026-27 Clubs across the 5 Major European Leagues from ESPN
+  const leagueEntries = Object.entries(LEAGUE_ESPN_SLUGS);
+  const leagueTeamResponses = await Promise.all(
+    leagueEntries.map(async ([leagueId, meta]) => {
+      const data = await fetchJsonWithTimeout(`${ESPN_SITE_API}/${meta.slug}/teams`, 5000);
+      return { leagueId, meta, teams: data?.sports?.[0]?.leagues?.[0]?.teams || [] };
+    })
+  );
+
+  const espnTeamsToFetchRosters = [];
+
+  for (const { leagueId, teams } of leagueTeamResponses) {
+    for (const wrapper of teams) {
+      const t = wrapper.team;
+      if (!t) continue;
+      const logo = t.logos?.[0]?.href || null;
+      const cid = mapApiTeamNameToClubId(t.displayName || t.name);
+
+      if (cid) {
+        const clubObj = CLUBS.find((c) => c.id === cid);
+        if (clubObj) {
+          clubObj.espnTeamId = t.id;
+          clubObj.espnLeagueSlug = LEAGUE_ESPN_SLUGS[leagueId].slug;
+          if (logo) clubObj.badgeUrl = logo;
+          if (t.color) clubObj.primaryColor = '#' + t.color;
+          espnTeamsToFetchRosters.push({ clubObj, espnTeamId: t.id, slug: LEAGUE_ESPN_SLUGS[leagueId].slug });
+        }
+      } else {
+        // Add any additional 2026-27 club from the Top 5 Leagues so all current clubs are playable!
+        const newId = 'club_' + t.id;
+        if (!CLUBS.some((c) => c.id === newId)) {
+          const newClub = {
+            id: newId,
+            espnTeamId: t.id,
+            espnLeagueSlug: LEAGUE_ESPN_SLUGS[leagueId].slug,
+            name: t.displayName || t.name,
+            nameTh: t.shortDisplayName || t.name,
+            short: t.abbreviation || t.name.slice(0, 3).toUpperCase(),
+            league: leagueId,
+            primaryColor: t.color ? '#' + t.color : '#10b981',
+            secondaryColor: t.alternateColor ? '#' + t.alternateColor : '#1e293b',
+            badgeUrl: logo,
+            aliases: [t.name.toLowerCase(), (t.shortDisplayName || '').toLowerCase(), (t.abbreviation || '').toLowerCase()].filter(Boolean)
+          };
+          CLUBS.push(newClub);
+          espnTeamsToFetchRosters.push({ clubObj: newClub, espnTeamId: t.id, slug: LEAGUE_ESPN_SLUGS[leagueId].slug });
+        }
       }
     }
   }
+
+  // 2. Fetch Live 2026-27 Active Squad Rosters for all clubs across the 5 leagues
+  const livePlayerMap = new Map();
+  const batchSize = 12;
+  for (let i = 0; i < espnTeamsToFetchRosters.length; i += batchSize) {
+    const batch = espnTeamsToFetchRosters.slice(i, i + batchSize);
+    await Promise.allSettled(
+      batch.map(async ({ clubObj, espnTeamId, slug }) => {
+        const rosterData = await fetchJsonWithTimeout(
+          `${ESPN_SITE_API}/${slug}/teams/${espnTeamId}/roster`,
+          5000
+        );
+        if (!rosterData || !Array.isArray(rosterData.athletes)) return;
+
+        for (const ath of rosterData.athletes) {
+          const espnId = String(ath.id);
+          const fullName = (ath.displayName || ath.fullName || '').trim();
+          if (!fullName) continue;
+
+          const normName = normalizeText(fullName);
+          const seed = seedPlayerLookup.get(normName);
+          const natInfo = mapNationalityToFlagAndUrl(ath.flag?.alt || ath.citizenship, ath.flag?.href);
+          const pos = mapPositionShort(ath.position?.abbreviation || ath.position?.name);
+
+          if (!livePlayerMap.has(normName)) {
+            const clubs = Array.from(new Set([clubObj.id, ...(seed?.clubs || [])]));
+            const aliases = Array.from(
+              new Set([
+                ...(seed?.aliases || []),
+                ...(ath.lastName ? [ath.lastName.toLowerCase()] : []),
+                ...(ath.shortName ? [ath.shortName.toLowerCase()] : [])
+              ])
+            );
+            livePlayerMap.set(normName, {
+              id: 'espn_' + espnId,
+              espnId,
+              name: fullName,
+              flag: seed?.flag || natInfo.flag,
+              flagUrl: natInfo.flagUrl || (seed?.flag ? getFlagUrlFromEmoji(seed.flag) : null),
+              photoUrl: ath.headshot?.href || null,
+              position: pos,
+              clubs,
+              rawTeams: [clubObj.name],
+              aliases,
+              fromLiveApi: true,
+              apiSynced: false
+            });
+          } else {
+            const existing = livePlayerMap.get(normName);
+            if (!existing.clubs.includes(clubObj.id)) {
+              existing.clubs.push(clubObj.id);
+            }
+          }
+        }
+      })
+    );
+  }
+
+  if (livePlayerMap.size > 100) {
+    PLAYERS.length = 0;
+    livePlayerMap.forEach((p) => PLAYERS.push(p));
+    console.log(`✅ Replaced PLAYERS with ${PLAYERS.length} live 2026-27 active players across ${CLUBS.length} clubs!`);
+  }
+
+  // 3. Fetch Live 2026-27 Season Top 10 Leaderboards (Goals & Assists) from ESPN Statistics API
+  const statLeagues = [
+    { slug: 'eng.1', titlePrefix: 'พรีเมียร์ลีก อังกฤษ', badge: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League' },
+    { slug: 'esp.1', titlePrefix: 'ลาลีกา สเปน', badge: '🇪🇸 La Liga' },
+    { slug: 'ita.1', titlePrefix: 'กัลโช่ เซเรียอา อิตาลี', badge: '🇮🇹 Serie A' },
+    { slug: 'ger.1', titlePrefix: 'บุนเดสลีกา เยอรมนี', badge: '🇩🇪 Bundesliga' },
+    { slug: 'fra.1', titlePrefix: 'ลีกเอิง ฝรั่งเศส', badge: '🇫🇷 Ligue 1' },
+    { slug: 'uefa.champions', titlePrefix: 'ยูฟ่า แชมเปียนส์ลีก (UCL)', badge: '🏆 UEFA Champions League' }
+  ];
+
+  const liveTop10Lists = [];
+  await Promise.allSettled(
+    statLeagues.map(async (lg) => {
+      const stData = await fetchJsonWithTimeout(`${ESPN_SITE_API}/${lg.slug}/statistics`, 5000);
+      if (!stData || !Array.isArray(stData.stats)) return;
+      const seasonLabel = stData.season?.abbreviation || '2026-27';
+
+      const goalsCat = stData.stats.find((s) => s.name === 'goalsLeaders');
+      if (goalsCat && Array.isArray(goalsCat.leaders) && goalsCat.leaders.length >= 10) {
+        liveTop10Lists.push({
+          id: `live_goals_${lg.slug.replace('.', '_')}`,
+          title: `10 อันดับดาวซัลโว ${lg.titlePrefix} ฤดูกาลล่าสุด (${seasonLabel})`,
+          category: `${lg.badge} ${seasonLabel} Top Goalscorers (Live API)`,
+          items: goalsCat.leaders.slice(0, 10).map((ldr, idx) => {
+            const ath = ldr.athlete || {};
+            const name = ath.displayName || 'Unknown';
+            const seed = seedPlayerLookup.get(normalizeText(name));
+            const natInfo = mapNationalityToFlagAndUrl(ath.flag?.alt, ath.flag?.href);
+            const teamName = ath.team?.shortDisplayName || ath.team?.name || '';
+            return {
+              rank: idx + 1,
+              name,
+              flag: seed?.flag || natInfo.flag,
+              flagUrl: natInfo.flagUrl,
+              stat: `${ldr.value} ประตู (${teamName})`,
+              points: 1,
+              aliases: Array.from(new Set([ath.lastName?.toLowerCase() || '', ...(seed?.aliases || [])].filter(Boolean)))
+            };
+          })
+        });
+      }
+
+      const assistsCat = stData.stats.find((s) => s.name === 'assistsLeaders');
+      if (assistsCat && Array.isArray(assistsCat.leaders) && assistsCat.leaders.length >= 10) {
+        liveTop10Lists.push({
+          id: `live_assists_${lg.slug.replace('.', '_')}`,
+          title: `10 อันดับจอมแอสซิสต์ ${lg.titlePrefix} ฤดูกาลล่าสุด (${seasonLabel})`,
+          category: `${lg.badge} ${seasonLabel} Top Assists (Live API)`,
+          items: assistsCat.leaders.slice(0, 10).map((ldr, idx) => {
+            const ath = ldr.athlete || {};
+            const name = ath.displayName || 'Unknown';
+            const seed = seedPlayerLookup.get(normalizeText(name));
+            const natInfo = mapNationalityToFlagAndUrl(ath.flag?.alt, ath.flag?.href);
+            const teamName = ath.team?.shortDisplayName || ath.team?.name || '';
+            return {
+              rank: idx + 1,
+              name,
+              flag: seed?.flag || natInfo.flag,
+              flagUrl: natInfo.flagUrl,
+              stat: `${ldr.value} แอสซิสต์ (${teamName})`,
+              points: 1,
+              aliases: Array.from(new Set([ath.lastName?.toLowerCase() || '', ...(seed?.aliases || [])].filter(Boolean)))
+            };
+          })
+        });
+      }
+    })
+  );
+
+  if (liveTop10Lists.length > 0) {
+    TOP10_LISTS.length = 0;
+    liveTop10Lists.forEach((l) => TOP10_LISTS.push(l));
+    console.log(`✅ Replaced TOP10_LISTS with ${TOP10_LISTS.length} live 2026-27 leaderboards!`);
+  }
+
+  // 4. Fetch Live 2026-27 Match Lineups (11 Starting XI) from ESPN Scoreboard + Summary API
+  const liveLineups = [];
+  for (const lg of statLeagues.slice(0, 5)) {
+    const sb = await fetchJsonWithTimeout(`${ESPN_SITE_API}/${lg.slug}/scoreboard`, 4500);
+    const events = (sb?.events || []).slice(0, 2);
+    for (const ev of events) {
+      const sum = await fetchJsonWithTimeout(`${ESPN_SITE_API}/${lg.slug}/summary?event=${ev.id}`, 4500);
+      if (!sum || !Array.isArray(sum.rosters)) continue;
+      for (const r of sum.rosters) {
+        const starters = (r.roster || []).filter((x) => x.starter);
+        if (starters.length === 11) {
+          const teamName = r.team?.displayName || 'Team';
+          const oppTeam = sum.rosters.find((o) => o !== r)?.team?.displayName || '';
+          const formation = r.formation || '4-3-3';
+          const slots = buildPitchSlotsFromEspnStarters(starters);
+          liveLineups.push({
+            id: `live_xi_${ev.id}_${r.team?.id}`,
+            title: `${teamName} - 11 ตัวจริงชุดล่าสุด (พบ ${oppTeam})`,
+            subtitle: `ระบบ ${formation} • ${lg.titlePrefix} (Live API 2026-27)`,
+            formation,
+            clubColor: r.team?.color ? '#' + r.team.color : '#059669',
+            slots
+          });
+        }
+      }
+    }
+  }
+
+  if (liveLineups.length > 0) {
+    LINEUPS.length = 0;
+    liveLineups.forEach((l) => LINEUPS.push(l));
+    console.log(`✅ Replaced LINEUPS with ${LINEUPS.length} live 2026-27 match Starting XIs!`);
+  }
+
+  // 5. Enrich Career Histories (teamHistory) for Top Active Multi-Club Players & Build Live Career Path Puzzles
+  const featuredStars = PLAYERS.filter((p) => seedPlayerLookup.has(normalizeText(p.name))).slice(0, 24);
+  const liveCareerPaths = [];
+
+  await Promise.allSettled(
+    featuredStars.map(async (star) => {
+      if (!star.espnId) return;
+      const bio = await fetchEspnAthleteBio(star.espnId);
+      if (bio && Array.isArray(bio.teamHistory)) {
+        const clubSteps = [];
+        bio.teamHistory.forEach((th) => {
+          const isNational = th.slug && !th.slug.includes('.');
+          if (isNational) return;
+          const cid = mapApiTeamNameToClubId(th.displayName, th.id);
+          if (cid && !star.clubs.includes(cid)) {
+            star.clubs.push(cid);
+          }
+          clubSteps.push({
+            years: th.seasons || '-',
+            club: th.displayName,
+            clubBadgeUrl: th.logo || null,
+            apps: `${th.seasonCount || 1} ฤดูกาล`,
+            goals: 'ชุดใหญ่'
+          });
+        });
+
+        if (clubSteps.length >= 2 && liveCareerPaths.length < 15) {
+          liveCareerPaths.push({
+            id: `live_cp_${star.espnId}`,
+            answerName: star.name,
+            flag: star.flag,
+            flagUrl: star.flagUrl,
+            position: star.position,
+            aliases: star.aliases || [],
+            hint: `นักเตะชุดปัจจุบันในศึก 5 ลีกใหญ่ยุโรป ฤดูกาล 2026-27 (ข้อมูลสดจาก Live API)`,
+            steps: [...clubSteps].reverse()
+          });
+        }
+      }
+    })
+  );
+
+  if (liveCareerPaths.length >= 4) {
+    CAREER_PATHS.length = 0;
+    liveCareerPaths.forEach((cp) => CAREER_PATHS.push(cp));
+    console.log(`✅ Replaced CAREER_PATHS with ${CAREER_PATHS.length} live 2026-27 player career timelines!`);
+  }
+
+  // 6. Build Live 2026-27 Trivia Questions from the live leaderboards
+  if (liveTop10Lists.length >= 2) {
+    const liveTrivia = [];
+    liveTop10Lists.forEach((list, idx) => {
+      if (list.items.length >= 4) {
+        const top1 = list.items[0];
+        const opts = [top1.name, list.items[1].name, list.items[2].name, list.items[3].name];
+        const correctName = top1.name;
+        const shuffled = [...opts].sort((a, b) => a.localeCompare(b));
+        const correctIdx = shuffled.indexOf(correctName);
+        liveTrivia.push({
+          id: `live_tr_${idx + 1}`,
+          question: `[Live 2026-27] ใครคือผู้นำอันดับ 1 ในหัวข้อ "${list.title}" ณ ปัจจุบันด้วยสถิติ ${top1.stat}?`,
+          options: shuffled,
+          correctIndex: correctIdx,
+          explanation: `${top1.name} นำเป็นอันดับ 1 ในฤดูกาลล่าสุดด้วยสถิติ ${top1.stat}`
+        });
+      }
+    });
+    if (liveTrivia.length >= 4) {
+      TRIVIA_QUESTIONS.length = 0;
+      liveTrivia.forEach((q) => TRIVIA_QUESTIONS.push(q));
+      console.log(`✅ Replaced TRIVIA_QUESTIONS with ${TRIVIA_QUESTIONS.length} live 2026-27 season trivia questions!`);
+    }
+  }
+
+  // 7. Pre-warm photos for top 24 players in background (non-blocking)
+  (async () => {
+    const topPhotoTargets = PLAYERS.slice(0, 24);
+    for (const p of topPhotoTargets) {
+      if (!p.photoUrl) {
+        await getPlayerPhotoByName(p.name);
+      }
+    }
+  })();
 }
 
 module.exports = {

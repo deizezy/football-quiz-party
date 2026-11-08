@@ -324,7 +324,7 @@ function serializeModeDataForClients(room) {
         const clubObj = cid ? CLUBS.find((c) => c.id === cid) : null;
         return {
           ...st,
-          clubBadgeUrl: clubObj?.badgeUrl || null
+          clubBadgeUrl: st.clubBadgeUrl || clubObj?.badgeUrl || null
         };
       }),
       answerName: isRevealed ? cp.answerName : null,
@@ -347,12 +347,13 @@ function serializeModeDataForClients(room) {
   if (mode === 'footy_grid') {
     const grid = FOOTY_GRIDS.find((g) => g.id === room.currentGridId) || FOOTY_GRIDS[0];
     const enrichHeader = (hdr) => {
+      const targetVal = hdr.id || hdr.value;
       if (hdr.type === 'club') {
-        const clubObj = CLUBS.find((c) => c.id === hdr.value);
+        const clubObj = CLUBS.find((c) => c.id === targetVal);
         return { ...hdr, badgeUrl: clubObj?.badgeUrl || null };
       }
       if (hdr.type === 'flag') {
-        return { ...hdr, flagUrl: getFlagUrlFromEmoji(hdr.value) };
+        return { ...hdr, flagUrl: getFlagUrlFromEmoji(targetVal) };
       }
       return hdr;
     };

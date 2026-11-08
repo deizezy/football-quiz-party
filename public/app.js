@@ -171,7 +171,7 @@ async function apiAction(action, payload = {}) {
   return res.json();
 }
 
-async function loadDatabase() {
+async function loadDatabase(isRetry = false) {
   const res = await fetch('/api/data');
   const data = await res.json();
   state.leagues = data.leagues || [];
@@ -179,6 +179,11 @@ async function loadDatabase() {
   state.players = data.players || [];
   renderLeagueTabs();
   renderClubsGrid();
+
+  // If server is still syncing all 96 live clubs on cold start, re-fetch once after 4s
+  if (!isRetry && state.clubs.length <= 35) {
+    setTimeout(() => loadDatabase(true), 4000);
+  }
 }
 
 function initHomeUI() {
