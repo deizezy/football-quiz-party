@@ -1,0 +1,12 @@
+{
+  "name": "football-club-quiz",
+  "version": "1.0.0",
+  "description": "Online Multiplayer Football Club Player Guessing Game (Top 5 European Leagues)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["football", "quiz", "multiplayer", "game"],
+  "license": "MIT"
+}

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⚽ Football Quiz Party Hub - 6 โหมดเกมทายฟุตบอลออนไลน์</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="bg-stadium"></div>
+  <div id="confettiContainer" class="confetti-container"></div>
+  <div id="floatingReactions" class="floating-reactions"></div>
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- SCREEN 1: HOME / CREATE OR JOIN ROOM -->
+  <main id="homeScreen" class="screen active">
+    <div class="hero-card">
+      <div class="badge-top">🏆 6-IN-1 FOOTBALL QUIZ PARTY HUB</div>
+      <h1 class="game-title">FOOTBALL QUIZ <span>PARTY</span></h1>
+      <p class="game-subtitle">
+        ศูนย์รวมเกมทายฟุตบอลออนไลน์ 6 โหมด: ทายนักเตะสโมสร • ผัง 11 ตัวจริง • ท็อป 10 สถิติ • เส้นทางค้าแข้ง • ควิซ 4 ตัวเลือก • ตาราง XO 3x3
+      </p>
+
+      <div class="profile-setup">
+        <label class="field-label">ชื่อผู้เล่นของคุณ</label>
+        <input type="text" id="playerNameInput" class="text-input" placeholder="เช่น โค้ชเตี้ย, เทพเมสซี่..." maxlength="20" />
+
+        <label class="field-label" style="margin-top: 14px;">เลือกไอคอนประจำตัว</label>
+        <div id="avatarPicker" class="avatar-picker"></div>
+      </div>
+
+      <div class="home-actions">
+        <button id="createRoomBtn" class="btn btn-primary btn-lg">
+          <span>🏟️ สร้างห้องปาร์ตี้ใหม่ (Create Room)</span>
+        </button>
+
+        <div class="divider"><span>หรือเข้าร่วมห้องเพื่อน</span></div>
+
+        <div class="join-row">
+          <input type="text" id="joinCodeInput" class="text-input code-input" placeholder="รหัสห้อง 5 ตัวอักษร" maxlength="6" />
+          <button id="joinRoomBtn" class="btn btn-accent">เข้าร่วม 🚀</button>
+        </div>
+      </div>
+
+      <div class="league-pills">
+        <span>🏟️ ทายสโมสร</span>
+        <span>📋 ผัง 11 ตัวจริง</span>
+        <span>📊 ท็อป 10 สถิติ</span>
+        <span>🕵️‍♂️ เส้นทางค้าแข้ง</span>
+        <span>⚡ ควิซ 4 ตัวเลือก</span>
+        <span>🔢 ตาราง XO 3x3</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- SCREEN 2: MULTIPLAYER ROOM -->
+  <main id="gameScreen" class="screen">
+    <!-- Top Header -->
+    <header class="room-header">
+      <div class="header-left">
+        <button id="leaveRoomBtn" class="btn btn-ghost btn-sm" title="ออกจากห้อง">⬅ ออก</button>
+        <div class="room-code-box">
+          <span class="room-code-label">ROOM CODE</span>
+          <strong id="displayRoomCode" class="room-code-value">-----</strong>
+          <button id="copyCodeBtn" class="btn-icon" title="คัดลอกรหัสห้อง">📋</button>
+          <button id="copyLinkBtn" class="btn-icon" title="คัดลอกลิงก์ชวนเพื่อน">🔗 ชวนเพื่อน</button>
+        </div>
+        <button id="switchModeTopBtn" class="btn btn-outline btn-sm">🎮 เปลี่ยนโหมดเกม</button>
+      </div>
+
+      <div class="header-center">
+        <div class="timer-pill" id="quickTimerControl">
+          <span>⏱️ เวลาตอบ:</span>
+          <button class="btn-mini" id="decTimeQuickBtn" title="ลดเวลา">-</button>
+          <strong id="headerTimeLimit">15s</strong>
+          <button class="btn-mini" id="incTimeQuickBtn" title="เพิ่มเวลา">+</button>
+        </div>
+        <div class="target-pill" id="headerTargetBadge">
+          🎯 เป้าหมายแชมป์: <strong id="headerTargetScore">1,000</strong> แต้ม
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="reaction-bar">
+          <button class="emoji-btn" data-emoji="⚽">⚽</button>
+          <button class="emoji-btn" data-emoji="🔥">🔥</button>
+          <button class="emoji-btn" data-emoji="😱">😱</button>
+          <button class="emoji-btn" data-emoji="👏">👏</button>
+          <button class="emoji-btn" data-emoji="😂">😂</button>
+          <button class="emoji-btn" data-emoji="🐐">🐐</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Layout: Sidebar (Leaderboard) + Center Stage -->
+    <div class="room-layout">
+      <!-- Left Sidebar: Players & Scoreboard -->
+      <aside class="scoreboard-panel">
+        <div class="panel-header">
+          <h3>🏆 ตารางคะแนนผู้เล่น (<span id="playerCountLabel">1</span>)</h3>
+          <button id="addBotBtn" class="btn btn-outline btn-xs">+ เพิ่มบอท AI</button>
+        </div>
+        <div id="playersList" class="players-list"></div>
+
+        <div class="panel-footer">
+          <button id="endMatchSidebarBtn" class="btn btn-gold btn-sm" style="width:100%; margin-bottom: 8px;">
+            🏆 จบแมตช์ & มอบถ้วยแชมป์
+          </button>
+          <button id="resetScoresBtn" class="btn btn-ghost btn-xs" style="width:100%;">
+            🔄 รีเซ็ตคะแนนเริ่มใหม่
+          </button>
+        </div>
+      </aside>
+
+      <!-- Center Arena -->
+      <section class="arena-panel">
+
+        <!-- STATE A: LOBBY & 6 GAME MODES SELECTOR -->
+        <div id="lobbyView" class="state-view active">
+          <div class="arena-card">
+            <div class="arena-badge">🎮 เลือกโหมดเกมฟุตบอล (6 Party Modes)</div>
+            <h2>เลือกโหมดที่ต้องการดวลกับเพื่อนๆ</h2>
+            <p class="muted-text">สามารถสลับเล่นได้ทุกโหมดโดยคะแนนสะสมต่อเนื่องไปจนถึงแต้มเป้าหมายแชมป์!</p>
+
+            <!-- 6 Game Modes Cards -->
+            <div id="gameModesGrid" class="modes-grid">
+              <div class="mode-card active" data-mode="club_battle">
+                <div class="mode-icon">🏟️</div>
+                <div class="mode-info">
+                  <h4>1. ทายนักเตะประจำสโมสร</h4>
+                  <p>เลือกสโมสรจาก 5 ลีกใหญ่ แล้วแข่งกันพิมพ์ชื่อนักเตะที่เคยค้าแข้งกับทีมนั้น</p>
+                </div>
+              </div>
+
+              <div class="mode-card" data-mode="lineup_quiz">
+                <div class="mode-icon">📋</div>
+                <div class="mode-info">
+                  <h4>2. ทายผัง 11 ตัวจริงในตำนาน</h4>
+                  <p>ดูผังสนามนัดชิงหยุดโลก (ใบ้ธงชาติ+เบอร์เสื้อ) แย่งกันพิมพ์เปิดชื่อให้ครบ 11 คน</p>
+                </div>
+              </div>
+
+              <div class="mode-card" data-mode="top10_stats">
+                <div class="mode-icon">📊</div>
+                <div class="mode-info">
+                  <h4>3. ทายท็อป 10 สถิติลูกหนัง</h4>
+                  <p>ทาย 10 อันดับดาวซัลโว, จอมแอสซิสต์, แข้งค่าตัวแพงสุดในประวัติศาสตร์</p>
+                </div>
+              </div>
+
+              <div class="mode-card" data-mode="career_path">
+                <div class="mode-icon">🕵️‍♂️</div>
+                <div class="mode-info">
+                  <h4>4. เส้นทางค้าแข้ง (ฉันคือใคร?)</h4>
+                  <p>ดูไทม์ไลน์การย้ายสโมสร จำนวนนัดและประตู แล้วทายว่านักเตะปริศนาคือใคร</p>
+                </div>
+              </div>
+
+              <div class="mode-card" data-mode="trivia_quiz">
+                <div class="mode-icon">⚡</div>
+                <div class="mode-info">
+                  <h4>5. ควิซแฟนพันธุ์แท้ 4 ตัวเลือก</h4>
+                  <p>คำถามสถิติและประวัติศาสตร์ลูกหนัง 4 ตัวเลือก วัดความไวสไตล์ Kahoot!</p>
+                </div>
+              </div>
+
+              <div class="mode-card" data-mode="footy_grid">
+                <div class="mode-icon">🔢</div>
+                <div class="mode-info">
+                  <h4>6. ตาราง XO ฟุตบอล 3x3</h4>
+                  <p>เลือกช่องตารางไขว้ (สโมสร x สโมสร/ทีมชาติ) ยึดช่องเรียง 3 ช่องรับโบนัส BINGO!</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-grid">
+              <!-- Timer Setting -->
+              <div class="setting-box">
+                <label>⏱️ เวลาตอบต่อรอบ (ปรับได้ 5 - 60 วินาที)</label>
+                <div class="timer-adjuster">
+                  <button class="btn btn-outline btn-sm" data-time-delta="-5">-5s</button>
+                  <button class="btn btn-outline btn-sm" data-time-delta="-1">-1s</button>
+                  <div class="timer-big-display"><span id="lobbyTimeValue">15</span> <small>วินาที</small></div>
+                  <button class="btn btn-outline btn-sm" data-time-delta="1">+1s</button>
+                  <button class="btn btn-outline btn-sm" data-time-delta="5">+5s</button>
+                </div>
+                <div class="preset-chips">
+                  <button class="chip" data-time-preset="10">10 วิ (ไวมาก)</button>
+                  <button class="chip active" data-time-preset="15">15 วิ (มาตรฐาน)</button>
+                  <button class="chip" data-time-preset="20">20 วิ</button>
+                  <button class="chip" data-time-preset="30">30 วิ (ชิลๆ)</button>
+                </div>
+
+                <label style="margin-top: 16px;">🏆 เป้าหมายคะแนนเพื่อคว้าแชมป์ (Target Score)</label>
+                <select id="targetScoreSelect" class="select-input">
+                  <option value="500">500 คะแนน (มินิแมตช์ ~4-5 รอบ)</option>
+                  <option value="1000" selected>1,000 คะแนน (แมตช์มาตรฐาน ~8-10 รอบ)</option>
+                  <option value="1500">1,500 คะแนน (แมตช์ดวลเดือด)</option>
+                  <option value="2000">2,000 คะแนน (มาราธอนลูกหนัง)</option>
+                  <option value="0">ไม่จำกัดแต้ม (กดจบแมตช์เองเมื่อไหร่ก็ได้)</option>
+                </select>
+              </div>
+
+              <!-- Duplicate & Club Rule Setting -->
+              <div class="setting-box">
+                <label>⚡ กติกาเมื่อตอบชื่อนักเตะซ้ำกันในรอบเดียวกัน</label>
+                <select id="duplicateRuleSelect" class="select-input">
+                  <option value="strict_unique">คนตอบไวกว่าได้คะแนนคนเดียว (คนช้าได้ 0)</option>
+                  <option value="speed_split">คนไวได้เต็ม (+100..150) / คนซ้ำได้ครึ่งเดียว (+50)</option>
+                  <option value="both_cancel">ใจตรงกันซ้ำกัน = โมฆะ ไม่ได้คะแนนทั้งคู่ (0)</option>
+                </select>
+
+                <label style="margin-top: 16px;">🎲 การเลือกสโมสร (สำหรับโหมดที่ 1)</label>
+                <select id="clubSelectModeInput" class="select-input">
+                  <option value="both">เลือกสโมสรเอง หรือ กดสุ่มสโมสรก็ได้ (แนะนำ)</option>
+                  <option value="random">สุ่มสโมสรให้อัตโนมัติทุกรอบ</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="arena-cta">
+              <button id="startClubSelectBtn" class="btn btn-primary btn-xl">
+                ⚽ เริ่มเกมโหมดที่เลือกเลย!
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STATE B: SELECTING CLUB (Mode 1) -->
+        <div id="selectingClubView" class="state-view">
+          <div class="arena-card">
+            <div class="club-select-header">
+              <div>
+                <div class="arena-badge">🎯 เลือกโจทย์สโมสร (5 ลีกใหญ่ยุโรป)</div>
+                <h2>เลือกหรือพิมพ์ชื่อสโมสรที่ต้องการทาย</h2>
+              </div>
+              <button id="randomClubBtn" class="btn btn-accent btn-lg">
+                🎲 สุ่มสโมสรเลย!
+              </button>
+            </div>
+
+            <div class="club-filter-bar">
+              <input type="text" id="clubSearchInput" class="text-input" placeholder="🔍 พิมพ์ค้นหาสโมสร เช่น Man Utd, แมนยู, Real Madrid, ยูเว่..." />
+              <div id="leagueFilterTabs" class="league-tabs"></div>
+            </div>
+
+            <div id="clubsGrid" class="clubs-grid"></div>
+          </div>
+        </div>
+
+        <!-- STATE C: PLAYING (ALL 6 MODES) -->
+        <div id="playingView" class="state-view">
+          <div id="activeClubBanner" class="club-banner">
+            <div class="club-banner-info">
+              <span id="playingLeagueBadge" class="league-tag">Premier League</span>
+              <h2 id="playingClubName">Manchester United</h2>
+              <p id="playingClubSub">แมนเชสเตอร์ ยูไนเต็ด • รอบย่อยที่ <span id="playingWaveNum">1</span></p>
+            </div>
+
+            <div class="countdown-box">
+              <div class="countdown-circle" id="countdownCircle">
+                <span id="countdownNumber">15</span>
+                <small>วินาที</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="timer-progress-track">
+            <div id="timerProgressBar" class="timer-progress-bar"></div>
+          </div>
+
+          <!-- Dynamic Visual Stage for Lineup / Top 10 / Career Path / Trivia / 3x3 Grid -->
+          <div id="modeDynamicStage" class="mode-dynamic-stage"></div>
+
+          <!-- Text Answer Input Area (for modes 1, 2, 3, 4, 6) -->
+          <div class="answer-card" id="answerInputZone">
+            <label id="answerPromptLabel" class="answer-prompt">
+              👟 พิมพ์ชื่อนักฟุตบอลของคุณ:
+            </label>
+
+            <div class="autocomplete-wrapper">
+              <div class="answer-input-row">
+                <input
+                  type="text"
+                  id="playerGuessInput"
+                  class="text-input guess-input"
+                  placeholder="พิมพ์ชื่อนักเตะ เช่น Cristiano Ronaldo, Rooney, Henry..."
+                  autocomplete="off"
+                />
+                <button id="submitGuessBtn" class="btn btn-primary btn-lg">ส่งคำตอบ ⚡</button>
+              </div>
+              <div id="playerAutocompleteList" class="autocomplete-dropdown hidden"></div>
+            </div>
+            <p class="hint-text">💡 พิมพ์เป็นภาษาอังกฤษหรือชื่อเล่น/ภาษาไทย ระบบจะช่วยเด้งชื่อนักเตะให้เลือกทันที (กดลูกศร ⬆⬇ และ Enter ได้)</p>
+          </div>
+
+          <!-- Locked-in Waiting Banner -->
+          <div id="answerLockedZone" class="locked-card hidden">
+            <div class="locked-icon">🔒</div>
+            <h3>ล็อกคำตอบของคุณเรียบร้อยแล้ว!</h3>
+            <p id="lockedAnswerText" class="locked-name"></p>
+            <p class="muted-text">กำลังรอผู้เล่นคนอื่นส่งคำตอบ หรือรอให้หมดเวลาเพื่อเฉลยพร้อมกัน...</p>
+          </div>
+
+          <!-- Used Players Board for Mode 1 -->
+          <div id="clubUsedBoard" class="used-board">
+            <div class="used-board-header">
+              <span>🚫 รายชื่อนักเตะที่ถูกตอบไปแล้วในสโมสรนี้ (<strong id="usedCountLabel">0</strong>/<span id="totalClubPlayersLabel">0</span> คนในคลัง)</span>
+              <small>ห้ามตอบซ้ำกับรายชื่อด้านล่างนี้!</small>
+            </div>
+            <div id="usedPlayersList" class="used-players-chips"></div>
+          </div>
+        </div>
+
+        <!-- STATE D: REVEAL RESULTS -->
+        <div id="revealView" class="state-view">
+          <div class="arena-card">
+            <!-- Target Score Reached Banner -->
+            <div id="targetReachedBanner" class="target-reached-banner hidden">
+              <div class="target-reached-text">
+                <span>🏆</span>
+                <div>
+                  <strong>มีผู้เล่นทำคะแนนทะลุเป้าหมายแชมป์แล้ว!</strong>
+                  <p>กดปุ่ม "มอบถ้วยแชมป์ & สรุปผลแมตช์" เพื่อเข้าสู่พิธีฉลองแชมป์ หรือจะดวลต่อก็ได้</p>
+                </div>
+              </div>
+              <button id="celebrateChampionBtn" class="btn btn-gold btn-lg">
+                🏆 มอบถ้วยแชมป์ & สรุปผลแมตช์!
+              </button>
+            </div>
+
+            <div class="reveal-header">
+              <div>
+                <span class="arena-badge">📣 เฉลยคำตอบประจำรอบ!</span>
+                <h2 id="revealClubTitle">ผลการแข่งขันในรอบนี้</h2>
+              </div>
+              <div class="reveal-actions">
+                <button id="nextWaveSameClubBtn" class="btn btn-primary btn-lg">
+                  🔥 เล่นโจทย์นี้ต่อ (รอบถัดไป)
+                </button>
+                <button id="changeClubBtn" class="btn btn-accent btn-lg">
+                  🔄 เปลี่ยนโจทย์ใหม่
+                </button>
+                <button id="endMatchRevealBtn" class="btn btn-gold">
+                  🏁 จบแมตช์
+                </button>
+              </div>
+            </div>
+
+            <!-- Dynamic Board Preview in Reveal (shows unlocked Lineup / Top 10 / Grid / Career / Trivia answer) -->
+            <div id="revealDynamicStage" class="mode-dynamic-stage" style="margin-bottom: 18px;"></div>
+
+            <div id="revealResultsList" class="reveal-results-list"></div>
+
+            <!-- Used Players Board in Reveal (Mode 1) -->
+            <div id="revealClubUsedBoard" class="used-board" style="margin-top: 18px;">
+              <div class="used-board-header">
+                <span>✅ นักเตะของสโมสรนี้ที่ถูกทายถูกไปแล้ว (<strong id="revealUsedCount">0</strong>/<span id="revealTotalClubPlayers">0</span>)</span>
+              </div>
+              <div id="revealUsedPlayersList" class="used-players-chips"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STATE E: GAME OVER / CHAMPIONSHIP PODIUM & MATCH SUMMARY -->
+        <div id="gameOverView" class="state-view">
+          <div class="arena-card champion-arena">
+            <div class="champion-header">
+              <div class="trophy-glow">🏆</div>
+              <span class="badge-top">FULL-TIME • MATCH SUMMARY & PODIUM</span>
+              <h2 class="champion-title">พิธีฉลองแชมป์ประจำแมตช์!</h2>
+              <p id="matchMetaSummary" class="muted-text">ดวลกันทั้งหมด 0 รอบ</p>
+            </div>
+
+            <!-- Top 3 Podium -->
+            <div id="podiumStage" class="podium-stage"></div>
+
+            <!-- MVP Special Awards -->
+            <div id="mvpSection" class="mvp-section">
+              <h3 class="section-subtitle">🎖️ รางวัลเกียรติยศประจำแมตช์ (MVP Awards)</h3>
+              <div id="mvpAwardsGrid" class="mvp-awards-grid"></div>
+            </div>
+
+            <!-- Full Match Statistics Table -->
+            <div class="standings-section">
+              <h3 class="section-subtitle">📊 สถิติผู้เล่นทุกคนในแมตช์นี้</h3>
+              <div class="table-responsive">
+                <table class="standings-table">
+                  <thead>
+                    <tr>
+                      <th>อันดับ</th>
+                      <th>ผู้เล่น</th>
+                      <th>ตอบถูก</th>
+                      <th>สตรีคสูงสุด</th>
+                      <th>ตอบไวสุด</th>
+                      <th>เวลาเฉลี่ย</th>
+                      <th>คะแนนรวม</th>
+                    </tr>
+                  </thead>
+                  <tbody id="standingsTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Play Again CTA -->
+            <div class="champion-actions">
+              <button id="playAgainBtn" class="btn btn-primary btn-xl">
+                ⚽ เริ่มแมตช์ใหม่ (เลือกโหมดดวลกันต่อ!)
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

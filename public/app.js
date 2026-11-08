@@ -1,0 +1,1252 @@
+// Frontend Multiplayer Client for 6-in-1 Football Quiz Party Hub
+
+const AVATARS = ['⚽', '🦁', '🔥', '⚡', '👑', '🦊', '🐯', '🦅', '🐉', '🌟', '🎯', '🛡️'];
+
+const MODE_META = {
+  club_battle: {
+    badge: '🏟️ โหมดที่ 1: ทายนักเตะประจำสโมสร',
+    prompt: '👟 พิมพ์ชื่อนักฟุตบอลที่ เคยค้าแข้ง (หรือกำลังเล่นให้) สโมสรนี้:'
+  },
+  lineup_quiz: {
+    badge: '📋 โหมดที่ 2: ทายผัง 11 ตัวจริงในตำนาน',
+    prompt: '👕 พิมพ์ชื่อนักฟุตบอลที่อยู่ในผัง 11 ตัวจริงด้านบน (ดูใบ้ธงชาติ + เบอร์เสื้อ):'
+  },
+  top10_stats: {
+    badge: '📊 โหมดที่ 3: ทายท็อป 10 สถิติลูกหนัง',
+    prompt: '🏅 พิมพ์ชื่อนักฟุตบอลที่ติดอยู่ใน Top 10 ของหัวข้อสถิตินี้:'
+  },
+  career_path: {
+    badge: '🕵️‍♂️ โหมดที่ 4: ทายนักเตะจากเส้นทางค้าแข้ง (ฉันคือใคร?)',
+    prompt: '🔍 จากตารางการย้ายทีมด้านบน นักเตะปริศนาคนนี้คือใคร?'
+  },
+  trivia_quiz: {
+    badge: '⚡ โหมดที่ 5: ควิซแฟนพันธุ์แท้ 4 ตัวเลือก',
+    prompt: '⚡ กดเลือกตัวเลือกที่ถูกต้องที่สุดด้านบน!'
+  },
+  footy_grid: {
+    badge: '🔢 โหมดที่ 6: ตาราง XO ฟุตบอล 3x3',
+    prompt: '🎯 คลิกเลือกช่องว่างในตาราง 3x3 ด้านบน แล้วพิมพ์ชื่อนักเตะที่ตรงกับทั้งแนวนอนและแนวตั้ง:'
+  }
+};
+
+const state = {
+  leagues: [],
+  clubs: [],
+  players: [],
+  playerId: localStorage.getItem('fcq_playerId') || 'pl_' + Math.random().toString(36).slice(2, 10),
+  playerName: localStorage.getItem('fcq_playerName') || '',
+  avatar: localStorage.getItem('fcq_avatar') || '⚽',
+  roomCode: null,
+  room: null,
+  eventSource: null,
+  selectedLeagueFilter: 'all',
+  clubSearchText: '',
+  selectedAutocompletePlayerId: null,
+  autocompleteItems: [],
+  autocompleteIndex: -1,
+  selectedGridCellIndex: 0,
+  lastRenderedState: null
+};
+
+localStorage.setItem('fcq_playerId', state.playerId);
+
+// Simple Web Audio API Sound Synthesizer
+const sfx = {
+  ctx: null,
+  init() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) this.ctx = new AudioCtx();
+    }
+  },
+  beep(freq = 440, duration = 0.08, type = 'sine', gainVal = 0.08) {
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+      gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + duration);
+    } catch (e) {}
+  },
+  lockIn() {
+    this.beep(587.33, 0.09, 'triangle', 0.1);
+    setTimeout(() => this.beep(880, 0.14, 'triangle', 0.12), 70);
+  },
+  success() {
+    this.beep(523.25, 0.1, 'triangle', 0.12);
+    setTimeout(() => this.beep(659.25, 0.1, 'triangle', 0.12), 90);
+    setTimeout(() => this.beep(783.99, 0.2, 'triangle', 0.14), 180);
+  },
+  championFanfare() {
+    const notes = [
+      [523.25, 0, 0.14],
+      [659.25, 130, 0.14],
+      [783.99, 260, 0.14],
+      [1046.5, 400, 0.35],
+      [783.99, 620, 0.14],
+      [1046.5, 760, 0.45]
+    ];
+    notes.forEach(([freq, delay, dur]) => {
+      setTimeout(() => this.beep(freq, dur, 'triangle', 0.15), delay);
+    });
+  },
+  urgentTick() {
+    this.beep(720, 0.05, 'sine', 0.06);
+  }
+};
+
+function launchConfetti() {
+  const container = document.getElementById('confettiContainer');
+  if (!container) return;
+  container.innerHTML = '';
+  const colors = ['#fbbf24', '#10b981', '#3b82f6', '#ef4444', '#a855f7', '#ec4899'];
+
+  for (let i = 0; i < 65; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + 'vw';
+    piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDuration = 2.2 + Math.random() * 2.2 + 's';
+    piece.style.animationDelay = Math.random() * 0.8 + 's';
+    container.appendChild(piece);
+  }
+
+  setTimeout(() => {
+    container.innerHTML = '';
+  }, 5000);
+}
+
+function normalizeText(str) {
+  return (str || '')
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function showToast(msg) {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.remove();
+  }, 3200);
+}
+
+function spawnFloatingReaction(emoji, playerName) {
+  const container = document.getElementById('floatingReactions');
+  const el = document.createElement('div');
+  el.className = 'floating-emoji';
+  el.style.right = Math.floor(Math.random() * 80) + 'px';
+  el.innerHTML = `<span>${emoji}</span> <small>${playerName}</small>`;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 2600);
+}
+
+async function apiAction(action, payload = {}) {
+  const res = await fetch('/api/action', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action,
+      roomCode: state.roomCode,
+      playerId: state.playerId,
+      ...payload
+    })
+  });
+  return res.json();
+}
+
+async function loadDatabase() {
+  const res = await fetch('/api/data');
+  const data = await res.json();
+  state.leagues = data.leagues || [];
+  state.clubs = data.clubs || [];
+  state.players = data.players || [];
+  renderLeagueTabs();
+  renderClubsGrid();
+}
+
+function initHomeUI() {
+  const nameInput = document.getElementById('playerNameInput');
+  nameInput.value = state.playerName;
+  nameInput.addEventListener('input', () => {
+    state.playerName = nameInput.value.trim();
+    localStorage.setItem('fcq_playerName', state.playerName);
+  });
+
+  const picker = document.getElementById('avatarPicker');
+  picker.innerHTML = '';
+  AVATARS.forEach((av) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'avatar-option' + (state.avatar === av ? ' selected' : '');
+    btn.textContent = av;
+    btn.addEventListener('click', () => {
+      state.avatar = av;
+      localStorage.setItem('fcq_avatar', av);
+      picker.querySelectorAll('.avatar-option').forEach((b) => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+    picker.appendChild(btn);
+  });
+
+  const params = new URLSearchParams(window.location.search);
+  const roomParam = params.get('room');
+  if (roomParam) {
+    document.getElementById('joinCodeInput').value = roomParam.toUpperCase();
+  }
+
+  document.getElementById('createRoomBtn').addEventListener('click', async () => {
+    sfx.init();
+    const playerName = document.getElementById('playerNameInput').value.trim() || 'กัปตันทีม';
+    state.playerName = playerName;
+    localStorage.setItem('fcq_playerName', playerName);
+
+    const data = await apiAction('create_room', {
+      playerName,
+      avatar: state.avatar
+    });
+    if (data.ok) {
+      enterRoom(data.roomCode, data.room);
+    } else {
+      showToast(data.error || 'ไม่สามารถสร้างห้องได้');
+    }
+  });
+
+  document.getElementById('joinRoomBtn').addEventListener('click', async () => {
+    sfx.init();
+    const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+    if (!code) {
+      showToast('กรุณากรอกรหัสห้อง 5 ตัวอักษร');
+      return;
+    }
+    const playerName = document.getElementById('playerNameInput').value.trim() || 'นักเตะท้าดวล';
+    state.playerName = playerName;
+    localStorage.setItem('fcq_playerName', playerName);
+
+    const res = await fetch('/api/action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'join_room',
+        roomCode: code,
+        playerId: state.playerId,
+        playerName,
+        avatar: state.avatar
+      })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      enterRoom(data.roomCode, data.room);
+    } else {
+      showToast(data.error || 'ไม่พบห้องนี้');
+    }
+  });
+}
+
+function enterRoom(roomCode, initialRoom) {
+  state.roomCode = roomCode;
+  state.room = initialRoom;
+  state.lastRenderedState = null;
+
+  window.history.replaceState({}, '', `?room=${roomCode}`);
+
+  document.getElementById('homeScreen').classList.remove('active');
+  document.getElementById('gameScreen').classList.add('active');
+  document.getElementById('displayRoomCode').textContent = roomCode;
+
+  connectStream(roomCode);
+  renderRoom();
+}
+
+function connectStream(roomCode) {
+  if (state.eventSource) {
+    state.eventSource.close();
+  }
+  const es = new EventSource(`/api/stream?roomCode=${encodeURIComponent(roomCode)}&playerId=${encodeURIComponent(state.playerId)}`);
+  state.eventSource = es;
+
+  es.onmessage = (event) => {
+    try {
+      const payload = JSON.parse(event.data);
+      if (payload.room) {
+        const prevState = state.room ? state.room.state : null;
+        const prevTime = state.room ? state.room.timeLeft : null;
+        state.room = payload.room;
+
+        if (payload.type === 'timer_tick') {
+          updateTimerOnly();
+          if (state.room.timeLeft <= 5 && state.room.timeLeft > 0 && state.room.timeLeft !== prevTime) {
+            sfx.urgentTick();
+          }
+          return;
+        }
+
+        if (payload.type === 'wave_revealed' && prevState !== 'REVEAL') {
+          const myRes = (state.room.lastWaveResults || []).find((r) => r.playerId === state.playerId);
+          if (myRes && myRes.pointsEarned > 0) {
+            sfx.success();
+          }
+        }
+
+        if (state.room.state === 'GAME_OVER' && prevState !== 'GAME_OVER') {
+          sfx.championFanfare();
+          launchConfetti();
+        }
+
+        if (payload.type === 'reaction' && payload.reaction) {
+          spawnFloatingReaction(payload.reaction.emoji, payload.reaction.playerName);
+        }
+
+        renderRoom();
+      }
+    } catch (e) {}
+  };
+}
+
+function updateTimerOnly() {
+  if (!state.room) return;
+  const t = state.room.timeLeft;
+  const total = state.room.totalTime || 15;
+  const numEl = document.getElementById('countdownNumber');
+  const circleEl = document.getElementById('countdownCircle');
+  const barEl = document.getElementById('timerProgressBar');
+
+  if (numEl) numEl.textContent = t;
+  if (circleEl) {
+    circleEl.classList.toggle('urgent', t <= 5);
+  }
+  if (barEl) {
+    const pct = Math.max(0, Math.min(100, (t / total) * 100));
+    barEl.style.width = `${pct}%`;
+    barEl.classList.toggle('urgent', t <= 5);
+  }
+}
+
+function renderRoom() {
+  const room = state.room;
+  if (!room) return;
+
+  const gameMode = room.settings.gameMode || 'club_battle';
+
+  document.getElementById('headerTimeLimit').textContent = `${room.settings.timeLimit}s`;
+  document.getElementById('lobbyTimeValue').textContent = room.settings.timeLimit;
+  document.getElementById('duplicateRuleSelect').value = room.settings.duplicateRule || 'strict_unique';
+  document.getElementById('clubSelectModeInput').value = room.settings.clubSelectMode || 'both';
+
+  const targetScore = room.settings.targetScore !== undefined ? room.settings.targetScore : 1000;
+  document.getElementById('targetScoreSelect').value = String(targetScore);
+  document.getElementById('headerTargetScore').textContent =
+    targetScore > 0 ? targetScore.toLocaleString() : 'ไม่จำกัด';
+
+  document.querySelectorAll('[data-time-preset]').forEach((btn) => {
+    btn.classList.toggle('active', parseInt(btn.dataset.timePreset, 10) === room.settings.timeLimit);
+  });
+
+  document.querySelectorAll('[data-mode]').forEach((card) => {
+    card.classList.toggle('active', card.dataset.mode === gameMode);
+  });
+
+  renderScoreboard(room);
+
+  const views = {
+    LOBBY: 'lobbyView',
+    SELECTING_CLUB: 'selectingClubView',
+    PLAYING: 'playingView',
+    REVEAL: 'revealView',
+    GAME_OVER: 'gameOverView'
+  };
+
+  Object.entries(views).forEach(([key, viewId]) => {
+    const el = document.getElementById(viewId);
+    if (el) el.classList.toggle('active', room.state === key);
+  });
+
+  if (room.state === 'SELECTING_CLUB') {
+    renderClubsGrid();
+  } else if (room.state === 'PLAYING') {
+    renderPlayingView(room);
+  } else if (room.state === 'REVEAL') {
+    renderRevealView(room);
+  } else if (room.state === 'GAME_OVER') {
+    renderGameOverView(room);
+  }
+
+  state.lastRenderedState = room.state;
+}
+
+function renderScoreboard(room) {
+  document.getElementById('playerCountLabel').textContent = room.players.length;
+  const listEl = document.getElementById('playersList');
+  listEl.innerHTML = '';
+
+  const sorted = [...room.players].sort((a, b) => b.score - a.score);
+  const targetScore = room.settings.targetScore || 0;
+
+  sorted.forEach((p, idx) => {
+    const item = document.createElement('div');
+    const isMe = p.id === state.playerId;
+    item.className =
+      'player-item' +
+      (isMe ? ' is-me' : '') +
+      (room.state === 'PLAYING' && p.hasSubmitted ? ' submitted' : '');
+
+    let statusHtml = '';
+    if (room.state === 'PLAYING') {
+      if (p.hasSubmitted) {
+        const sec = p.submittedTimeMs ? (p.submittedTimeMs / 1000).toFixed(1) : '';
+        statusHtml = `<div class="player-status locked">🔒 ตอบแล้ว! (${sec}s)</div>`;
+      } else {
+        statusHtml = `<div class="player-status">⏳ กำลังคิดคำตอบ...</div>`;
+      }
+    } else {
+      const streakBadge = p.streak >= 2 ? ` 🔥x${p.streak}` : '';
+      const targetTag = targetScore > 0 && p.score >= targetScore ? ' 🏆ถึงเป้า!' : '';
+      statusHtml = `<div class="player-status">อันดับ #${idx + 1}${streakBadge}${targetTag}</div>`;
+    }
+
+    const hostTag = p.id === room.hostId ? ' 👑' : '';
+    const meTag = isMe ? ' (คุณ)' : '';
+    const removeBtn =
+      p.isBot
+        ? `<button class="remove-bot-btn" data-remove-id="${p.id}" title="ลบบอท">✖</button>`
+        : '';
+
+    item.innerHTML = `
+      <div class="player-left">
+        <span class="player-avatar">${p.avatar}</span>
+        <div class="player-meta">
+          <div class="player-name">${p.name}${hostTag}${meTag}</div>
+          ${statusHtml}
+        </div>
+      </div>
+      <div class="player-right">
+        <span class="player-score">${p.score}</span>
+        ${removeBtn}
+      </div>
+    `;
+    listEl.appendChild(item);
+  });
+
+  listEl.querySelectorAll('[data-remove-id]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      apiAction('remove_player', { targetPlayerId: btn.dataset.removeId });
+    });
+  });
+}
+
+function renderLeagueTabs() {
+  const container = document.getElementById('leagueFilterTabs');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const allBtn = document.createElement('button');
+  allBtn.className = 'league-tab' + (state.selectedLeagueFilter === 'all' ? ' active' : '');
+  allBtn.textContent = '🌍 ทั้งหมด (5 ลีกใหญ่)';
+  allBtn.addEventListener('click', () => {
+    state.selectedLeagueFilter = 'all';
+    renderLeagueTabs();
+    renderClubsGrid();
+  });
+  container.appendChild(allBtn);
+
+  state.leagues.forEach((lg) => {
+    const btn = document.createElement('button');
+    btn.className = 'league-tab' + (state.selectedLeagueFilter === lg.id ? ' active' : '');
+    btn.textContent = `${lg.flag} ${lg.name}`;
+    btn.addEventListener('click', () => {
+      state.selectedLeagueFilter = lg.id;
+      renderLeagueTabs();
+      renderClubsGrid();
+    });
+    container.appendChild(btn);
+  });
+}
+
+function renderClubsGrid() {
+  const grid = document.getElementById('clubsGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const q = normalizeText(state.clubSearchText);
+  const filtered = state.clubs.filter((c) => {
+    if (state.selectedLeagueFilter !== 'all' && c.league !== state.selectedLeagueFilter) {
+      return false;
+    }
+    if (!q) return true;
+    return (
+      normalizeText(c.name).includes(q) ||
+      normalizeText(c.nameTh).includes(q) ||
+      normalizeText(c.short).includes(q) ||
+      (c.aliases && c.aliases.some((a) => normalizeText(a).includes(q)))
+    );
+  });
+
+  filtered.forEach((club) => {
+    const card = document.createElement('div');
+    card.className = 'club-card';
+    card.innerHTML = `
+      <div class="club-crest" style="background: linear-gradient(135deg, ${club.primaryColor}, ${club.secondaryColor === '#FFFFFF' ? '#1e293b' : club.secondaryColor});">
+        ${club.short}
+      </div>
+      <div class="club-card-info">
+        <h4>${club.name}</h4>
+        <p>${club.nameTh}</p>
+      </div>
+    `;
+    card.addEventListener('click', () => {
+      apiAction('select_club', { clubId: club.id });
+    });
+    grid.appendChild(card);
+  });
+}
+
+function buildModeStageHTML(room, isReveal = false) {
+  const mode = room.settings.gameMode || 'club_battle';
+  const md = room.modeData;
+  if (!md) return '';
+
+  // MODE 2: STARTING XI PITCH
+  if (mode === 'lineup_quiz') {
+    const slotsHtml = (md.slots || [])
+      .map((s) => {
+        return `
+          <div class="pitch-slot ${s.unlocked ? 'unlocked' : ''}" style="grid-row:${s.row}; grid-column:${s.col};">
+            <div class="slot-top">
+              <span>${s.flag}</span>
+              <span>${s.pos}</span>
+              <span>#${s.number}</span>
+            </div>
+            <div class="slot-name">${s.unlocked ? s.playerName : '❓ ???'}</div>
+            ${s.unlocked ? `<div class="slot-by">เปิดโดย ${s.answeredBy}</div>` : ''}
+          </div>
+        `;
+      })
+      .join('');
+
+    return `
+      <div class="pitch-board">
+        <div class="pitch-grid">${slotsHtml}</div>
+      </div>
+    `;
+  }
+
+  // MODE 3: TOP 10 STATS
+  if (mode === 'top10_stats') {
+    const rowsHtml = (md.items || [])
+      .map((it) => {
+        return `
+          <div class="top10-row ${it.unlocked ? 'unlocked' : ''}">
+            <div class="top10-left">
+              <div class="top10-rank">#${it.rank}</div>
+              <div>
+                <div style="font-weight:700;">${it.flag} ${it.unlocked ? it.name : '❓ ??? (ยังไม่ถูกเปิด)'}</div>
+                ${it.unlocked ? `<small style="color:#6ee7b7;">ตอบโดย ${it.answeredBy}</small>` : ''}
+              </div>
+            </div>
+            <div class="top10-stat">${it.stat}</div>
+          </div>
+        `;
+      })
+      .join('');
+
+    return `<div class="top10-grid">${rowsHtml}</div>`;
+  }
+
+  // MODE 4: CAREER PATH
+  if (mode === 'career_path') {
+    const trHtml = (md.steps || [])
+      .map(
+        (st) => `
+          <tr>
+            <td>${st.years}</td>
+            <td><strong>${st.club}</strong></td>
+            <td>${st.apps} นัด</td>
+            <td>⚽ ${st.goals} ประตู</td>
+          </tr>
+        `
+      )
+      .join('');
+
+    return `
+      <div class="career-card">
+        <div class="career-hint-bar">
+          <span>💡 <strong>คำใบ้:</strong> ${md.hint}</span>
+          <span>สัญชาติ: <strong>${md.flag}</strong> • ตำแหน่ง: <strong>${md.position}</strong></span>
+        </div>
+        <div class="table-responsive">
+          <table class="standings-table">
+            <thead>
+              <tr>
+                <th>ช่วงปี</th>
+                <th>สโมสรที่ค้าแข้ง</th>
+                <th>ลงสนาม</th>
+                <th>ประตู</th>
+              </tr>
+            </thead>
+            <tbody>${trHtml}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  // MODE 5: 4-CHOICE TRIVIA
+  if (mode === 'trivia_quiz') {
+    const letters = ['A', 'B', 'C', 'D'];
+    const optsHtml = (md.options || [])
+      .map((opt, idx) => {
+        const isCorrectClass = isReveal && md.correctIndex === idx ? 'correct' : '';
+        return `
+          <button type="button" class="trivia-option-btn ${isCorrectClass}" data-trivia-choice="${idx}" ${isReveal ? 'disabled' : ''}>
+            <span class="opt-letter">${letters[idx] || idx + 1}</span>
+            <span>${opt}</span>
+          </button>
+        `;
+      })
+      .join('');
+
+    return `
+      <div class="trivia-box">
+        <div class="trivia-question-text">❓ ${md.question}</div>
+        <div class="trivia-options-grid">${optsHtml}</div>
+      </div>
+    `;
+  }
+
+  // MODE 6: 3x3 FOOTY TIC-TAC-TOE GRID
+  if (mode === 'footy_grid') {
+    const cells = md.cells || Array(9).fill(null);
+    // Ensure selectedGridCellIndex points to an open cell if possible
+    if (cells[state.selectedGridCellIndex]) {
+      const firstOpen = cells.findIndex((c) => !c);
+      if (firstOpen >= 0) state.selectedGridCellIndex = firstOpen;
+    }
+
+    let html = `<div class="footy-grid-wrapper"><div class="footy-grid-board">`;
+    // Top-left corner
+    html += `<div class="grid-header-cell"><strong>XO 3x3</strong><small>คลิกเลือกช่อง</small></div>`;
+    // 3 Column headers
+    (md.cols || []).forEach((col) => {
+      html += `<div class="grid-header-cell"><strong>${col.label}</strong><small>${col.sub}</small></div>`;
+    });
+
+    // 3 Rows
+    (md.rows || []).forEach((row, rIdx) => {
+      html += `<div class="grid-header-cell"><strong>${row.label}</strong><small>${row.sub}</small></div>`;
+      for (let cIdx = 0; cIdx < 3; cIdx++) {
+        const cellIdx = rIdx * 3 + cIdx;
+        const claimed = cells[cellIdx];
+        const isSelected = !isReveal && !claimed && state.selectedGridCellIndex === cellIdx;
+        if (claimed) {
+          html += `
+            <div class="grid-play-cell claimed">
+              <div style="font-size:1.2rem;">${claimed.ownerAvatar}</div>
+              <strong style="font-size:0.84rem;color:#fde68a;">${claimed.playerFlag} ${claimed.playerName}</strong>
+              <small style="font-size:0.7rem;color:#6ee7b7;">ยึดโดย ${claimed.ownerName}</small>
+            </div>
+          `;
+        } else {
+          html += `
+            <div class="grid-play-cell ${isSelected ? 'selected-target' : ''}" data-grid-cell="${cellIdx}">
+              <span style="font-size:0.78rem;color:#cbd5e1;">${row.label}</span>
+              <strong style="font-size:0.82rem;color:#fbbf24;">✕ ${md.cols[cIdx].label}</strong>
+              ${isSelected ? '<small style="color:#34d399;font-weight:700;">🎯 เลือกช่องนี้อยู่</small>' : '<small style="opacity:0.6;">คลิกเพื่อเล็งช่องนี้</small>'}
+            </div>
+          `;
+        }
+      }
+    });
+
+    html += `</div></div>`;
+    return html;
+  }
+
+  return '';
+}
+
+function bindDynamicStageEvents(container, room) {
+  if (!container) return;
+  const mode = room.settings.gameMode || 'club_battle';
+
+  if (mode === 'trivia_quiz') {
+    container.querySelectorAll('[data-trivia-choice]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const idx = parseInt(btn.dataset.triviaChoice, 10);
+        const optText = room.modeData?.options?.[idx] || `ตัวเลือก ${idx + 1}`;
+        sfx.lockIn();
+        document.getElementById('lockedAnswerText').textContent = `⚡ เลือก: "${optText}"`;
+        await apiAction('submit_answer', {
+          playerInput: String(idx),
+          choiceIndex: idx
+        });
+      });
+    });
+  }
+
+  if (mode === 'footy_grid') {
+    container.querySelectorAll('[data-grid-cell]').forEach((cellEl) => {
+      cellEl.addEventListener('click', () => {
+        state.selectedGridCellIndex = parseInt(cellEl.dataset.gridCell, 10);
+        renderPlayingView(state.room);
+      });
+    });
+  }
+}
+
+function renderPlayingView(room) {
+  const mode = room.settings.gameMode || 'club_battle';
+  const meta = MODE_META[mode] || MODE_META.club_battle;
+  const banner = document.getElementById('activeClubBanner');
+
+  document.getElementById('playingLeagueBadge').textContent = meta.badge;
+  document.getElementById('answerPromptLabel').textContent = meta.prompt;
+
+  if (mode === 'club_battle') {
+    const club = room.currentClub;
+    if (club) {
+      banner.style.background = `linear-gradient(135deg, ${club.primaryColor}, #0f172a)`;
+      document.getElementById('playingClubName').textContent = club.name;
+      document.getElementById('playingClubSub').innerHTML = `${club.nameTh} • รอบย่อยที่ <span id="playingWaveNum">${room.waveNumber}</span>`;
+    }
+  } else if (mode === 'lineup_quiz') {
+    banner.style.background = `linear-gradient(135deg, ${room.modeData?.clubColor || '#059669'}, #0f172a)`;
+    document.getElementById('playingClubName').textContent = room.modeData?.title || 'Guess the Lineup';
+    document.getElementById('playingClubSub').textContent = `${room.modeData?.subtitle || ''} • รอบย่อยที่ ${room.waveNumber}`;
+  } else if (mode === 'top10_stats') {
+    banner.style.background = `linear-gradient(135deg, #2563eb, #0f172a)`;
+    document.getElementById('playingClubName').textContent = room.modeData?.title || 'Top 10 Stats';
+    document.getElementById('playingClubSub').textContent = `${room.modeData?.category || ''} • รอบย่อยที่ ${room.waveNumber}`;
+  } else if (mode === 'career_path') {
+    banner.style.background = `linear-gradient(135deg, #7c3aed, #0f172a)`;
+    document.getElementById('playingClubName').textContent = 'นักเตะปริศนาคนนี้คือใคร? (Who Am I?)';
+    document.getElementById('playingClubSub').textContent = `ดูประวัติสโมสรที่เคยค้าแข้งด้านล่างแล้วพิมพ์ชื่อนักเตะ!`;
+  } else if (mode === 'trivia_quiz') {
+    banner.style.background = `linear-gradient(135deg, #d97706, #0f172a)`;
+    document.getElementById('playingClubName').textContent = `คำถามแฟนพันธุ์แท้ลูกหนัง ข้อที่ ${room.roundNumber}`;
+    document.getElementById('playingClubSub').textContent = `กดเลือกคำตอบที่ถูกต้องให้ไวที่สุด!`;
+  } else if (mode === 'footy_grid') {
+    banner.style.background = `linear-gradient(135deg, #0d9488, #0f172a)`;
+    document.getElementById('playingClubName').textContent = room.modeData?.title || 'Footy Tic-Tac-Toe 3x3';
+    document.getElementById('playingClubSub').textContent = `คลิกเลือกช่องในตาราง แล้วพิมพ์ชื่อนักเตะเพื่อยึดช่อง!`;
+  }
+
+  updateTimerOnly();
+
+  const stageEl = document.getElementById('modeDynamicStage');
+  stageEl.innerHTML = buildModeStageHTML(room, false);
+  bindDynamicStageEvents(stageEl, room);
+
+  const me = room.players.find((p) => p.id === state.playerId);
+  const hasSubmitted = me && me.hasSubmitted;
+
+  const inputZone = document.getElementById('answerInputZone');
+  const lockedZone = document.getElementById('answerLockedZone');
+  const guessInput = document.getElementById('playerGuessInput');
+
+  if (hasSubmitted) {
+    inputZone.classList.add('hidden');
+    stageEl.classList.toggle('hidden', mode === 'trivia_quiz');
+    lockedZone.classList.remove('hidden');
+  } else {
+    lockedZone.classList.add('hidden');
+    stageEl.classList.remove('hidden');
+    // In trivia_quiz mode, players click one of the 4 option buttons directly
+    if (mode === 'trivia_quiz') {
+      inputZone.classList.add('hidden');
+    } else {
+      inputZone.classList.remove('hidden');
+      if (state.lastRenderedState !== 'PLAYING') {
+        guessInput.value = '';
+        state.selectedAutocompletePlayerId = null;
+        hideAutocomplete();
+        setTimeout(() => guessInput.focus(), 80);
+      }
+    }
+  }
+
+  const usedBoard = document.getElementById('clubUsedBoard');
+  if (mode === 'club_battle') {
+    usedBoard.classList.remove('hidden');
+    document.getElementById('usedCountLabel').textContent = room.usedPlayers.length;
+    document.getElementById('totalClubPlayersLabel').textContent = room.totalPossibleForClub || 0;
+    renderUsedPlayersChips('usedPlayersList', room.usedPlayers);
+  } else {
+    usedBoard.classList.add('hidden');
+  }
+}
+
+function renderUsedPlayersChips(containerId, usedPlayers) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (!usedPlayers || usedPlayers.length === 0) {
+    container.innerHTML = `<span class="muted-text" style="font-size:0.82rem;">ยังไม่มีชื่อที่ถูกใช้ในรอบสโมสรนี้ ทุกคนสามารถตอบได้ทุกชื่อ!</span>`;
+    return;
+  }
+
+  usedPlayers.forEach((u) => {
+    const chip = document.createElement('div');
+    chip.className = 'used-chip';
+    chip.innerHTML = `<span>${u.flag || '⚽'}</span> <strong>${u.name}</strong> <small>(โดย ${u.answeredBy})</small>`;
+    container.appendChild(chip);
+  });
+}
+
+function renderRevealView(room) {
+  const mode = room.settings.gameMode || 'club_battle';
+  const club = room.currentClub;
+
+  const nextWaveBtn = document.getElementById('nextWaveSameClubBtn');
+  const changeBtn = document.getElementById('changeClubBtn');
+
+  if (mode === 'club_battle') {
+    document.getElementById('revealClubTitle').textContent = club
+      ? `สโมสร: ${club.name} (${club.nameTh}) • รอบย่อยที่ ${room.waveNumber}`
+      : 'เฉลยคำตอบ';
+    nextWaveBtn.textContent = '🔥 เล่นสโมสรนี้ต่อ (ห้ามซ้ำชื่อเดิม!)';
+    changeBtn.textContent = '🔄 เปลี่ยนสโมสรใหม่';
+    changeBtn.classList.remove('hidden');
+  } else if (mode === 'lineup_quiz') {
+    document.getElementById('revealClubTitle').textContent = `${room.modeData?.title || ''} • รอบย่อยที่ ${room.waveNumber}`;
+    nextWaveBtn.textContent = '🔥 ทายผัง 11 ตัวจริงนี้ต่อ!';
+    changeBtn.textContent = '🔄 เปลี่ยนแมตช์ผัง 11 ตัวจริงใหม่';
+    changeBtn.classList.remove('hidden');
+  } else if (mode === 'top10_stats') {
+    document.getElementById('revealClubTitle').textContent = `${room.modeData?.title || ''} • รอบย่อยที่ ${room.waveNumber}`;
+    nextWaveBtn.textContent = '🔥 ทาย Top 10 หัวข้อนี้ต่อ!';
+    changeBtn.textContent = '🔄 เปลี่ยนหัวข้อ Top 10 ใหม่';
+    changeBtn.classList.remove('hidden');
+  } else if (mode === 'career_path') {
+    document.getElementById('revealClubTitle').textContent = `เฉลยนักเตะปริศนา: ${room.modeData?.flag || ''} ${room.modeData?.answerName || ''}`;
+    nextWaveBtn.textContent = '🕵️‍♂️ ไปข้อต่อไป (สุ่มนักเตะปริศนาคนใหม่!)';
+    changeBtn.classList.add('hidden');
+  } else if (mode === 'trivia_quiz') {
+    document.getElementById('revealClubTitle').textContent = `เฉลยคำถามแฟนพันธุ์แท้ ข้อที่ ${room.roundNumber}`;
+    nextWaveBtn.textContent = '⚡ คำถามข้อต่อไป!';
+    changeBtn.classList.add('hidden');
+  } else if (mode === 'footy_grid') {
+    document.getElementById('revealClubTitle').textContent = `${room.modeData?.title || 'ตาราง XO'} • รอบย่อยที่ ${room.waveNumber}`;
+    nextWaveBtn.textContent = '🔥 เล่นตาราง XO นี้ต่อ (ชิงช่องที่เหลือ!)';
+    changeBtn.textContent = '🔄 เปลี่ยนกระดาน XO ใหม่';
+    changeBtn.classList.remove('hidden');
+  }
+
+  const targetBanner = document.getElementById('targetReachedBanner');
+  if (targetBanner) {
+    targetBanner.classList.toggle('hidden', !room.hasReachedTarget);
+  }
+
+  const revealStage = document.getElementById('revealDynamicStage');
+  revealStage.innerHTML = buildModeStageHTML(room, true);
+
+  const listEl = document.getElementById('revealResultsList');
+  listEl.innerHTML = '';
+
+  (room.lastWaveResults || []).forEach((res) => {
+    const item = document.createElement('div');
+    item.className = `reveal-item status-${res.status}`;
+
+    const timeTag = res.timeTakenMs ? `⏱️ ${(res.timeTakenMs / 1000).toFixed(1)} วิ` : '⏱️ หมดเวลา';
+    const answerTitle = res.footballer
+      ? `${res.footballer.flag} ${res.footballer.name} <small style="font-weight:400;opacity:0.75;">(${res.footballer.position})</small>`
+      : res.rawInput
+      ? `"${res.rawInput}"`
+      : '— ไม่ได้ตอบ —';
+
+    const ptsText = res.pointsEarned > 0 ? `+${res.pointsEarned}` : '0';
+
+    item.innerHTML = `
+      <div class="reveal-main">
+        <div class="reveal-player-row">
+          <span>${res.playerAvatar} <strong>${res.playerName}</strong></span>
+          <span>• ${timeTag}</span>
+        </div>
+        <div class="reveal-answer-name">${answerTitle}</div>
+        <div class="reveal-msg">${res.message}</div>
+      </div>
+      <div class="reveal-points ${res.pointsEarned === 0 ? 'zero' : ''}">
+        ${ptsText} <small style="font-size:0.75rem;">คะแนน</small>
+      </div>
+    `;
+    listEl.appendChild(item);
+  });
+
+  const revealClubBoard = document.getElementById('revealClubUsedBoard');
+  if (mode === 'club_battle') {
+    revealClubBoard.classList.remove('hidden');
+    document.getElementById('revealUsedCount').textContent = room.usedPlayers.length;
+    document.getElementById('revealTotalClubPlayers').textContent = room.totalPossibleForClub || 0;
+    renderUsedPlayersChips('revealUsedPlayersList', room.usedPlayers);
+  } else {
+    revealClubBoard.classList.add('hidden');
+  }
+}
+
+function renderGameOverView(room) {
+  const summary = room.matchSummary;
+  if (!summary) return;
+
+  document.getElementById('matchMetaSummary').textContent =
+    `ดวลกันทั้งหมด ${summary.totalRoundsPlayed} โจทย์ • รวม ${summary.totalWavesPlayed} รอบย่อย`;
+
+  const podiumEl = document.getElementById('podiumStage');
+  podiumEl.innerHTML = '';
+  const medals = { 1: '👑', 2: '🥈', 3: '🥉' };
+
+  (summary.podium || []).forEach((p) => {
+    const spot = document.createElement('div');
+    spot.className = `podium-spot rank-${p.rank}`;
+    const fastStr = p.fastestTimeMs ? `⚡ ${(p.fastestTimeMs / 1000).toFixed(1)}s` : '';
+
+    spot.innerHTML = `
+      <div class="podium-avatar-wrap">
+        <div class="podium-avatar">${p.avatar}</div>
+        <span class="podium-medal">${medals[p.rank] || '🏅'}</span>
+      </div>
+      <div class="podium-name">${p.name}</div>
+      <div class="podium-score">${p.score.toLocaleString()} <small style="font-size:0.7rem;">pts</small></div>
+      <div class="podium-pillar">
+        <span class="pillar-rank-num">#${p.rank}</span>
+        <div class="pillar-sub">ตอบถูก ${p.correctCount} ครั้ง ${fastStr ? '• ' + fastStr : ''}</div>
+      </div>
+    `;
+    podiumEl.appendChild(spot);
+  });
+
+  const mvpSection = document.getElementById('mvpSection');
+  const mvpGrid = document.getElementById('mvpAwardsGrid');
+  mvpGrid.innerHTML = '';
+
+  if (!summary.awards || summary.awards.length === 0) {
+    mvpSection.classList.add('hidden');
+  } else {
+    mvpSection.classList.remove('hidden');
+    summary.awards.forEach((aw) => {
+      const card = document.createElement('div');
+      card.className = 'mvp-card';
+      card.innerHTML = `
+        <div class="mvp-icon">${aw.icon}</div>
+        <div class="mvp-info">
+          <h4>${aw.title}</h4>
+          <strong>${aw.playerAvatar} ${aw.playerName}</strong>
+          <p>${aw.detail}</p>
+        </div>
+      `;
+      mvpGrid.appendChild(card);
+    });
+  }
+
+  const tbody = document.getElementById('standingsTableBody');
+  tbody.innerHTML = '';
+  (summary.standings || []).forEach((st) => {
+    const tr = document.createElement('tr');
+    const rankIcon = st.rank === 1 ? '🥇 1' : st.rank === 2 ? '🥈 2' : st.rank === 3 ? '🥉 3' : `#${st.rank}`;
+    const fastestStr = st.fastestTimeMs ? `${(st.fastestTimeMs / 1000).toFixed(2)}s` : '-';
+    const avgStr = st.avgTimeMs ? `${(st.avgTimeMs / 1000).toFixed(2)}s` : '-';
+
+    tr.innerHTML = `
+      <td><strong>${rankIcon}</strong></td>
+      <td>${st.avatar} <strong>${st.name}</strong></td>
+      <td>${st.correctCount} ครั้ง</td>
+      <td>🔥 ${st.bestStreak}</td>
+      <td>${fastestStr}</td>
+      <td>${avgStr}</td>
+      <td><strong style="color:#fbbf24;">${st.score.toLocaleString()}</strong></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// AUTOCOMPLETE SEARCH LOGIC
+function updateAutocomplete(query) {
+  const dropdown = document.getElementById('playerAutocompleteList');
+  const norm = normalizeText(query);
+
+  if (!norm || norm.length < 1) {
+    hideAutocomplete();
+    return;
+  }
+
+  const usedIds = new Set((state.room?.usedPlayers || []).map((u) => u.id));
+
+  const matches = [];
+  for (const p of state.players) {
+    const pNameNorm = normalizeText(p.name);
+    const startsWith = pNameNorm.startsWith(norm) || pNameNorm.split(/\s+/).some((part) => part.startsWith(norm));
+    const aliasMatch = p.aliases && p.aliases.some((a) => normalizeText(a).includes(norm));
+    const includesMatch = pNameNorm.includes(norm);
+
+    if (startsWith || aliasMatch || includesMatch) {
+      matches.push({
+        player: p,
+        alreadyUsed: usedIds.has(p.id),
+        priority: startsWith ? 1 : aliasMatch ? 2 : 3
+      });
+    }
+  }
+
+  matches.sort((a, b) => a.priority - b.priority || a.player.name.localeCompare(b.player.name));
+  const topMatches = matches.slice(0, 8);
+
+  if (topMatches.length === 0) {
+    hideAutocomplete();
+    return;
+  }
+
+  state.autocompleteItems = topMatches.map((m) => m.player);
+  state.autocompleteIndex = 0;
+
+  dropdown.innerHTML = '';
+  topMatches.forEach((m, idx) => {
+    const p = m.player;
+    const row = document.createElement('div');
+    row.className =
+      'autocomplete-item' +
+      (idx === state.autocompleteIndex ? ' active' : '') +
+      (m.alreadyUsed ? ' already-used' : '');
+
+    row.innerHTML = `
+      <div class="ac-left">
+        <span class="ac-flag">${p.flag}</span>
+        <span class="ac-name">${p.name}</span>
+      </div>
+      <div>
+        ${m.alreadyUsed ? '<span class="ac-pos" style="background:#ef4444;color:#fff;">ถูกใช้แล้ว</span>' : `<span class="ac-pos">${p.position}</span>`}
+      </div>
+    `;
+
+    row.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      selectAutocompletePlayer(p);
+    });
+    dropdown.appendChild(row);
+  });
+
+  dropdown.classList.remove('hidden');
+}
+
+function selectAutocompletePlayer(player) {
+  const input = document.getElementById('playerGuessInput');
+  input.value = player.name;
+  state.selectedAutocompletePlayerId = player.id;
+  hideAutocomplete();
+  submitCurrentGuess();
+}
+
+function hideAutocomplete() {
+  const dropdown = document.getElementById('playerAutocompleteList');
+  if (dropdown) dropdown.classList.add('hidden');
+  state.autocompleteItems = [];
+  state.autocompleteIndex = -1;
+}
+
+async function submitCurrentGuess() {
+  const input = document.getElementById('playerGuessInput');
+  const val = input.value.trim();
+  if (!val) {
+    showToast('กรุณาพิมพ์ชื่อนักฟุตบอลก่อนส่งคำตอบ');
+    return;
+  }
+
+  let chosenId = state.selectedAutocompletePlayerId;
+  if (!chosenId && state.autocompleteItems.length > 0 && state.autocompleteIndex >= 0) {
+    const activeItem = state.autocompleteItems[state.autocompleteIndex];
+    if (activeItem && normalizeText(activeItem.name).includes(normalizeText(val))) {
+      chosenId = activeItem.id;
+      input.value = activeItem.name;
+    }
+  }
+
+  sfx.lockIn();
+  document.getElementById('lockedAnswerText').textContent = `👟 "${input.value}"`;
+  hideAutocomplete();
+
+  await apiAction('submit_answer', {
+    playerInput: input.value,
+    selectedPlayerId: chosenId,
+    cellIndex: state.selectedGridCellIndex
+  });
+}
+
+function bindRoomEvents() {
+  document.getElementById('leaveRoomBtn').addEventListener('click', () => {
+    if (state.eventSource) state.eventSource.close();
+    window.history.replaceState({}, '', window.location.pathname);
+    document.getElementById('gameScreen').classList.remove('active');
+    document.getElementById('homeScreen').classList.add('active');
+  });
+
+  document.getElementById('switchModeTopBtn').addEventListener('click', () => {
+    apiAction('back_to_lobby');
+  });
+
+  document.querySelectorAll('[data-mode]').forEach((card) => {
+    card.addEventListener('click', () => {
+      apiAction('update_settings', { gameMode: card.dataset.mode });
+    });
+  });
+
+  document.getElementById('copyCodeBtn').addEventListener('click', () => {
+    if (!state.roomCode) return;
+    navigator.clipboard.writeText(state.roomCode);
+    showToast(`คัดลอกรหัสห้อง ${state.roomCode} แล้ว!`);
+  });
+
+  document.getElementById('copyLinkBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText(window.location.href);
+    showToast('คัดลอกลิงก์ชวนเพื่อนเรียบร้อย! ส่งให้เพื่อนเปิดเข้าห้องได้เลย');
+  });
+
+  document.querySelectorAll('[data-time-delta]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (!state.room) return;
+      const delta = parseInt(btn.dataset.timeDelta, 10);
+      const nextTime = Math.max(5, Math.min(60, state.room.settings.timeLimit + delta));
+      apiAction('update_settings', { timeLimit: nextTime });
+    });
+  });
+
+  document.querySelectorAll('[data-time-preset]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const preset = parseInt(btn.dataset.timePreset, 10);
+      apiAction('update_settings', { timeLimit: preset });
+    });
+  });
+
+  document.getElementById('decTimeQuickBtn').addEventListener('click', () => {
+    if (!state.room) return;
+    apiAction('update_settings', { timeLimit: Math.max(5, state.room.settings.timeLimit - 5) });
+  });
+
+  document.getElementById('incTimeQuickBtn').addEventListener('click', () => {
+    if (!state.room) return;
+    apiAction('update_settings', { timeLimit: Math.min(60, state.room.settings.timeLimit + 5) });
+  });
+
+  document.getElementById('targetScoreSelect').addEventListener('change', (e) => {
+    apiAction('update_settings', { targetScore: parseInt(e.target.value, 10) });
+  });
+
+  document.getElementById('duplicateRuleSelect').addEventListener('change', (e) => {
+    apiAction('update_settings', { duplicateRule: e.target.value });
+  });
+
+  document.getElementById('clubSelectModeInput').addEventListener('change', (e) => {
+    apiAction('update_settings', { clubSelectMode: e.target.value });
+  });
+
+  document.getElementById('addBotBtn').addEventListener('click', async () => {
+    const res = await apiAction('add_bot');
+    if (!res.ok) showToast(res.error);
+  });
+
+  document.getElementById('resetScoresBtn').addEventListener('click', () => {
+    apiAction('reset_scores');
+  });
+
+  document.getElementById('playAgainBtn').addEventListener('click', () => {
+    apiAction('reset_scores');
+  });
+
+  const triggerEndMatch = () => {
+    sfx.init();
+    apiAction('end_match');
+  };
+  document.getElementById('endMatchSidebarBtn').addEventListener('click', triggerEndMatch);
+  document.getElementById('endMatchRevealBtn').addEventListener('click', triggerEndMatch);
+  document.getElementById('celebrateChampionBtn').addEventListener('click', triggerEndMatch);
+
+  document.getElementById('startClubSelectBtn').addEventListener('click', () => {
+    sfx.init();
+    apiAction('start_mode_round');
+  });
+
+  document.getElementById('randomClubBtn').addEventListener('click', () => {
+    apiAction('select_club', {
+      random: true,
+      leagueFilter: state.selectedLeagueFilter === 'all' ? null : state.selectedLeagueFilter
+    });
+  });
+
+  document.getElementById('clubSearchInput').addEventListener('input', (e) => {
+    state.clubSearchText = e.target.value;
+    renderClubsGrid();
+  });
+
+  const guessInput = document.getElementById('playerGuessInput');
+  guessInput.addEventListener('input', (e) => {
+    state.selectedAutocompletePlayerId = null;
+    updateAutocomplete(e.target.value);
+  });
+
+  guessInput.addEventListener('keydown', (e) => {
+    const dropdown = document.getElementById('playerAutocompleteList');
+    const isVisible = !dropdown.classList.contains('hidden') && state.autocompleteItems.length > 0;
+
+    if (e.key === 'ArrowDown' && isVisible) {
+      e.preventDefault();
+      state.autocompleteIndex = (state.autocompleteIndex + 1) % state.autocompleteItems.length;
+      highlightAutocompleteRow();
+    } else if (e.key === 'ArrowUp' && isVisible) {
+      e.preventDefault();
+      state.autocompleteIndex =
+        (state.autocompleteIndex - 1 + state.autocompleteItems.length) %
+        state.autocompleteItems.length;
+      highlightAutocompleteRow();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (isVisible && state.autocompleteIndex >= 0) {
+        selectAutocompletePlayer(state.autocompleteItems[state.autocompleteIndex]);
+      } else {
+        submitCurrentGuess();
+      }
+    } else if (e.key === 'Escape') {
+      hideAutocomplete();
+    }
+  });
+
+  document.getElementById('submitGuessBtn').addEventListener('click', () => {
+    submitCurrentGuess();
+  });
+
+  document.getElementById('nextWaveSameClubBtn').addEventListener('click', () => {
+    apiAction('next_wave_same_club');
+  });
+
+  document.getElementById('changeClubBtn').addEventListener('click', () => {
+    apiAction('start_mode_round');
+  });
+
+  document.querySelectorAll('.emoji-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      apiAction('send_reaction', { emoji: btn.dataset.emoji });
+    });
+  });
+}
+
+function highlightAutocompleteRow() {
+  const dropdown = document.getElementById('playerAutocompleteList');
+  const rows = dropdown.querySelectorAll('.autocomplete-item');
+  rows.forEach((r, idx) => {
+    r.classList.toggle('active', idx === state.autocompleteIndex);
+  });
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  initHomeUI();
+  bindRoomEvents();
+  loadDatabase();
+});
