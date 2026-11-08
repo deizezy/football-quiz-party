@@ -132,6 +132,12 @@ function normalizeText(str) {
     .toString()
     .trim()
     .toLowerCase()
+    .replace(/ø/g, 'o')
+    .replace(/ł/g, 'l')
+    .replace(/ß/g, 'ss')
+    .replace(/đ/g, 'd')
+    .replace(/æ/g, 'ae')
+    .replace(/œ/g, 'oe')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
 }

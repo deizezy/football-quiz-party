@@ -206,6 +206,12 @@ function normalizeText(str) {
     .toString()
     .trim()
     .toLowerCase()
+    .replace(/ø/g, 'o')
+    .replace(/ł/g, 'l')
+    .replace(/ß/g, 'ss')
+    .replace(/đ/g, 'd')
+    .replace(/æ/g, 'ae')
+    .replace(/œ/g, 'oe')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
 }
@@ -907,14 +913,37 @@ async function initializeFootballApiData() {
     );
   }
 
+  // Canonical alias map to merge known short/full name variants across ESPN, Seed & Wikidata
+  const CANONICAL_MERGE_KEYS = {
+    'nicolas gonzalez': 'nico gonzalez',
+    'emerson palmieri': 'emerson',
+    'pedro': 'pedro rodriguez',
+    'ronaldo': 'ronaldo nazario'
+  };
+
+  const resolvePlayerKey = (rawNormName, aliases = []) => {
+    if (CANONICAL_MERGE_KEYS[rawNormName] && livePlayerMap.has(CANONICAL_MERGE_KEYS[rawNormName])) {
+      return CANONICAL_MERGE_KEYS[rawNormName];
+    }
+    if (livePlayerMap.has(rawNormName)) return rawNormName;
+    for (const al of aliases) {
+      const an = normalizeText(al);
+      if (an.includes(' ') && livePlayerMap.has(an)) {
+        return an;
+      }
+    }
+    return rawNormName;
+  };
+
   // 2B. Merge curated Legends & Former Multi-Club Stars from seedPlayerLookup
   seedPlayerLookup.forEach((seed, normName) => {
     const flagUrl = seed.flagUrl || getFlagUrlFromEmoji(seed.flag);
-    if (!livePlayerMap.has(normName)) {
+    const targetKey = resolvePlayerKey(normName, seed.aliases || []);
+    if (!livePlayerMap.has(targetKey)) {
       const nameParts = seed.name.split(/\s+/);
-      const lastName = nameParts[nameParts.length - 1].toLowerCase();
-      livePlayerMap.set(normName, {
-        id: seed.id || 'legend_' + normName.replace(/[^a-z0-9]/g, '_'),
+      const lastName = normalizeText(nameParts[nameParts.length - 1]);
+      livePlayerMap.set(targetKey, {
+        id: seed.id || 'legend_' + targetKey.replace(/[^a-z0-9]/g, '_'),
         name: seed.name,
         flag: seed.flag || '⚽',
         flagUrl,
@@ -928,9 +957,12 @@ async function initializeFootballApiData() {
         apiSynced: false
       });
     } else {
-      const existing = livePlayerMap.get(normName);
+      const existing = livePlayerMap.get(targetKey);
       seed.clubs.forEach((cid) => {
         if (!existing.clubs.includes(cid)) existing.clubs.push(cid);
+      });
+      (seed.aliases || []).forEach((al) => {
+        if (al && !existing.aliases.includes(al)) existing.aliases.push(al);
       });
     }
   });
@@ -958,7 +990,8 @@ async function initializeFootballApiData() {
         const cid = WIKIDATA_CLUB_QIDS[clubQid];
         if (!cid) continue;
 
-        const normName = normalizeText(fullName);
+        const rawNormName = normalizeText(fullName);
+        const normName = resolvePlayerKey(rawNormName, [fullName]);
         const natName = b.countryLabel?.value || '';
         const natInfo = mapNationalityToFlagAndUrl(natName);
 
@@ -975,7 +1008,7 @@ async function initializeFootballApiData() {
             position: 'FW',
             clubs: [cid],
             rawTeams: [],
-            aliases: Array.from(new Set([lastName, normName, fullName.toLowerCase()].filter(Boolean))),
+            aliases: Array.from(new Set([lastName, rawNormName, fullName.toLowerCase()].filter(Boolean))),
             fromLiveApi: true,
             isLegend: true,
             apiSynced: false
