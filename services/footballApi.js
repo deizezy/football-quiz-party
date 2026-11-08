@@ -362,7 +362,7 @@ async function fetchJsonWithTimeout(url, timeoutMs = 4000) {
       signal: controller.signal,
       headers: {
         'User-Agent': USER_AGENT,
-        Accept: 'application/json, application/sparql-results+json'
+        Accept: url.includes('wikidata.org') ? 'application/sparql-results+json' : 'application/json'
       }
     });
     if (!res.ok) return null;
