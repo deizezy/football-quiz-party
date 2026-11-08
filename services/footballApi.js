@@ -42,7 +42,7 @@ PLAYERS.forEach((p) => {
     clubs: [...(p.clubs || [])],
     aliases: [...(p.aliases || [])],
     flag: p.flag,
-    flagUrl: p.flagUrl || getFlagUrlFromEmoji(p.flag)
+    flagUrl: p.flagUrl || null
   });
 });
 
