@@ -31,16 +31,55 @@ const LEAGUE_ESPN_SLUGS = {
   ligue_1: { slug: 'fra.1', name: 'Ligue 1', flag: '🇫🇷', iso: 'fr' }
 };
 
-// Preserve Thai aliases and known past club links from initial seed data so Thai search & multi-club history work seamlessly
+// Preserve Thai aliases, legends, and known past club links from initial seed data so Thai/English search & multi-club history work seamlessly
 const seedPlayerLookup = new Map();
 PLAYERS.forEach((p) => {
   const norm = normalizeText(p.name);
   seedPlayerLookup.set(norm, {
+    id: p.id,
+    name: p.name,
+    position: p.position || 'FW',
     clubs: [...(p.clubs || [])],
     aliases: [...(p.aliases || [])],
-    flag: p.flag
+    flag: p.flag,
+    flagUrl: p.flagUrl || getFlagUrlFromEmoji(p.flag)
   });
 });
+
+const WIKIDATA_CLUB_QIDS = {
+  Q18656: 'man_utd',
+  Q1130849: 'liverpool',
+  Q9617: 'arsenal',
+  Q9616: 'chelsea',
+  Q50602: 'man_city',
+  Q18741: 'tottenham',
+  Q18716: 'newcastle',
+  Q18711: 'aston_villa',
+  Q5794: 'everton',
+  Q18747: 'west_ham',
+  Q8682: 'real_madrid',
+  Q7156: 'barcelona',
+  Q8701: 'atletico',
+  Q10329: 'sevilla',
+  Q10333: 'valencia',
+  Q12297: 'villarreal',
+  Q1422: 'juventus',
+  Q1543: 'ac_milan',
+  Q631: 'inter_milan',
+  Q2739: 'roma',
+  Q2641: 'napoli',
+  Q2609: 'lazio',
+  Q2052: 'fiorentina',
+  Q15789: 'bayern',
+  Q41420: 'dortmund',
+  Q104761: 'leverkusen',
+  Q702455: 'leipzig',
+  Q483020: 'psg',
+  Q180305: 'monaco',
+  Q704: 'lyon',
+  Q132885: 'marseille',
+  Q19516: 'lille'
+};
 
 // Verified default API badge URLs for instant startup availability before async refresh finishes
 const DEFAULT_CLUB_BADGES = {
@@ -94,6 +133,7 @@ const NATIONALITY_MAP = {
   brazil: { flag: '🇧🇷', iso: 'br' },
   argentina: { flag: '🇦🇷', iso: 'ar' },
   netherlands: { flag: '🇳🇱', iso: 'nl' },
+  'kingdom of the netherlands': { flag: '🇳🇱', iso: 'nl' },
   holland: { flag: '🇳🇱', iso: 'nl' },
   belgium: { flag: '🇧🇪', iso: 'be' },
   croatia: { flag: '🇭🇷', iso: 'hr' },
@@ -867,10 +907,108 @@ async function initializeFootballApiData() {
     );
   }
 
+  // 2B. Merge curated Legends & Former Multi-Club Stars from seedPlayerLookup
+  seedPlayerLookup.forEach((seed, normName) => {
+    const flagUrl = seed.flagUrl || getFlagUrlFromEmoji(seed.flag);
+    if (!livePlayerMap.has(normName)) {
+      const nameParts = seed.name.split(/\s+/);
+      const lastName = nameParts[nameParts.length - 1].toLowerCase();
+      livePlayerMap.set(normName, {
+        id: seed.id || 'legend_' + normName.replace(/[^a-z0-9]/g, '_'),
+        name: seed.name,
+        flag: seed.flag || '⚽',
+        flagUrl,
+        photoUrl: null,
+        position: seed.position || 'FW',
+        clubs: [...seed.clubs],
+        rawTeams: [],
+        aliases: Array.from(new Set([lastName, normName, ...(seed.aliases || [])].filter(Boolean))),
+        fromLiveApi: true,
+        isLegend: true,
+        apiSynced: false
+      });
+    } else {
+      const existing = livePlayerMap.get(normName);
+      seed.clubs.forEach((cid) => {
+        if (!existing.clubs.includes(cid)) existing.clubs.push(cid);
+      });
+    }
+  });
+
+  // 2C. Fetch 1,700+ Historical & Multi-Club Legends across all 32 Major European Clubs via Wikidata SPARQL
+  try {
+    const allQids = Object.keys(WIKIDATA_CLUB_QIDS);
+    const qidBatches = [allQids.slice(0, 16), allQids.slice(16)];
+    let legendsAdded = 0;
+    let historiesEnriched = 0;
+
+    await Promise.allSettled(
+      qidBatches.map(async (qids) => {
+        const valuesStr = qids.map((q) => 'wd:' + q).join(' ');
+        const sparql = `SELECT ?player ?playerLabel ?club ?countryLabel WHERE { VALUES ?club { ${valuesStr} } ?player wdt:P31 wd:Q5 ; wdt:P106 wd:Q937857 ; wdt:P54 ?club ; wikibase:sitelinks ?sitelinks . FILTER(?sitelinks >= 38) OPTIONAL { ?player wdt:P27 ?country . } SERVICE wikibase:label { bd:serviceParam wikibase:language 'en'. } } LIMIT 3500`;
+        const url = `${WIKIDATA_SPARQL_URL}?format=json&query=${encodeURIComponent(sparql)}`;
+        const data = await fetchJsonWithTimeout(url, 8000);
+        const bindings = data?.results?.bindings || [];
+
+        for (const b of bindings) {
+          const fullName = (b.playerLabel?.value || '').trim();
+          if (!fullName || /^Q\d+$/.test(fullName)) continue;
+
+          const clubUri = b.club?.value || '';
+          const clubQid = clubUri.split('/').pop();
+          const cid = WIKIDATA_CLUB_QIDS[clubQid];
+          if (!cid) continue;
+
+          const normName = normalizeText(fullName);
+          const natName = b.countryLabel?.value || '';
+          const natInfo = mapNationalityToFlagAndUrl(natName);
+
+          if (!livePlayerMap.has(normName)) {
+            const parts = fullName.split(/\s+/);
+            const lastName = normalizeText(parts[parts.length - 1]);
+            const qid = (b.player?.value || '').split('/').pop() || normName.replace(/[^a-z0-9]/g, '_');
+            livePlayerMap.set(normName, {
+              id: 'wd_' + qid,
+              name: fullName,
+              flag: natInfo.flag,
+              flagUrl: natInfo.flagUrl || getFlagUrlFromEmoji(natInfo.flag),
+              photoUrl: null,
+              position: 'FW',
+              clubs: [cid],
+              rawTeams: [],
+              aliases: Array.from(new Set([lastName, normName, fullName.toLowerCase()].filter(Boolean))),
+              fromLiveApi: true,
+              isLegend: true,
+              apiSynced: false
+            });
+            legendsAdded++;
+          } else {
+            const existing = livePlayerMap.get(normName);
+            if (!existing.clubs.includes(cid)) {
+              existing.clubs.push(cid);
+              historiesEnriched++;
+            }
+            if ((existing.flag === '⚽' || !existing.flagUrl) && natInfo.flagUrl) {
+              existing.flag = natInfo.flag;
+              existing.flagUrl = natInfo.flagUrl;
+            }
+          }
+        }
+      })
+    );
+    console.log(
+      `🌟 Wikidata Legends Sync: Added ${legendsAdded} former/legend players & enriched ${historiesEnriched} historical club transfers!`
+    );
+  } catch (err) {
+    // Non-fatal if Wikidata is slow
+  }
+
   if (livePlayerMap.size > 100) {
     PLAYERS.length = 0;
     livePlayerMap.forEach((p) => PLAYERS.push(p));
-    console.log(`✅ Replaced PLAYERS with ${PLAYERS.length} live 2026-27 active players across ${CLUBS.length} clubs!`);
+    console.log(
+      `✅ Total Ready Players in Memory: ${PLAYERS.length} (Active 2026-27 + Legends/Former Players across ${CLUBS.length} clubs)!`
+    );
   }
 
   // 3. Fetch Live 2026-27 Season Top 10 Leaderboards (Goals & Assists) from ESPN Statistics API
