@@ -4,8 +4,8 @@ const AVATARS = ['⚽', '🦁', '🔥', '⚡', '👑', '🦊', '🐯', '🦅', '
 
 const MODE_META = {
   club_battle: {
-    badge: '🏟️ โหมดที่ 1: ทายนักเตะประจำสโมสร',
-    prompt: '👟 พิมพ์ชื่อนักฟุตบอลที่ เคยค้าแข้ง (หรือกำลังเล่นให้) สโมสรนี้:'
+    badge: '🏟️ โหมดที่ 1: ลงสโมสรล่าแต้มคูณ (Multi-Club Pool)',
+    prompt: '👟 พิมพ์ชื่อนักฟุตบอลที่เคยอยู่สโมสรบนกระดาน! (ตรง 1 สโมสร = +1 แต้ม, ตรง 2 สโมสร = +2 แต้ม, ตรง 3 สโมสร = +3 แต้ม!):'
   },
   lineup_quiz: {
     badge: '📋 โหมดที่ 2: ทายผัง 11 ตัวจริงในตำนาน',
@@ -293,6 +293,10 @@ function connectStream(roomCode) {
           return;
         }
 
+        if (payload.type === 'club_picked') {
+          sfx.lockIn();
+        }
+
         if (payload.type === 'wave_revealed' && prevState !== 'REVEAL') {
           const myRes = (state.room.lastWaveResults || []).find((r) => r.playerId === state.playerId);
           if (myRes && myRes.pointsEarned > 0) {
@@ -345,7 +349,7 @@ function renderRoom() {
   document.getElementById('duplicateRuleSelect').value = room.settings.duplicateRule || 'strict_unique';
   document.getElementById('clubSelectModeInput').value = room.settings.clubSelectMode || 'both';
 
-  const targetScore = room.settings.targetScore !== undefined ? room.settings.targetScore : 1000;
+  const targetScore = room.settings.targetScore !== undefined ? room.settings.targetScore : 10;
   document.getElementById('targetScoreSelect').value = String(targetScore);
   document.getElementById('headerTargetScore').textContent =
     targetScore > 0 ? targetScore.toLocaleString() : 'ไม่จำกัด';
@@ -374,6 +378,7 @@ function renderRoom() {
   });
 
   if (room.state === 'SELECTING_CLUB') {
+    renderPickedClubsPool(room);
     renderClubsGrid();
   } else if (room.state === 'PLAYING') {
     renderPlayingView(room);
@@ -403,7 +408,13 @@ function renderScoreboard(room) {
       (room.state === 'PLAYING' && p.hasSubmitted ? ' submitted' : '');
 
     let statusHtml = '';
-    if (room.state === 'PLAYING') {
+    if (room.state === 'SELECTING_CLUB') {
+      if (p.pickedClubCount > 0) {
+        statusHtml = `<div class="player-status locked">✅ เลือกสโมสรแล้ว</div>`;
+      } else {
+        statusHtml = `<div class="player-status">⏳ กำลังเลือกสโมสร...</div>`;
+      }
+    } else if (room.state === 'PLAYING') {
       if (p.hasSubmitted) {
         const sec = p.submittedTimeMs ? (p.submittedTimeMs / 1000).toFixed(1) : '';
         statusHtml = `<div class="player-status locked">🔒 ตอบแล้ว! (${sec}s)</div>`;
@@ -446,6 +457,59 @@ function renderScoreboard(room) {
   });
 }
 
+function renderPickedClubsPool(room) {
+  const picked = room.pickedClubs || [];
+  const targetSize = room.targetClubPoolSize || Math.max(room.players.length, 3);
+  document.getElementById('pickedPoolCount').textContent = picked.length;
+  document.getElementById('pickedPoolTarget').textContent = targetSize;
+
+  const myPicks = picked.filter((pc) => pc.playerId === state.playerId);
+  const maxPerPlayer = room.maxClubsPerPlayer || 1;
+  const heading = document.getElementById('clubSelectHeading');
+
+  if (myPicks.length >= maxPerPlayer) {
+    heading.textContent = '✅ คุณเลือกสโมสรเรียบร้อยแล้ว! กำลังรอเพื่อนคนอื่นเลือกสโมสร...';
+  } else if (maxPerPlayer > 1) {
+    heading.textContent = `เลือกสโมสรลงกระดานได้สูงสุด ${maxPerPlayer} ทีม (เลือกแล้ว ${myPicks.length}/${maxPerPlayer})`;
+  } else {
+    heading.textContent = 'พิมพ์หรือคลิกเลือกสโมสรของคุณ 1 ทีม (เปิดโชว์ทันที ห้ามซ้ำกับเพื่อน!)';
+  }
+
+  const listEl = document.getElementById('pickedClubsPoolList');
+  listEl.innerHTML = '';
+
+  picked.forEach((pc) => {
+    const c = pc.club;
+    const pill = document.createElement('div');
+    pill.className = 'picked-club-pill';
+    pill.innerHTML = `
+      <div class="club-crest" style="width:36px;height:36px;font-size:0.76rem;background:linear-gradient(135deg, ${c?.primaryColor || '#10b981'}, ${c?.secondaryColor === '#FFFFFF' ? '#1e293b' : c?.secondaryColor || '#0f172a'});">
+        ${c?.short || 'FC'}
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:0.95rem;">${c?.name || pc.clubId}</div>
+        <div style="font-size:0.74rem;color:#34d399;">เลือกโดย ${pc.playerAvatar} ${pc.playerName}</div>
+      </div>
+    `;
+    listEl.appendChild(pill);
+  });
+
+  // Render waiting slots
+  const remaining = Math.max(0, targetSize - picked.length);
+  for (let i = 0; i < remaining; i++) {
+    const waitPill = document.createElement('div');
+    waitPill.className = 'picked-club-pill waiting';
+    waitPill.innerHTML = `
+      <span>⏳</span>
+      <div>
+        <div style="font-weight:600;font-size:0.88rem;">รอเลือกสโมสรที่ ${picked.length + i + 1}...</div>
+        <div style="font-size:0.72rem;color:#94a3b8;">ห้ามซ้ำกับทีมบนกระดาน</div>
+      </div>
+    `;
+    listEl.appendChild(waitPill);
+  }
+}
+
 function renderLeagueTabs() {
   const container = document.getElementById('leagueFilterTabs');
   if (!container) return;
@@ -479,6 +543,11 @@ function renderClubsGrid() {
   if (!grid) return;
   grid.innerHTML = '';
 
+  const pickedMap = new Map();
+  (state.room?.pickedClubs || []).forEach((pc) => {
+    pickedMap.set(pc.clubId, pc);
+  });
+
   const q = normalizeText(state.clubSearchText);
   const filtered = state.clubs.filter((c) => {
     if (state.selectedLeagueFilter !== 'all' && c.league !== state.selectedLeagueFilter) {
@@ -494,19 +563,26 @@ function renderClubsGrid() {
   });
 
   filtered.forEach((club) => {
+    const pickedInfo = pickedMap.get(club.id);
     const card = document.createElement('div');
-    card.className = 'club-card';
+    card.className = 'club-card' + (pickedInfo ? ' already-picked' : '');
     card.innerHTML = `
       <div class="club-crest" style="background: linear-gradient(135deg, ${club.primaryColor}, ${club.secondaryColor === '#FFFFFF' ? '#1e293b' : club.secondaryColor});">
         ${club.short}
       </div>
       <div class="club-card-info">
         <h4>${club.name}</h4>
-        <p>${club.nameTh}</p>
+        <p>${pickedInfo ? `🔒 เลือกโดย ${pickedInfo.playerName}` : club.nameTh}</p>
       </div>
     `;
-    card.addEventListener('click', () => {
-      apiAction('select_club', { clubId: club.id });
+    card.addEventListener('click', async () => {
+      const res = await apiAction('select_club', { clubId: club.id });
+      if (!res.ok) {
+        showToast(res.error);
+      } else {
+        document.getElementById('clubSearchInput').value = '';
+        state.clubSearchText = '';
+      }
     });
     grid.appendChild(card);
   });
@@ -514,6 +590,39 @@ function renderClubsGrid() {
 
 function buildModeStageHTML(room, isReveal = false) {
   const mode = room.settings.gameMode || 'club_battle';
+
+  // MODE 1: MULTI-CLUB POOL STAGE
+  if (mode === 'club_battle') {
+    const picked = room.pickedClubs || [];
+    if (picked.length === 0) return '';
+
+    const cardsHtml = picked
+      .map((pc) => {
+        const c = pc.club;
+        return `
+          <div class="picked-club-pill">
+            <div class="club-crest" style="width:40px;height:40px;font-size:0.8rem;background:linear-gradient(135deg, ${c?.primaryColor || '#10b981'}, ${c?.secondaryColor === '#FFFFFF' ? '#1e293b' : c?.secondaryColor || '#0f172a'});">
+              ${c?.short || 'FC'}
+            </div>
+            <div>
+              <div style="font-weight:700;font-size:1rem;">${c?.name || pc.clubId}</div>
+              <div style="font-size:0.75rem;color:#94a3b8;">${c?.nameTh || ''} • เลือกโดย ${pc.playerAvatar} ${pc.playerName}</div>
+            </div>
+          </div>
+        `;
+      })
+      .join('<span style="font-size:1.3rem;font-weight:800;color:#fbbf24;">+</span>');
+
+    return `
+      <div class="multi-clubs-stage">
+        <div style="width:100%;font-size:0.85rem;color:#fde68a;font-weight:600;margin-bottom:4px;">
+          🎯 สโมสรโจทย์ประจำรอบนี้ (นักเตะเคยอยู่กี่สโมสรในรายการนี้ ได้คะแนนตามจำนวนสโมสรที่ตรง!):
+        </div>
+        ${cardsHtml}
+      </div>
+    `;
+  }
+
   const md = room.modeData;
   if (!md) return '';
 
@@ -628,21 +737,17 @@ function buildModeStageHTML(room, isReveal = false) {
   // MODE 6: 3x3 FOOTY TIC-TAC-TOE GRID
   if (mode === 'footy_grid') {
     const cells = md.cells || Array(9).fill(null);
-    // Ensure selectedGridCellIndex points to an open cell if possible
     if (cells[state.selectedGridCellIndex]) {
       const firstOpen = cells.findIndex((c) => !c);
       if (firstOpen >= 0) state.selectedGridCellIndex = firstOpen;
     }
 
     let html = `<div class="footy-grid-wrapper"><div class="footy-grid-board">`;
-    // Top-left corner
     html += `<div class="grid-header-cell"><strong>XO 3x3</strong><small>คลิกเลือกช่อง</small></div>`;
-    // 3 Column headers
     (md.cols || []).forEach((col) => {
       html += `<div class="grid-header-cell"><strong>${col.label}</strong><small>${col.sub}</small></div>`;
     });
 
-    // 3 Rows
     (md.rows || []).forEach((row, rIdx) => {
       html += `<div class="grid-header-cell"><strong>${row.label}</strong><small>${row.sub}</small></div>`;
       for (let cIdx = 0; cIdx < 3; cIdx++) {
@@ -714,12 +819,12 @@ function renderPlayingView(room) {
   document.getElementById('answerPromptLabel').textContent = meta.prompt;
 
   if (mode === 'club_battle') {
-    const club = room.currentClub;
-    if (club) {
-      banner.style.background = `linear-gradient(135deg, ${club.primaryColor}, #0f172a)`;
-      document.getElementById('playingClubName').textContent = club.name;
-      document.getElementById('playingClubSub').innerHTML = `${club.nameTh} • รอบย่อยที่ <span id="playingWaveNum">${room.waveNumber}</span>`;
-    }
+    const picked = room.pickedClubs || [];
+    const firstClub = picked[0]?.club;
+    banner.style.background = `linear-gradient(135deg, ${firstClub?.primaryColor || '#059669'}, #0f172a)`;
+    const clubNamesStr = picked.map((pc) => pc.club?.name || pc.clubId).join('  •  ');
+    document.getElementById('playingClubName').textContent = clubNamesStr || 'สโมสรบนกระดาน';
+    document.getElementById('playingClubSub').innerHTML = `ตรง 1 สโมสร = 1 แต้ม, ตรง 2 สโมสร = 2 แต้ม, ตรง 3 สโมสร = 3 แต้ม! • รอบย่อยที่ <span id="playingWaveNum">${room.waveNumber}</span>`;
   } else if (mode === 'lineup_quiz') {
     banner.style.background = `linear-gradient(135deg, ${room.modeData?.clubColor || '#059669'}, #0f172a)`;
     document.getElementById('playingClubName').textContent = room.modeData?.title || 'Guess the Lineup';
@@ -762,7 +867,6 @@ function renderPlayingView(room) {
   } else {
     lockedZone.classList.add('hidden');
     stageEl.classList.remove('hidden');
-    // In trivia_quiz mode, players click one of the 4 option buttons directly
     if (mode === 'trivia_quiz') {
       inputZone.classList.add('hidden');
     } else {
@@ -800,24 +904,25 @@ function renderUsedPlayersChips(containerId, usedPlayers) {
   usedPlayers.forEach((u) => {
     const chip = document.createElement('div');
     chip.className = 'used-chip';
-    chip.innerHTML = `<span>${u.flag || '⚽'}</span> <strong>${u.name}</strong> <small>(โดย ${u.answeredBy})</small>`;
+    chip.innerHTML = `<span>${u.flag || '⚽'}</span> <strong>${u.name}</strong> <small>(${u.position} • โดย ${u.answeredBy})</small>`;
     container.appendChild(chip);
   });
 }
 
 function renderRevealView(room) {
   const mode = room.settings.gameMode || 'club_battle';
-  const club = room.currentClub;
+  const picked = room.pickedClubs || [];
 
   const nextWaveBtn = document.getElementById('nextWaveSameClubBtn');
   const changeBtn = document.getElementById('changeClubBtn');
 
   if (mode === 'club_battle') {
-    document.getElementById('revealClubTitle').textContent = club
-      ? `สโมสร: ${club.name} (${club.nameTh}) • รอบย่อยที่ ${room.waveNumber}`
+    const clubNamesStr = picked.map((pc) => pc.club?.name || pc.clubId).join(' + ');
+    document.getElementById('revealClubTitle').textContent = clubNamesStr
+      ? `กระดานสโมสร: ${clubNamesStr} • รอบย่อยที่ ${room.waveNumber}`
       : 'เฉลยคำตอบ';
-    nextWaveBtn.textContent = '🔥 เล่นสโมสรนี้ต่อ (ห้ามซ้ำชื่อเดิม!)';
-    changeBtn.textContent = '🔄 เปลี่ยนสโมสรใหม่';
+    nextWaveBtn.textContent = '🔥 เล่นชุดสโมสรเดิมต่อ (ห้ามซ้ำชื่อเดิม!)';
+    changeBtn.textContent = '🔄 ให้ทุกคนเลือกสโมสรชุดใหม่!';
     changeBtn.classList.remove('hidden');
   } else if (mode === 'lineup_quiz') {
     document.getElementById('revealClubTitle').textContent = `${room.modeData?.title || ''} • รอบย่อยที่ ${room.waveNumber}`;
@@ -917,7 +1022,7 @@ function renderGameOverView(room) {
         <span class="podium-medal">${medals[p.rank] || '🏅'}</span>
       </div>
       <div class="podium-name">${p.name}</div>
-      <div class="podium-score">${p.score.toLocaleString()} <small style="font-size:0.7rem;">pts</small></div>
+      <div class="podium-score">${p.score.toLocaleString()} <small style="font-size:0.7rem;">แต้ม</small></div>
       <div class="podium-pillar">
         <span class="pillar-rank-num">#${p.rank}</span>
         <div class="pillar-sub">ตอบถูก ${p.correctCount} ครั้ง ${fastStr ? '• ' + fastStr : ''}</div>
@@ -1174,16 +1279,39 @@ function bindRoomEvents() {
     apiAction('start_mode_round');
   });
 
-  document.getElementById('randomClubBtn').addEventListener('click', () => {
-    apiAction('select_club', {
+  document.getElementById('randomClubBtn').addEventListener('click', async () => {
+    const res = await apiAction('select_club', {
       random: true,
       leagueFilter: state.selectedLeagueFilter === 'all' ? null : state.selectedLeagueFilter
     });
+    if (!res.ok) showToast(res.error);
   });
 
-  document.getElementById('clubSearchInput').addEventListener('input', (e) => {
+  document.getElementById('forceStartWaveBtn').addEventListener('click', async () => {
+    const res = await apiAction('force_start_club_wave');
+    if (!res.ok) showToast(res.error);
+  });
+
+  const clubSearchEl = document.getElementById('clubSearchInput');
+  clubSearchEl.addEventListener('input', (e) => {
     state.clubSearchText = e.target.value;
     renderClubsGrid();
+  });
+
+  clubSearchEl.addEventListener('keydown', async (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const val = clubSearchEl.value.trim();
+      if (!val) return;
+      const res = await apiAction('select_club', { clubInput: val });
+      if (!res.ok) {
+        showToast(res.error);
+      } else {
+        clubSearchEl.value = '';
+        state.clubSearchText = '';
+        renderClubsGrid();
+      }
+    }
   });
 
   const guessInput = document.getElementById('playerGuessInput');

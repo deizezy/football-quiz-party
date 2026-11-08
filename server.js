@@ -55,11 +55,9 @@ function matchesNameOrAlias(input, targetName, aliases = []) {
   if (targetNorm === norm) return true;
   if (aliases && aliases.some((a) => normalizeText(a) === norm)) return true;
 
-  // Last name match
   const parts = targetNorm.split(/\s+/);
   if (parts[parts.length - 1] === norm && norm.length >= 3) return true;
 
-  // Substring match if >= 4 chars
   if (norm.length >= 4) {
     if (targetNorm.includes(norm)) return true;
     if (aliases && aliases.some((a) => normalizeText(a).includes(norm))) return true;
@@ -112,7 +110,8 @@ function findClubByInput(input, clubId) {
         normalizeText(c.name) === norm ||
         normalizeText(c.nameTh) === norm ||
         normalizeText(c.short) === norm ||
-        (c.aliases && c.aliases.some((a) => normalizeText(a) === norm))
+        (c.aliases && c.aliases.some((a) => normalizeText(a).includes(norm))
+        )
     ) ||
     CLUBS.find(
       (c) =>
@@ -250,7 +249,7 @@ function serializeModeDataForClients(room) {
 
   if (mode === 'lineup_quiz') {
     const lineup = LINEUPS.find((l) => l.id === room.currentLineupId) || LINEUPS[0];
-    const unlockedMap = room.unlockedLineupSlots || {}; // slotId -> { answeredBy, playerName }
+    const unlockedMap = room.unlockedLineupSlots || {};
     return {
       lineupId: lineup.id,
       title: lineup.title,
@@ -274,7 +273,7 @@ function serializeModeDataForClients(room) {
 
   if (mode === 'top10_stats') {
     const list = TOP10_LISTS.find((l) => l.id === room.currentTop10Id) || TOP10_LISTS[0];
-    const unlockedRanks = room.unlockedTop10Ranks || {}; // rank -> { answeredBy }
+    const unlockedRanks = room.unlockedTop10Ranks || {};
     return {
       listId: list.id,
       title: list.title,
@@ -333,14 +332,28 @@ function serializeModeDataForClients(room) {
 }
 
 function serializeRoomForClients(room) {
-  const club = room.currentClubId ? CLUBS.find((c) => c.id === room.currentClubId) : null;
-  const totalPossibleForClub = club
-    ? PLAYERS.filter((p) => p.clubs.includes(club.id)).length
-    : 0;
+  const pickedClubs = (room.pickedClubs || []).map((pc) => {
+    const clubObj = CLUBS.find((c) => c.id === pc.clubId);
+    return {
+      ...pc,
+      club: clubObj || null
+    };
+  });
+
+  const activeClubIds = pickedClubs.map((pc) => pc.clubId);
+  const totalPossibleForClub =
+    activeClubIds.length > 0
+      ? PLAYERS.filter((p) => p.clubs.some((cid) => activeClubIds.includes(cid))).length
+      : 0;
 
   const targetScore = room.settings.targetScore || 0;
   const hasReachedTarget =
     targetScore > 0 && room.players.some((p) => p.score >= targetScore);
+
+  // Max clubs allowed per round: if solo (1 player), allow picking up to 3 clubs so they can test multi-club scoring!
+  // If 2+ players, each player picks 1 club.
+  const maxClubsPerPlayer = room.players.length === 1 ? 3 : 1;
+  const targetClubPoolSize = room.players.length === 1 ? 3 : room.players.length;
 
   return {
     code: room.code,
@@ -351,7 +364,10 @@ function serializeRoomForClients(room) {
     roundNumber: room.roundNumber,
     waveNumber: room.waveNumber,
     totalWavesPlayed: room.totalWavesPlayed || 0,
-    currentClub: club,
+    pickedClubs,
+    maxClubsPerPlayer,
+    targetClubPoolSize,
+    currentClub: pickedClubs[0]?.club || null,
     totalPossibleForClub,
     modeData: serializeModeDataForClients(room),
     timeLeft: room.timeLeft,
@@ -369,6 +385,7 @@ function serializeRoomForClients(room) {
       stats: p.stats || createInitialStats(),
       isBot: !!p.isBot,
       connected: p.connected !== false,
+      pickedClubCount: (room.pickedClubs || []).filter((pc) => pc.playerId === p.id).length,
       hasSubmitted: !!room.submissions[p.id],
       submittedTimeMs: room.submissions[p.id] ? room.submissions[p.id].timeTakenMs : null
     }))
@@ -406,6 +423,52 @@ function clearRoomTimers(room) {
   }
 }
 
+// Schedule Bots to pick a unique club during SELECTING_CLUB phase
+function scheduleBotClubPicks(room) {
+  if (!room.botTimeouts) room.botTimeouts = [];
+  room.players
+    .filter((p) => p.isBot)
+    .forEach((bot, idx) => {
+      const delayMs = 1200 + idx * 900 + Math.floor(Math.random() * 900);
+      const t = setTimeout(() => {
+        if (room.state !== 'SELECTING_CLUB') return;
+        const alreadyPicked = (room.pickedClubs || []).some((pc) => pc.playerId === bot.id);
+        if (alreadyPicked) return;
+
+        const usedClubIds = new Set((room.pickedClubs || []).map((pc) => pc.clubId));
+        const available = CLUBS.filter((c) => !usedClubIds.has(c.id));
+        if (available.length === 0) return;
+
+        const chosenClub = available[Math.floor(Math.random() * available.length)];
+        room.pickedClubs.push({
+          playerId: bot.id,
+          playerName: bot.name,
+          playerAvatar: bot.avatar,
+          clubId: chosenClub.id
+        });
+
+        broadcastRoom(room.code, 'club_picked');
+        checkAllClubsPicked(room);
+      }, delayMs);
+      room.botTimeouts.push(t);
+    });
+}
+
+function checkAllClubsPicked(room) {
+  if (room.state !== 'SELECTING_CLUB') return;
+  const targetSize = room.players.length === 1 ? 3 : room.players.length;
+  if ((room.pickedClubs || []).length >= targetSize) {
+    setTimeout(() => {
+      if (room.state === 'SELECTING_CLUB' && (room.pickedClubs || []).length > 0) {
+        room.roundNumber += 1;
+        room.waveNumber = 1;
+        room.usedPlayers = [];
+        startWave(room);
+      }
+    }, 650);
+  }
+}
+
 function scheduleBotActions(room) {
   room.botTimeouts = [];
   const mode = room.settings.gameMode || 'club_battle';
@@ -421,15 +484,29 @@ function scheduleBotActions(room) {
         if (room.state !== 'PLAYING' || room.submissions[bot.id]) return;
 
         if (mode === 'club_battle') {
-          const clubId = room.currentClubId;
-          const validPlayers = PLAYERS.filter(
-            (p) => p.clubs.includes(clubId) && !room.usedPlayers.some((u) => u.id === p.id)
+          const activeClubIds = (room.pickedClubs || []).map((pc) => pc.clubId);
+          // Prefer players who match 2+ clubs if possible, or at least 1 club!
+          const unusedPlayers = PLAYERS.filter(
+            (p) => !room.usedPlayers.some((u) => u.id === p.id)
           );
-          const wrongPlayers = PLAYERS.filter((p) => !p.clubs.includes(clubId));
-          const chosen =
-            validPlayers.length > 0 && Math.random() < 0.8
-              ? validPlayers[Math.floor(Math.random() * validPlayers.length)]
-              : wrongPlayers[Math.floor(Math.random() * wrongPlayers.length)];
+          const multiClubMatches = unusedPlayers.filter(
+            (p) => p.clubs.filter((cid) => activeClubIds.includes(cid)).length >= 2
+          );
+          const singleClubMatches = unusedPlayers.filter(
+            (p) => p.clubs.filter((cid) => activeClubIds.includes(cid)).length >= 1
+          );
+          const wrongPlayers = unusedPlayers.filter(
+            (p) => !p.clubs.some((cid) => activeClubIds.includes(cid))
+          );
+
+          let chosen = null;
+          if (multiClubMatches.length > 0 && Math.random() < 0.45) {
+            chosen = multiClubMatches[Math.floor(Math.random() * multiClubMatches.length)];
+          } else if (singleClubMatches.length > 0 && Math.random() < 0.82) {
+            chosen = singleClubMatches[Math.floor(Math.random() * singleClubMatches.length)];
+          } else if (wrongPlayers.length > 0) {
+            chosen = wrongPlayers[Math.floor(Math.random() * wrongPlayers.length)];
+          }
           if (chosen) handlePlayerSubmission(room, bot.id, chosen.name, chosen.id);
         } else if (mode === 'lineup_quiz') {
           const lineup = LINEUPS.find((l) => l.id === room.currentLineupId) || LINEUPS[0];
@@ -594,10 +671,13 @@ function finishWave(room) {
   broadcastRoom(room.code, 'wave_revealed');
 }
 
-// MODE 1: CLUB BATTLE
+// MODE 1: MULTI-CLUB POOL BATTLE (1 point per matched club in the pool!)
 function finishClubBattleWave(room) {
-  const club = CLUBS.find((c) => c.id === room.currentClubId);
-  const totalLimitMs = room.settings.timeLimit * 1000;
+  const pickedClubs = (room.pickedClubs || []).map((pc) => ({
+    ...pc,
+    club: CLUBS.find((c) => c.id === pc.clubId)
+  }));
+
   const orderedEntries = room.players.map((pl) => ({
     player: pl,
     sub: room.submissions[pl.id] || null
@@ -613,6 +693,7 @@ function finishClubBattleWave(room) {
         playerAvatar: player.avatar,
         rawInput: '',
         footballer: null,
+        matchedClubs: [],
         status: 'TIMEOUT',
         pointsEarned: 0,
         timeTakenMs: null,
@@ -628,6 +709,7 @@ function finishClubBattleWave(room) {
         playerAvatar: player.avatar,
         rawInput: sub.rawInput,
         footballer: null,
+        matchedClubs: [],
         status: 'NOT_FOUND',
         pointsEarned: 0,
         timeTakenMs: sub.timeTakenMs,
@@ -643,6 +725,7 @@ function finishClubBattleWave(room) {
         playerAvatar: player.avatar,
         rawInput: sub.rawInput,
         footballer,
+        matchedClubs: [],
         status: 'ALREADY_USED',
         pointsEarned: 0,
         timeTakenMs: sub.timeTakenMs,
@@ -650,8 +733,10 @@ function finishClubBattleWave(room) {
       };
     }
 
-    const playedForClub = footballer.clubs.includes(room.currentClubId);
-    if (!playedForClub) {
+    // Check how many picked clubs on the board this footballer played for!
+    const matched = pickedClubs.filter((pc) => footballer.clubs.includes(pc.clubId));
+
+    if (matched.length === 0) {
       const actualClubNames = footballer.clubs
         .map((cid) => CLUBS.find((c) => c.id === cid)?.name)
         .filter(Boolean)
@@ -663,10 +748,11 @@ function finishClubBattleWave(room) {
         playerAvatar: player.avatar,
         rawInput: sub.rawInput,
         footballer,
+        matchedClubs: [],
         status: 'WRONG_CLUB',
         pointsEarned: 0,
         timeTakenMs: sub.timeTakenMs,
-        message: `${footballer.name} ไม่เคยอยู่ ${club ? club.name : 'สโมสรนี้'} (เคยอยู่: ${actualClubNames || '-'})`
+        message: `${footballer.name} ไม่เคยอยู่สโมสรใดเลยบนกระดานรอบนี้ (เคยอยู่: ${actualClubNames || '-'})`
       };
     }
 
@@ -685,6 +771,7 @@ function finishClubBattleWave(room) {
       playerAvatar: player.avatar,
       rawInput: sub.rawInput,
       footballer,
+      matchedClubs: matched.map((m) => m.club?.name || m.clubId),
       status: 'PENDING_DUPLICATE_CHECK',
       pointsEarned: 0,
       timeTakenMs: sub.timeTakenMs,
@@ -704,14 +791,14 @@ function finishClubBattleWave(room) {
     }
 
     const claims = claimedInThisWave.get(res.footballer.id);
-    const speedRatio = Math.max(0, 1 - res.timeTakenMs / totalLimitMs);
-    const speedBonus = Math.round(speedRatio * 50);
+    const matchedCount = res.matchedClubs.length;
+    const clubsText = res.matchedClubs.join(' + ');
 
     if (claims.length === 1) {
-      const pts = 100 + speedBonus;
+      const pts = matchedCount;
       res.status = 'CORRECT';
       res.pointsEarned = pts;
-      res.message = `ถูกต้อง! เคยค้าแข้งกับ ${club.name} (+100 และโบนัสความเร็ว +${speedBonus})`;
+      res.message = `เคยอยู่ ${matchedCount} สโมสรบนกระดาน (${clubsText}) ➔ รับ +${pts} คะแนน!`;
       if (pl) {
         pl.score += pts;
         recordPlayerResultStats(pl, true, res.timeTakenMs, res.footballer.name);
@@ -720,7 +807,7 @@ function finishClubBattleWave(room) {
         id: res.footballer.id,
         name: res.footballer.name,
         flag: res.footballer.flag,
-        position: res.footballer.position,
+        position: `${matchedCount} สโมสร`,
         answeredBy: res.playerName,
         wave: room.waveNumber
       });
@@ -734,31 +821,20 @@ function finishClubBattleWave(room) {
         res.message = `ใจตรงกัน! ตอบ ${res.footballer.name} ซ้ำกับเพื่อนในรอบเดียวกัน จึงไม่ได้คะแนน`;
         recordPlayerResultStats(pl, false, null, null);
       } else if (rule === 'speed_split') {
-        if (isFastest) {
-          const pts = 100 + speedBonus;
-          res.status = 'CORRECT';
-          res.pointsEarned = pts;
-          res.message = `ตอบซ้ำแต่ไวกว่า! (${(res.timeTakenMs / 1000).toFixed(1)}s) ได้คะแนนเต็ม +${pts}`;
-          if (pl) {
-            pl.score += pts;
-            recordPlayerResultStats(pl, true, res.timeTakenMs, res.footballer.name);
-          }
-        } else {
-          const pts = 50;
-          res.status = 'DUPLICATE_PARTIAL';
-          res.pointsEarned = pts;
-          res.message = `ตอบ ${res.footballer.name} ซ้ำกับ ${claims[0].playerName} ที่ไวกว่า (ได้ครึ่งเดียว +50)`;
-          if (pl) {
-            pl.score += pts;
-            recordPlayerResultStats(pl, true, res.timeTakenMs, res.footballer.name);
-          }
+        const pts = matchedCount;
+        res.status = isFastest ? 'CORRECT' : 'DUPLICATE_PARTIAL';
+        res.pointsEarned = pts;
+        res.message = `เคยอยู่ ${matchedCount} สโมสร (${clubsText}) ➔ รับ +${pts} คะแนน!`;
+        if (pl) {
+          pl.score += pts;
+          recordPlayerResultStats(pl, true, res.timeTakenMs, res.footballer.name);
         }
       } else {
         if (isFastest) {
-          const pts = 100 + speedBonus;
+          const pts = matchedCount;
           res.status = 'CORRECT';
           res.pointsEarned = pts;
-          res.message = `ไวกว่า! ชิงตอบ ${res.footballer.name} ก่อนเพื่อน (${(res.timeTakenMs / 1000).toFixed(1)}s) +${pts}`;
+          res.message = `ไวกว่า! เคยอยู่ ${matchedCount} สโมสร (${clubsText}) ➔ รับ +${pts} คะแนน!`;
           if (pl) {
             pl.score += pts;
             recordPlayerResultStats(pl, true, res.timeTakenMs, res.footballer.name);
@@ -776,7 +852,7 @@ function finishClubBattleWave(room) {
           id: res.footballer.id,
           name: res.footballer.name,
           flag: res.footballer.flag,
-          position: res.footballer.position,
+          position: `${matchedCount} สโมสร`,
           answeredBy: claims[0].playerName,
           wave: room.waveNumber
         });
@@ -792,9 +868,7 @@ function finishClubBattleWave(room) {
 function finishLineupWave(room) {
   const lineup = LINEUPS.find((l) => l.id === room.currentLineupId) || LINEUPS[0];
   if (!room.unlockedLineupSlots) room.unlockedLineupSlots = {};
-  const totalLimitMs = room.settings.timeLimit * 1000;
 
-  // Sort submissions by fastest timeTakenMs
   const subs = room.players
     .map((pl) => ({ player: pl, sub: room.submissions[pl.id] || null }))
     .sort((a, b) => (a.sub?.timeTakenMs || 999999) - (b.sub?.timeTakenMs || 999999));
@@ -815,7 +889,6 @@ function finishLineupWave(room) {
       };
     }
 
-    // Check if input matches any slot in lineup
     const matchedSlot = lineup.slots.find((s) =>
       matchesNameOrAlias(sub.rawInput, s.playerId, s.aliases)
     );
@@ -851,16 +924,12 @@ function finishLineupWave(room) {
       };
     }
 
-    // Unlock slot!
     room.unlockedLineupSlots[matchedSlot.slotId] = {
       answeredBy: player.name,
       playerId: matchedSlot.playerId
     };
 
-    const speedRatio = Math.max(0, 1 - sub.timeTakenMs / totalLimitMs);
-    const speedBonus = Math.round(speedRatio * 50);
-    const pts = 110 + speedBonus;
-
+    const pts = 1;
     player.score += pts;
     recordPlayerResultStats(player, true, sub.timeTakenMs, matchedSlot.playerId);
 
@@ -873,7 +942,7 @@ function finishLineupWave(room) {
       status: 'CORRECT',
       pointsEarned: pts,
       timeTakenMs: sub.timeTakenMs,
-      message: `เปิดป้ายสำเร็จ! ${matchedSlot.playerId} (${matchedSlot.pos} เบอร์ ${matchedSlot.number}) +${pts} แต้ม`
+      message: `เปิดป้ายสำเร็จ! ${matchedSlot.playerId} (${matchedSlot.pos} เบอร์ ${matchedSlot.number}) +${pts} คะแนน`
     };
   });
 
@@ -885,7 +954,6 @@ function finishLineupWave(room) {
 function finishTop10Wave(room) {
   const list = TOP10_LISTS.find((l) => l.id === room.currentTop10Id) || TOP10_LISTS[0];
   if (!room.unlockedTop10Ranks) room.unlockedTop10Ranks = {};
-  const totalLimitMs = room.settings.timeLimit * 1000;
 
   const subs = room.players
     .map((pl) => ({ player: pl, sub: room.submissions[pl.id] || null }))
@@ -946,10 +1014,7 @@ function finishTop10Wave(room) {
       answeredBy: player.name
     };
 
-    const speedRatio = Math.max(0, 1 - sub.timeTakenMs / totalLimitMs);
-    const speedBonus = Math.round(speedRatio * 40);
-    const pts = matchedItem.points + speedBonus;
-
+    const pts = 1;
     player.score += pts;
     recordPlayerResultStats(player, true, sub.timeTakenMs, matchedItem.name);
 
@@ -973,7 +1038,6 @@ function finishTop10Wave(room) {
 // MODE 4: CAREER PATH (WHO AM I?)
 function finishCareerPathWave(room) {
   const cp = CAREER_PATHS.find((c) => c.id === room.currentCareerId) || CAREER_PATHS[0];
-  const totalLimitMs = room.settings.timeLimit * 1000;
 
   const subs = room.players
     .map((pl) => ({ player: pl, sub: room.submissions[pl.id] || null }))
@@ -1011,10 +1075,7 @@ function finishCareerPathWave(room) {
       };
     }
 
-    const speedRatio = Math.max(0, 1 - sub.timeTakenMs / totalLimitMs);
-    const speedBonus = Math.round(speedRatio * 60);
-    const pts = 120 + speedBonus;
-
+    const pts = 2;
     player.score += pts;
     recordPlayerResultStats(player, true, sub.timeTakenMs, cp.answerName);
 
@@ -1027,7 +1088,7 @@ function finishCareerPathWave(room) {
       status: 'CORRECT',
       pointsEarned: pts,
       timeTakenMs: sub.timeTakenMs,
-      message: `ทายถูกเผง! เขาคือ ${cp.answerName} (+120 และโบนัสความเร็ว +${speedBonus})`
+      message: `ทายถูกเผง! เขาคือ ${cp.answerName} รับ +${pts} คะแนน`
     };
   });
 
@@ -1038,7 +1099,6 @@ function finishCareerPathWave(room) {
 // MODE 5: 4-CHOICE FOOTBALL TRIVIA QUIZ
 function finishTriviaWave(room) {
   const tr = TRIVIA_QUESTIONS.find((q) => q.id === room.currentTriviaId) || TRIVIA_QUESTIONS[0];
-  const totalLimitMs = room.settings.timeLimit * 1000;
 
   const subs = room.players
     .map((pl) => ({ player: pl, sub: room.submissions[pl.id] || null }))
@@ -1079,10 +1139,7 @@ function finishTriviaWave(room) {
       };
     }
 
-    const speedRatio = Math.max(0, 1 - sub.timeTakenMs / totalLimitMs);
-    const speedBonus = Math.round(speedRatio * 50);
-    const pts = 100 + speedBonus;
-
+    const pts = 1;
     player.score += pts;
     recordPlayerResultStats(player, true, sub.timeTakenMs, chosenText);
 
@@ -1107,7 +1164,6 @@ function finishTriviaWave(room) {
 function finishFootyGridWave(room) {
   const grid = FOOTY_GRIDS.find((g) => g.id === room.currentGridId) || FOOTY_GRIDS[0];
   if (!room.gridCells) room.gridCells = Array(9).fill(null);
-  const totalLimitMs = room.settings.timeLimit * 1000;
 
   const subs = room.players
     .map((pl) => ({ player: pl, sub: room.submissions[pl.id] || null }))
@@ -1170,7 +1226,6 @@ function finishFootyGridWave(room) {
       };
     }
 
-    // Claim cell!
     room.gridCells[cellIdx] = {
       ownerId: player.id,
       ownerName: player.name,
@@ -1179,11 +1234,9 @@ function finishFootyGridWave(room) {
       playerFlag: footballer.flag
     };
 
-    const speedRatio = Math.max(0, 1 - sub.timeTakenMs / totalLimitMs);
-    const speedBonus = Math.round(speedRatio * 40);
     const gotBingo = checkGridBingo(room.gridCells, player.id);
-    const bingoBonus = gotBingo ? 150 : 0;
-    const pts = 120 + speedBonus + bingoBonus;
+    const bingoBonus = gotBingo ? 2 : 0;
+    const pts = 2 + bingoBonus;
 
     player.score += pts;
     recordPlayerResultStats(player, true, sub.timeTakenMs, footballer.name);
@@ -1197,7 +1250,7 @@ function finishFootyGridWave(room) {
       status: 'CORRECT',
       pointsEarned: pts,
       timeTakenMs: sub.timeTakenMs,
-      message: `ยึดช่อง [${rowCrit.label} x ${colCrit.label}] สำเร็จ!${gotBingo ? ' 🎉 เรียงครบ 3 ช่อง BINGO โบนัส +150!' : ''}`
+      message: `ยึดช่อง [${rowCrit.label} x ${colCrit.label}] สำเร็จ!${gotBingo ? ' 🎉 เรียงครบ 3 ช่อง BINGO โบนัส +2 แต้ม!' : ''}`
     };
   });
 
@@ -1207,10 +1260,10 @@ function finishFootyGridWave(room) {
 
 function startModeRound(room, options = {}) {
   const mode = room.settings.gameMode || 'club_battle';
-  room.roundNumber += 1;
-  room.waveNumber = 1;
 
   if (mode === 'lineup_quiz') {
+    room.roundNumber += 1;
+    room.waveNumber = 1;
     const chosen = options.lineupId
       ? LINEUPS.find((l) => l.id === options.lineupId)
       : LINEUPS[(room.roundNumber - 1) % LINEUPS.length];
@@ -1218,6 +1271,8 @@ function startModeRound(room, options = {}) {
     room.unlockedLineupSlots = {};
     startWave(room);
   } else if (mode === 'top10_stats') {
+    room.roundNumber += 1;
+    room.waveNumber = 1;
     const chosen = options.listId
       ? TOP10_LISTS.find((l) => l.id === options.listId)
       : TOP10_LISTS[(room.roundNumber - 1) % TOP10_LISTS.length];
@@ -1225,17 +1280,23 @@ function startModeRound(room, options = {}) {
     room.unlockedTop10Ranks = {};
     startWave(room);
   } else if (mode === 'career_path') {
+    room.roundNumber += 1;
+    room.waveNumber = 1;
     const pool = CAREER_PATHS.filter((c) => c.id !== room.currentCareerId);
     const nextCp = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : CAREER_PATHS[0];
     room.currentCareerId = nextCp.id;
     startWave(room);
   } else if (mode === 'trivia_quiz') {
+    room.roundNumber += 1;
+    room.waveNumber = 1;
     const pool = TRIVIA_QUESTIONS.filter((q) => q.id !== room.currentTriviaId);
     const nextTr =
       pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : TRIVIA_QUESTIONS[0];
     room.currentTriviaId = nextTr.id;
     startWave(room);
   } else if (mode === 'footy_grid') {
+    room.roundNumber += 1;
+    room.waveNumber = 1;
     const chosen = options.gridId
       ? FOOTY_GRIDS.find((g) => g.id === options.gridId)
       : FOOTY_GRIDS[(room.roundNumber - 1) % FOOTY_GRIDS.length];
@@ -1243,18 +1304,31 @@ function startModeRound(room, options = {}) {
     room.gridCells = Array(9).fill(null);
     startWave(room);
   } else {
-    // club_battle
+    // club_battle: Multi-Club Pool!
+    room.pickedClubs = [];
+    room.usedPlayers = [];
+    room.lastWaveResults = [];
+
     if (room.settings.clubSelectMode === 'random') {
-      const randomClub = CLUBS[Math.floor(Math.random() * CLUBS.length)];
-      room.currentClubId = randomClub.id;
-      room.usedPlayers = [];
+      // Auto-assign 1 random unique club per player (minimum 3 clubs on board)
+      const shuffled = [...CLUBS].sort(() => Math.random() - 0.5);
+      const count = Math.max(room.players.length, 3);
+      for (let i = 0; i < count; i++) {
+        const p = room.players[i % room.players.length];
+        room.pickedClubs.push({
+          playerId: p.id,
+          playerName: p.name,
+          playerAvatar: p.avatar,
+          clubId: shuffled[i].id
+        });
+      }
+      room.roundNumber += 1;
+      room.waveNumber = 1;
       startWave(room);
     } else {
       room.state = 'SELECTING_CLUB';
-      room.currentClubId = null;
-      room.usedPlayers = [];
-      room.lastWaveResults = [];
       broadcastRoom(room.code, 'selecting_club');
+      scheduleBotClubPicks(room);
     }
   }
 }
@@ -1276,7 +1350,7 @@ function handleApiAction(req, res, body) {
       roundNumber: 0,
       waveNumber: 0,
       totalWavesPlayed: 0,
-      currentClubId: null,
+      pickedClubs: [],
       currentLineupId: LINEUPS[0].id,
       currentTop10Id: TOP10_LISTS[0].id,
       currentCareerId: CAREER_PATHS[0].id,
@@ -1294,7 +1368,7 @@ function handleApiAction(req, res, body) {
         timeLimit: 15,
         duplicateRule: 'strict_unique',
         clubSelectMode: 'both',
-        targetScore: 1000
+        targetScore: 10 // Default 10 points for 1/2/3 point scoring!
       },
       players: [
         {
@@ -1410,6 +1484,9 @@ function handleApiAction(req, res, body) {
       connected: true
     });
     broadcastRoom(code, 'player_joined');
+    if (room.state === 'SELECTING_CLUB') {
+      scheduleBotClubPicks(room);
+    }
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
   }
@@ -1417,6 +1494,7 @@ function handleApiAction(req, res, body) {
   if (action === 'remove_player') {
     const targetId = body.targetPlayerId;
     room.players = room.players.filter((p) => p.id !== targetId);
+    room.pickedClubs = (room.pickedClubs || []).filter((pc) => pc.playerId !== targetId);
     broadcastRoom(code, 'player_removed');
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
@@ -1430,13 +1508,34 @@ function handleApiAction(req, res, body) {
   }
 
   if (action === 'select_club') {
+    if (!room.pickedClubs) room.pickedClubs = [];
+    const player = room.players.find((p) => p.id === playerId);
+    const maxAllowed = room.players.length === 1 ? 3 : 1;
+    const myCurrentPicks = room.pickedClubs.filter((pc) => pc.playerId === playerId);
+
+    if (myCurrentPicks.length >= maxAllowed) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      return res.end(
+        JSON.stringify({
+          ok: false,
+          error: 'คุณได้เลือกสโมสรของรอบนี้ครบแล้ว กำลังรอเพื่อนคนอื่นเลือกสโมสร...'
+        })
+      );
+    }
+
+    const usedClubIds = new Set(room.pickedClubs.map((pc) => pc.clubId));
     let chosenClub = null;
+
     if (body.random) {
-      const pool = body.leagueFilter
+      const pool = (body.leagueFilter
         ? CLUBS.filter((c) => c.league === body.leagueFilter)
-        : CLUBS;
-      const list = pool.length > 0 ? pool : CLUBS;
-      chosenClub = list[Math.floor(Math.random() * list.length)];
+        : CLUBS
+      ).filter((c) => !usedClubIds.has(c.id));
+      const fallback = CLUBS.filter((c) => !usedClubIds.has(c.id));
+      const list = pool.length > 0 ? pool : fallback;
+      if (list.length > 0) {
+        chosenClub = list[Math.floor(Math.random() * list.length)];
+      }
     } else {
       chosenClub = findClubByInput(body.clubInput, body.clubId);
     }
@@ -1446,12 +1545,40 @@ function handleApiAction(req, res, body) {
       return res.end(JSON.stringify({ ok: false, error: 'ไม่พบสโมสรที่ระบุ กรุณาเลือกจากรายการ 5 ลีกใหญ่ยุโรป' }));
     }
 
-    room.currentClubId = chosenClub.id;
+    if (usedClubIds.has(chosenClub.id)) {
+      const owner = room.pickedClubs.find((pc) => pc.clubId === chosenClub.id);
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      return res.end(
+        JSON.stringify({
+          ok: false,
+          error: `ห้ามซ้ำ! สโมสร ${chosenClub.name} ถูกเลือกไปแล้วโดย ${owner ? owner.playerName : 'ผู้เล่นอื่น'}`
+        })
+      );
+    }
+
+    room.pickedClubs.push({
+      playerId,
+      playerName: player ? player.name : 'ผู้เล่น',
+      playerAvatar: player ? player.avatar : '⚽',
+      clubId: chosenClub.id
+    });
+
+    broadcastRoom(code, 'club_picked');
+    checkAllClubsPicked(room);
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+  }
+
+  if (action === 'force_start_club_wave') {
+    if ((room.pickedClubs || []).length === 0) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ ok: false, error: 'กรุณาเลือกอย่างน้อย 1 สโมสรก่อนเริ่มรอบ' }));
+    }
     room.roundNumber += 1;
     room.waveNumber = 1;
     room.usedPlayers = [];
     startWave(room);
-
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
   }
@@ -1459,7 +1586,6 @@ function handleApiAction(req, res, body) {
   if (action === 'next_wave_same_club') {
     const mode = room.settings.gameMode || 'club_battle';
     if (mode === 'career_path' || mode === 'trivia_quiz') {
-      // For single-shot question modes, next_wave immediately loads the next question!
       startModeRound(room);
     } else {
       room.waveNumber += 1;
@@ -1496,6 +1622,7 @@ function handleApiAction(req, res, body) {
     room.roundNumber = 0;
     room.waveNumber = 0;
     room.totalWavesPlayed = 0;
+    room.pickedClubs = [];
     room.usedPlayers = [];
     room.unlockedLineupSlots = {};
     room.unlockedTop10Ranks = {};
@@ -1600,7 +1727,6 @@ const server = http.createServer((req, res) => {
       `data: ${JSON.stringify({ type: 'room_state', room: serializeRoomForClients(room) })}\n\n`
     );
 
-    // Heartbeat every 20s to prevent cloud reverse-proxies (like Render.com) from closing idle SSE streams
     const heartbeat = setInterval(() => {
       try {
         res.write(': ping\n\n');

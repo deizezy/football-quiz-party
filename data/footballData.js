@@ -223,6 +223,7 @@ const RAW_PLAYERS = [
   ['Robert Pirès', '🇫🇷', 'MF', ['marseille', 'arsenal', 'villarreal', 'aston_villa'], ['pires', 'ปิแรส']],
   ['Freddie Ljungberg', '🇸🇪', 'MF', ['arsenal', 'west_ham'], ['ljungberg', 'ลุงเบิร์ก']],
   ['Sol Campbell', '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'DF', ['tottenham', 'arsenal', 'newcastle'], ['campbell', 'โซล แคมป์เบลล์']],
+  ['William Gallas', '🇫🇷', 'DF', ['marseille', 'chelsea', 'arsenal', 'tottenham'], ['gallas', 'กัลลาส']],
   ['Ashley Cole', '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'DF', ['arsenal', 'chelsea', 'roma'], ['ashley cole', 'แอชลีย์ โคล']],
   ['Kolo Touré', '🇨🇮', 'DF', ['arsenal', 'man_city', 'liverpool'], ['kolo toure', 'โคโล่ ตูเร่']],
   ['Emmanuel Adebayor', '🇹🇬', 'FW', ['monaco', 'arsenal', 'man_city', 'real_madrid', 'tottenham'], ['adebayor', 'อเดบายอร์']],

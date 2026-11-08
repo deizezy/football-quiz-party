@@ -79,7 +79,7 @@
           <button class="btn-mini" id="incTimeQuickBtn" title="เพิ่มเวลา">+</button>
         </div>
         <div class="target-pill" id="headerTargetBadge">
-          🎯 เป้าหมายแชมป์: <strong id="headerTargetScore">1,000</strong> แต้ม
+          🎯 เป้าหมายแชมป์: <strong id="headerTargetScore">10</strong> แต้ม
         </div>
       </div>
 
@@ -130,8 +130,8 @@
               <div class="mode-card active" data-mode="club_battle">
                 <div class="mode-icon">🏟️</div>
                 <div class="mode-info">
-                  <h4>1. ทายนักเตะประจำสโมสร</h4>
-                  <p>เลือกสโมสรจาก 5 ลีกใหญ่ แล้วแข่งกันพิมพ์ชื่อนักเตะที่เคยค้าแข้งกับทีมนั้น</p>
+                  <h4>1. ลงสโมสรล่าแต้มคูณ (Multi-Club Pool)</h4>
+                  <p>ทุกคนพิมพ์เลือกสโมสรคนละทีม (ห้ามซ้ำ) แล้วทายนักเตะ! เคยอยู่กี่สโมสรในกระดาน รับแต้มตามจำนวนสโมสร (1, 2, 3... แต้ม)</p>
                 </div>
               </div>
 
@@ -196,10 +196,10 @@
 
                 <label style="margin-top: 16px;">🏆 เป้าหมายคะแนนเพื่อคว้าแชมป์ (Target Score)</label>
                 <select id="targetScoreSelect" class="select-input">
-                  <option value="500">500 คะแนน (มินิแมตช์ ~4-5 รอบ)</option>
-                  <option value="1000" selected>1,000 คะแนน (แมตช์มาตรฐาน ~8-10 รอบ)</option>
-                  <option value="1500">1,500 คะแนน (แมตช์ดวลเดือด)</option>
-                  <option value="2000">2,000 คะแนน (มาราธอนลูกหนัง)</option>
+                  <option value="5">5 คะแนน (มินิแมตช์ ไวๆ)</option>
+                  <option value="10" selected>10 คะแนน (แมตช์มาตรฐาน แนะนำ!)</option>
+                  <option value="15">15 คะแนน (แมตช์ดวลเดือด)</option>
+                  <option value="20">20 คะแนน (มาราธอนลูกหนัง)</option>
                   <option value="0">ไม่จำกัดแต้ม (กดจบแมตช์เองเมื่อไหร่ก็ได้)</option>
                 </select>
               </div>
@@ -209,14 +209,14 @@
                 <label>⚡ กติกาเมื่อตอบชื่อนักเตะซ้ำกันในรอบเดียวกัน</label>
                 <select id="duplicateRuleSelect" class="select-input">
                   <option value="strict_unique">คนตอบไวกว่าได้คะแนนคนเดียว (คนช้าได้ 0)</option>
-                  <option value="speed_split">คนไวได้เต็ม (+100..150) / คนซ้ำได้ครึ่งเดียว (+50)</option>
+                  <option value="speed_split">ได้คะแนนตามจำนวนสโมสรที่ตรงทั้งคู่</option>
                   <option value="both_cancel">ใจตรงกันซ้ำกัน = โมฆะ ไม่ได้คะแนนทั้งคู่ (0)</option>
                 </select>
 
                 <label style="margin-top: 16px;">🎲 การเลือกสโมสร (สำหรับโหมดที่ 1)</label>
                 <select id="clubSelectModeInput" class="select-input">
-                  <option value="both">เลือกสโมสรเอง หรือ กดสุ่มสโมสรก็ได้ (แนะนำ)</option>
-                  <option value="random">สุ่มสโมสรให้อัตโนมัติทุกรอบ</option>
+                  <option value="both">ผู้เล่นแต่ละคนพิมพ์/เลือกสโมสรเองคนละทีม (แนะนำ)</option>
+                  <option value="random">สุ่มสโมสรประจำตัวผู้เล่นแต่ละคนให้อัตโนมัติ</option>
                 </select>
               </div>
             </div>
@@ -229,21 +229,35 @@
           </div>
         </div>
 
-        <!-- STATE B: SELECTING CLUB (Mode 1) -->
+        <!-- STATE B: SELECTING CLUB (Mode 1: Each player picks 1 unique club live!) -->
         <div id="selectingClubView" class="state-view">
           <div class="arena-card">
             <div class="club-select-header">
               <div>
-                <div class="arena-badge">🎯 เลือกโจทย์สโมสร (5 ลีกใหญ่ยุโรป)</div>
-                <h2>เลือกหรือพิมพ์ชื่อสโมสรที่ต้องการทาย</h2>
+                <div class="arena-badge">🎯 ช่วงที่ 1: ผู้เล่นแต่ละคนเลือกสโมสรคนละ 1 ทีม (เปิดโชว์ทันที • ห้ามซ้ำกัน!)</div>
+                <h2 id="clubSelectHeading">พิมพ์หรือคลิกเลือกสโมสรของคุณเพื่อวางลงกระดาน</h2>
               </div>
-              <button id="randomClubBtn" class="btn btn-accent btn-lg">
-                🎲 สุ่มสโมสรเลย!
-              </button>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button id="randomClubBtn" class="btn btn-accent">
+                  🎲 สุ่มสโมสรให้ฉัน
+                </button>
+                <button id="forceStartWaveBtn" class="btn btn-primary">
+                  🚀 เริ่มทายนักเตะเลย!
+                </button>
+              </div>
+            </div>
+
+            <!-- Live Picked Clubs Pool on Board -->
+            <div class="picked-clubs-pool-box">
+              <div class="pool-box-header">
+                <span>🏟️ <strong>สโมสรบนกระดานรอบนี้ (<span id="pickedPoolCount">0</span>/<span id="pickedPoolTarget">3</span> ทีม)</strong></span>
+                <small>ยิ่งตอบนักเตะที่เคยอยู่หลายสโมสรในกระดานนี้ ยิ่งได้แต้มคูณตามจำนวนสโมสร!</small>
+              </div>
+              <div id="pickedClubsPoolList" class="picked-clubs-pool-list"></div>
             </div>
 
             <div class="club-filter-bar">
-              <input type="text" id="clubSearchInput" class="text-input" placeholder="🔍 พิมพ์ค้นหาสโมสร เช่น Man Utd, แมนยู, Real Madrid, ยูเว่..." />
+              <input type="text" id="clubSearchInput" class="text-input" placeholder="🔍 พิมพ์ชื่อสโมสรแล้วกด Enter หรือคลิกเลือกด้านล่าง เช่น Arsenal, Chelsea, Spurs..." />
               <div id="leagueFilterTabs" class="league-tabs"></div>
             </div>
 
