@@ -30,6 +30,18 @@ const MODE_META = {
   footy_grid: {
     badge: '🔢 โหมดที่ 6: ตาราง XO ฟุตบอล 3x3',
     prompt: '🎯 คลิกเลือกช่องแล้วพิมพ์ชื่อนักเตะ (ช่องทั่วไป +2 • 💎ช่องหายาก +3 • ใช้คำใบ้ +1 • 🔥เรียงครบ 3 ช่อง BINGO โบนัส +3 แต้ม):'
+  },
+  connections: {
+    badge: '🧩 โหมดที่ 7: จับกลุ่ม 16 นักเตะ 4 ความลับ (Football Connections)',
+    prompt: '🧩 คลิกเลือกนักเตะบนกระดานให้ครบ 4 คนที่มีความเชื่อมโยงเดียวกัน แล้วกดปุ่ม "✅ ส่งกลุ่ม 4 คน" ด้านบน!'
+  },
+  who_are_ya_wordle: {
+    badge: '🖼️ โหมดที่ 8: ทายนักเตะจากรูปเบลอ + Wordle (Who Are Ya?)',
+    prompt: '🔍 พิมพ์ชื่อนักเตะเพื่อทายรูปปริศนา (ทายผิดจะเปิดแถบสีใบ้ 🟢ตรง / 🟡เคยอยู่สโมสรเดียวกัน และรูปชัดขึ้นเรื่อยๆ):'
+  },
+  chain_link: {
+    badge: '🔗 โหมดที่ 9: ต่อโซ่นักเตะเพื่อนร่วมทีม (Chain Link)',
+    prompt: '🔗 พิมพ์ชื่อนักเตะคนถัดไปที่เคยค้าแข้งสโมสรเดียวกับนักเตะคนล่าสุด (ห้ามซ้ำนักเตะ & ห้ามซ้ำสโมสรที่ใช้เชื่อมไปแล้ว):'
   }
 };
 
@@ -49,6 +61,8 @@ const state = {
   autocompleteItems: [],
   autocompleteIndex: -1,
   selectedGridCellIndex: 0,
+  selectedConnectionIds: [],
+  lastConnectionsBoardId: null,
   lastRenderedState: null
 };
 
@@ -340,7 +354,14 @@ function connectStream(roomCode) {
 }
 
 function isUntimedContinuousMode(mode) {
-  return mode === 'top10_stats' || mode === 'lineup_quiz' || mode === 'footy_grid';
+  return (
+    mode === 'top10_stats' ||
+    mode === 'lineup_quiz' ||
+    mode === 'footy_grid' ||
+    mode === 'connections' ||
+    mode === 'who_are_ya_wordle' ||
+    mode === 'chain_link'
+  );
 }
 
 function updateTimerOnly() {
@@ -442,6 +463,15 @@ function renderRoom() {
       } else if (gameMode === 'footy_grid') {
         modeInfoTitle.textContent = '🔢 กติกาโหมดตาราง XO ฟุตบอล 3x3';
         modeInfoDesc.innerHTML = '• คลิกเลือกช่องแล้วพิมพ์ชื่อนักเตะที่ตรงทั้งแนวนอนและแนวตั้ง (ห้ามใช้ชื่อซ้ำในตารางเดียวกัน)<br>• ช่องทั่วไป <strong>+2 แต้ม</strong> • 💎ช่องหายาก (มีคำตอบ ≤5 คน) <strong>+3 แต้ม</strong> • ใช้คำใบ้ <strong>+1 แต้ม</strong><br>• 🔥 เรียงครบ 3 ช่อง (BINGO) รับโบนัสเพิ่ม <strong>+3 แต้ม</strong>!';
+      } else if (gameMode === 'connections') {
+        modeInfoTitle.textContent = '🧩 กติกาโหมดจับกลุ่ม 16 นักเตะ 4 ความลับ (Connections)';
+        modeInfoDesc.innerHTML = '• คลิกเลือกนักเตะบนกระดานทีละ 4 คนที่มีความเชื่อมโยงลับเดียวกัน<br>• 🟢 หมวดง่าย <strong>+1 แต้ม</strong> • 🟡 หมวดกลาง <strong>+2 แต้ม</strong> • 🔵 หมวดยาก <strong>+3 แต้ม</strong> • 🟣 หมวดแฟนพันธุ์แท้ (2 สโมสร) <strong>+4 แต้ม</strong>!';
+      } else if (gameMode === 'who_are_ya_wordle') {
+        modeInfoTitle.textContent = '🖼️ กติกาโหมดทายนักเตะจากรูปเบลอ + Wordle (Who Are Ya?)';
+        modeInfoDesc.innerHTML = '• ทายชื่อนักเตะจากรูปเบลอ! ทุกครั้งที่ทายผิดจะแสดงตารางเทียบสี (🟢ตรง / 🟡เคยอยู่สโมสรเดียวกัน) และรูปจะชัดขึ้น<br>• ทายถูกตั้งแต่เบลอจัดได้ <strong>+4 แต้ม</strong> และลดหลั่นลงมาตามจำนวนคำใบ้ (+3 / +2 / +1 แต้ม)!';
+      } else if (gameMode === 'chain_link') {
+        modeInfoTitle.textContent = '🔗 กติกาโหมดต่อโซ่นักเตะเพื่อนร่วมทีม (Chain Link)';
+        modeInfoDesc.innerHTML = '• พิมพ์ชื่อนักเตะที่เคยอยู่สโมสรเดียวกับนักเตะคนล่าสุดในโซ่ (ห้ามซ้ำนักเตะ และห้ามใช้สโมสรเชื่อมซ้ำ!)<br>• เชื่อมสำเร็จรับ <strong>+2 แต้ม</strong> ต่อคน • โบนัสทุกๆ โซ่ครบ 5 คน รับเพิ่มอีก <strong>+1 แต้ม</strong>!';
       }
     }
   }
@@ -1112,6 +1142,252 @@ function buildModeStageHTML(room, isReveal = false) {
     return html;
   }
 
+  // MODE 7: FOOTBALL CONNECTIONS (16 Players -> 4 Secret Groups of 4)
+  if (mode === 'connections') {
+    if (md.boardId && state.lastConnectionsBoardId !== md.boardId) {
+      state.selectedConnectionIds = [];
+      state.lastConnectionsBoardId = md.boardId;
+    }
+    const remainingIds = new Set((md.remainingTiles || []).map((t) => t.id));
+    state.selectedConnectionIds = (state.selectedConnectionIds || []).filter((id) => remainingIds.has(id));
+    const selSet = new Set(state.selectedConnectionIds);
+
+    const solvedCount = (md.solvedGroups || []).length;
+    const hintBannerHtml = md.hintText
+      ? `<div style="padding:8px 12px;margin-bottom:10px;border-radius:10px;background:rgba(245,158,11,0.16);border:1px solid rgba(251,191,36,0.45);color:#fde68a;font-size:0.84rem;font-weight:600;">${md.hintText}</div>`
+      : '';
+
+    const toolbarHtml = !isReveal
+      ? `
+        <div class="top10-toolbar">
+          <div class="top10-toolbar-left">
+            <span class="top10-progress-pill">เปิดแล้ว <strong>${solvedCount}/4</strong> กลุ่ม • เลือกอยู่ <strong>${selSet.size}/4</strong> คน</span>
+            <button type="button" class="btn btn-primary btn-sm" data-conn-submit="1" ${selSet.size !== 4 ? 'disabled' : ''}>✅ ส่งกลุ่ม 4 คน</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-conn-clear="1" ${selSet.size === 0 ? 'disabled' : ''}>✖ ล้างที่เลือก</button>
+          </div>
+          <div class="top10-toolbar-actions">
+            <button type="button" class="btn btn-outline btn-sm" data-conn-hint="1">💡 คำใบ้คู่หู</button>
+            <button type="button" class="btn btn-outline btn-sm" data-conn-reveal-one="1">👁️ เฉลย 1 กลุ่ม</button>
+            <button type="button" class="btn btn-outline btn-sm" data-conn-reveal-all="1">👁️ เฉลยทั้งหมด</button>
+            <button type="button" class="btn btn-accent btn-sm" data-conn-next="1">🎲 สุ่มกระดานใหม่</button>
+          </div>
+        </div>
+      `
+      : '';
+
+    const solvedHtml = (md.solvedGroups || [])
+      .map((g) => {
+        const namesStr = (g.players || []).map((p) => `${p.flag} ${p.name}`).join('  •  ');
+        return `
+          <div class="connections-group-banner" style="border-color:${g.color};background:linear-gradient(135deg, ${g.color}28, rgba(15,23,42,0.94));">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+              <strong style="font-size:0.96rem;color:#fff;">${g.tierLabel} — ${g.title}</strong>
+              <span style="font-size:0.78rem;color:${g.revealed ? '#fbbf24' : '#6ee7b7'};font-weight:700;">
+                ${g.revealed ? '👁️ เปิดเฉลย (0 แต้ม)' : `✅ แก้ได้โดย ${g.solvedBy} (+${g.points} แต้ม)`}
+              </span>
+            </div>
+            <div style="font-size:0.84rem;color:#e2e8f0;">${namesStr}</div>
+          </div>
+        `;
+      })
+      .join('');
+
+    const tilesHtml = (md.remainingTiles || [])
+      .map((t) => {
+        const isSel = selSet.has(t.id);
+        return `
+          <div class="conn-tile ${isSel ? 'selected' : ''}" data-conn-tile="${t.id}">
+            ${renderPlayerPhotoHTML(t.photoUrl, '⚽', 'player-photo-avatar')}
+            <div style="font-weight:700;font-size:0.84rem;line-height:1.25;">${t.name}</div>
+            <div style="font-size:0.72rem;color:#94a3b8;display:flex;align-items:center;gap:4px;">
+              ${renderFlagHTML(t.flag, t.flagUrl)} <span>${t.position}</span>
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
+    return `
+      ${toolbarHtml}
+      ${hintBannerHtml}
+      <div class="connections-solved-list">${solvedHtml}</div>
+      <div class="connections-grid-16">${tilesHtml}</div>
+    `;
+  }
+
+  // MODE 8: WHO ARE YA? (BLURRED PHOTO + WORDLE ATTRIBUTE MATRIX)
+  if (mode === 'who_are_ya_wordle') {
+    const clues = md.hintClues || {};
+    const toolbarHtml = !isReveal
+      ? `
+        <div class="top10-toolbar">
+          <div class="top10-toolbar-left">
+            <span class="top10-progress-pill">🎯 คะแนนปัจจุบัน: <strong>+${md.potentialPoints || 1} แต้ม</strong></span>
+            ${
+              !md.solved && !md.revealed
+                ? `
+                  <button type="button" class="btn btn-outline btn-sm" data-wordle-hint="1">💡 ลดความเบลอ & เปิดคำใบ้ถัดไป</button>
+                  <button type="button" class="btn btn-outline btn-sm" data-wordle-reveal="1">👁️ เฉลยนักเตะคนนี้</button>
+                `
+                : ''
+            }
+          </div>
+          <div class="top10-toolbar-actions">
+            <button type="button" class="btn btn-accent btn-sm" data-wordle-next="1">🔄 สุ่มนักเตะปริศนาคนต่อไป</button>
+          </div>
+        </div>
+      `
+      : '';
+
+    const photoElem = md.photoUrl
+      ? `<img src="${md.photoUrl}" alt="Mystery Player" style="filter:blur(${md.blurPx || 0}px);" onerror="this.outerHTML='<span style=\\'font-size:2.8rem;\\'>🕵️‍♂️</span>'" />`
+      : `<span style="font-size:2.8rem;">🕵️‍♂️</span>`;
+
+    const solvedBanner =
+      md.solved || md.revealed
+        ? `
+          <div style="padding:12px 16px;margin-bottom:12px;border-radius:12px;background:${md.solved ? 'rgba(16,185,129,0.18)' : 'rgba(245,158,11,0.16)'};border:1px solid ${md.solved ? '#10b981' : '#f59e0b'};display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+            <div>
+              <div style="font-size:0.78rem;color:#cbd5e1;">${md.solved ? `🎉 ทายถูกโดย ${md.solvedBy} (+${md.pointsAwarded} แต้ม!)` : '👁️ เฉลยนักเตะปริศนา (0 แต้ม)'}</div>
+              <div style="font-size:1.15rem;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px;">
+                ${renderFlagHTML(md.answerPlayer?.flag, md.answerPlayer?.flagUrl)} ${md.answerPlayer?.name || ''} (${md.answerPlayer?.position || ''})
+              </div>
+              <div style="font-size:0.78rem;color:#a7f3d0;">สโมสร: ${(md.answerPlayer?.clubs || []).join(', ')}</div>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" data-wordle-next="1">➡️ ไปข้อต่อไปเลย!</button>
+          </div>
+        `
+        : '';
+
+    const guessesHtml = (md.guesses || [])
+      .map((g) => {
+        const clubSub =
+          g.clubMatch === 'partial' && g.sharedClubNames && g.sharedClubNames.length > 0
+            ? `<div style="font-size:0.66rem;font-weight:400;">(เคยอยู่ ${g.sharedClubNames[0]})</div>`
+            : '';
+        return `
+          <div class="wordle-guess-row">
+            <div style="display:flex;align-items:center;gap:8px;">
+              ${renderPlayerPhotoHTML(g.photoUrl, '⚽', 'player-photo-avatar')}
+              <div>
+                <div style="font-weight:700;font-size:0.86rem;">${g.playerName}</div>
+                <div style="font-size:0.7rem;color:#94a3b8;">ทายโดย ${g.byPlayerAvatar} ${g.byPlayerName}</div>
+              </div>
+            </div>
+            <div class="wordle-attr-cell match-${g.natMatch}">
+              <div>🌍 สัญชาติ</div>
+              <div>${renderFlagHTML(g.flag, g.flagUrl)}</div>
+            </div>
+            <div class="wordle-attr-cell match-${g.leagueMatch}">
+              <div>🏆 ลีก</div>
+              <div>${g.leagueName}</div>
+            </div>
+            <div class="wordle-attr-cell match-${g.clubMatch}">
+              <div>🏟️ สโมสร</div>
+              <div>${g.clubName}</div>
+              ${clubSub}
+            </div>
+            <div class="wordle-attr-cell match-${g.posMatch}">
+              <div>👕 ตำแหน่ง</div>
+              <div>${g.position}</div>
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
+    return `
+      ${toolbarHtml}
+      ${solvedBanner}
+      <div class="wordle-hero-box">
+        <div class="wordle-photo-frame">${photoElem}</div>
+        <div class="wordle-clues-grid">
+          <div class="wordle-clue-pill">🌍 สัญชาติ: <strong>${clues.nationality ? renderFlagHTML(clues.nationality, clues.flagUrl) : '🔒 ซ่อนอยู่'}</strong></div>
+          <div class="wordle-clue-pill">👕 ตำแหน่ง: <strong>${clues.position || '🔒 ซ่อนอยู่'}</strong></div>
+          <div class="wordle-clue-pill">🏟️ สโมสรหลัก: <strong>${clues.clubName || '🔒 ซ่อนอยู่'}</strong></div>
+          <div class="wordle-clue-pill">🔤 อักษรย่อ: <strong>${clues.initials || '🔒 ซ่อนอยู่'}</strong></div>
+        </div>
+      </div>
+      <div class="wordle-guesses-list">
+        ${guessesHtml || '<div class="muted-text" style="text-align:center;padding:10px;font-size:0.84rem;">พิมพ์ทายชื่อนักเตะคนแรกด้านล่างเพื่อดูแถบสีคำใบ้ (🟢ตรงเป๊ะ / 🟡เคยอยู่สโมสรหรือลีกเดียวกัน)!</div>'}
+      </div>
+    `;
+  }
+
+  // MODE 9: CHAIN LINK (Player -> Shared Club -> Teammate -> Shared Club...)
+  if (mode === 'chain_link') {
+    const anchor = md.currentAnchor || {};
+    const availClubsHtml = (anchor.availableClubs || [])
+      .map((c) => {
+        const bImg = c.badgeUrl ? `<img src="${c.badgeUrl}" alt="${c.name}" style="width:15px;height:15px;object-fit:contain;" onerror="this.style.display='none'" />` : '';
+        return `<span class="mini-club-chip">${bImg} ${c.name}</span>`;
+      })
+      .join('');
+
+    const usedClubsHtml = (md.usedClubs || [])
+      .map((c) => `<span class="used-chip" style="font-size:0.74rem;border-color:rgba(239,68,68,0.4);color:#fca5a5;">🔒 ${c.name}</span>`)
+      .join('');
+
+    const toolbarHtml = !isReveal
+      ? `
+        <div class="top10-toolbar">
+          <div class="top10-toolbar-left">
+            <span class="top10-progress-pill">🔗 ความยาวลูกโซ่: <strong>${md.chainLength || 1}</strong> คน (ต่อสำเร็จรับ <strong>+2 แต้ม</strong>)</span>
+            <button type="button" class="btn btn-outline btn-sm" data-chain-hint="1">💡 คำใบ้คนถัดไป</button>
+            <button type="button" class="btn btn-outline btn-sm" data-chain-auto="1">👁️ ให้ระบบต่อให้ 1 ก้าว</button>
+          </div>
+          <div class="top10-toolbar-actions">
+            <button type="button" class="btn btn-accent btn-sm" data-chain-reset="1">🔄 เริ่มลูกโซ่ใหม่</button>
+          </div>
+        </div>
+      `
+      : '';
+
+    const hintBannerHtml = md.hintText
+      ? `<div style="padding:8px 12px;margin-bottom:10px;border-radius:10px;background:rgba(245,158,11,0.16);border:1px solid rgba(251,191,36,0.45);color:#fde68a;font-size:0.84rem;font-weight:600;">${md.hintText}</div>`
+      : '';
+
+    const chainTimelineHtml = (md.history || [])
+      .map((node, idx) => {
+        const bridgeHtml =
+          idx > 0
+            ? `<span class="chain-bridge-badge">➔ 🏟️ ${node.viaClubName} ➔</span>`
+            : '';
+        return `
+          ${bridgeHtml}
+          <div class="chain-node">
+            ${renderPlayerPhotoHTML(node.photoUrl, '⚽', 'player-photo-avatar')}
+            <div>
+              <div style="font-weight:700;">#${node.step} ${renderFlagHTML(node.flag, node.flagUrl)} ${node.playerName}</div>
+              <div style="font-size:0.7rem;color:#94a3b8;">${node.byPlayerName}${node.pointsEarned > 0 ? ` (+${node.pointsEarned} แต้ม)` : ''}</div>
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
+    return `
+      ${toolbarHtml}
+      ${hintBannerHtml}
+      <div class="chain-anchor-card">
+        <div style="font-size:0.78rem;color:#6ee7b7;font-weight:700;margin-bottom:6px;">🎯 นักเตะคนล่าสุดในโซ่ (พิมพ์ชื่อนักเตะที่เคยอยู่สโมสรเดียวกับเขา):</div>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+          ${renderPlayerPhotoHTML(anchor.photoUrl, '⚽', 'reveal-player-photo')}
+          <div>
+            <div style="font-size:1.2rem;font-weight:800;display:flex;align-items:center;gap:6px;">
+              ${renderFlagHTML(anchor.flag, anchor.flagUrl)} ${anchor.playerName || ''} <small style="font-weight:500;color:#94a3b8;">(${anchor.position || ''})</small>
+            </div>
+            <div style="margin-top:6px;font-size:0.8rem;color:#cbd5e1;">
+              🏟️ สโมสรที่ยังใช้เชื่อมต่อได้: ${availClubsHtml || '<span style="color:#f87171;">ไม่มีสโมสรว่างเหลือแล้ว! กด "🔄 เริ่มลูกโซ่ใหม่" ได้เลย</span>'}
+            </div>
+          </div>
+        </div>
+        ${usedClubsHtml ? `<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;"><small style="color:#94a3b8;">สโมสรที่ใช้เชื่อมไปแล้ว (ห้ามใช้ซ้ำ):</small> ${usedClubsHtml}</div>` : ''}
+      </div>
+      <div class="chain-timeline">${chainTimelineHtml}</div>
+    `;
+  }
+
   return '';
 }
 
@@ -1276,6 +1552,151 @@ function bindDynamicStageEvents(container, room) {
       });
     }
   }
+
+  if (mode === 'connections') {
+    container.querySelectorAll('[data-conn-tile]').forEach((tileEl) => {
+      tileEl.addEventListener('click', () => {
+        const pid = tileEl.dataset.connTile;
+        if (!Array.isArray(state.selectedConnectionIds)) {
+          state.selectedConnectionIds = [];
+        }
+        const idx = state.selectedConnectionIds.indexOf(pid);
+        if (idx >= 0) {
+          state.selectedConnectionIds.splice(idx, 1);
+          sfx.beep(420, 0.06);
+        } else {
+          if (state.selectedConnectionIds.length >= 4) {
+            showToast('เลือกได้สูงสุด 4 คนต่อกลุ่มครับ');
+            return;
+          }
+          state.selectedConnectionIds.push(pid);
+          sfx.beep(580, 0.06);
+        }
+        renderPlayingView(state.room);
+      });
+    });
+
+    const clearBtn = container.querySelector('[data-conn-clear]');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        state.selectedConnectionIds = [];
+        sfx.beep(360, 0.06);
+        renderPlayingView(state.room);
+      });
+    }
+
+    const submitBtn = container.querySelector('[data-conn-submit]');
+    if (submitBtn) {
+      submitBtn.addEventListener('click', async () => {
+        if (!Array.isArray(state.selectedConnectionIds) || state.selectedConnectionIds.length !== 4) {
+          showToast('กรุณาคลิกเลือกนักเตะให้ครบ 4 คนก่อนกดส่งครับ');
+          return;
+        }
+        sfx.lockIn();
+        const res = await apiAction('connections_submit_group', {
+          playerIds: state.selectedConnectionIds
+        });
+        if (res && res.connectionsFeedback) {
+          if (res.connectionsFeedback.correct || res.connectionsFeedback.ok) {
+            state.selectedConnectionIds = [];
+            sfx.success();
+          } else {
+            sfx.beep(260, 0.14);
+          }
+          if (res.connectionsFeedback.message) {
+            showToast(res.connectionsFeedback.message);
+          }
+        }
+      });
+    }
+
+    const hintBtn = container.querySelector('[data-conn-hint]');
+    if (hintBtn) {
+      hintBtn.addEventListener('click', async () => {
+        sfx.beep(520, 0.08);
+        await apiAction('connections_hint');
+      });
+    }
+
+    const revealOneBtn = container.querySelector('[data-conn-reveal-one]');
+    if (revealOneBtn) {
+      revealOneBtn.addEventListener('click', async () => {
+        state.selectedConnectionIds = [];
+        sfx.beep(360, 0.09);
+        await apiAction('connections_reveal_one');
+      });
+    }
+
+    const revealAllBtn = container.querySelector('[data-conn-reveal-all]');
+    if (revealAllBtn) {
+      revealAllBtn.addEventListener('click', async () => {
+        state.selectedConnectionIds = [];
+        sfx.beep(330, 0.12);
+        await apiAction('connections_reveal_all');
+      });
+    }
+
+    const nextBtn = container.querySelector('[data-conn-next]');
+    if (nextBtn) {
+      nextBtn.addEventListener('click', async () => {
+        state.selectedConnectionIds = [];
+        sfx.lockIn();
+        await apiAction('start_mode_round');
+      });
+    }
+  }
+
+  if (mode === 'who_are_ya_wordle') {
+    const hintBtn = container.querySelector('[data-wordle-hint]');
+    if (hintBtn) {
+      hintBtn.addEventListener('click', async () => {
+        sfx.beep(520, 0.08);
+        await apiAction('wordle_hint_unblur');
+      });
+    }
+
+    const revealBtn = container.querySelector('[data-wordle-reveal]');
+    if (revealBtn) {
+      revealBtn.addEventListener('click', async () => {
+        sfx.beep(340, 0.1);
+        await apiAction('wordle_reveal_answer');
+      });
+    }
+
+    const nextBtn = container.querySelector('[data-wordle-next]');
+    if (nextBtn) {
+      nextBtn.addEventListener('click', async () => {
+        sfx.lockIn();
+        await apiAction('start_mode_round');
+      });
+    }
+  }
+
+  if (mode === 'chain_link') {
+    const hintBtn = container.querySelector('[data-chain-hint]');
+    if (hintBtn) {
+      hintBtn.addEventListener('click', async () => {
+        sfx.beep(520, 0.08);
+        await apiAction('chain_hint');
+      });
+    }
+
+    const autoBtn = container.querySelector('[data-chain-auto]');
+    if (autoBtn) {
+      autoBtn.addEventListener('click', async () => {
+        sfx.beep(440, 0.09);
+        await apiAction('chain_auto_step');
+      });
+    }
+
+    const resetBtn = container.querySelector('[data-chain-reset]');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', async () => {
+        sfx.lockIn();
+        await apiAction('start_mode_round');
+      });
+    }
+  }
 }
 
 function renderPlayingView(room) {
@@ -1320,6 +1741,18 @@ function renderPlayingView(room) {
     banner.style.background = `linear-gradient(135deg, #0d9488, #0f172a)`;
     document.getElementById('playingClubName').textContent = room.modeData?.title || 'Footy Tic-Tac-Toe 3x3';
     document.getElementById('playingClubSub').textContent = `คลิกเลือกช่องในตาราง แล้วพิมพ์ชื่อนักเตะเพื่อยึดช่อง! (ไม่จำกัดเวลา ห้ามใช้ชื่อซ้ำในกระดานเดียวกัน)`;
+  } else if (mode === 'connections') {
+    banner.style.background = `linear-gradient(135deg, #8b5cf6, #0f172a)`;
+    document.getElementById('playingClubName').textContent = room.modeData?.title || `Football Connections ชุดที่ #${room.roundNumber}`;
+    document.getElementById('playingClubSub').innerHTML = `คลิกเลือกนักเตะทีละ <strong>4 คน</strong> ที่มีความลับร่วมกัน (🟢+1 / 🟡+2 / 🔵+3 / 🟣+4 แต้ม • หากตรง 3/4 ระบบจะเตือนว่า "เฉียดมาก!")`;
+  } else if (mode === 'who_are_ya_wordle') {
+    banner.style.background = `linear-gradient(135deg, #ec4899, #0f172a)`;
+    document.getElementById('playingClubName').textContent = `Who Are Ya? Wordle ข้อที่ #${room.roundNumber}`;
+    document.getElementById('playingClubSub').innerHTML = `พิมพ์ชื่อนักเตะเพื่อเทียบ <strong>สัญชาติ / ลีก / สโมสร / ตำแหน่ง</strong> (🟢ตรงเป๊ะ / 🟡เคยอยู่ร่วมทีมหรือลีกร่วม / ⚪ไม่ตรง) ยิ่งทายตอนภาพเบลอยิ่งได้แต้มเยอะ (+4 ถึง +1)!`;
+  } else if (mode === 'chain_link') {
+    banner.style.background = `linear-gradient(135deg, #06b6d4, #0f172a)`;
+    document.getElementById('playingClubName').textContent = `Chain Link ต่อโซ่เพื่อนร่วมทีม (ความยาวโซ่: ${room.modeData?.chainLength || 0} ลิงก์)`;
+    document.getElementById('playingClubSub').innerHTML = `พิมพ์ชื่อนักเตะที่เคยอยู่สโมสรเดียวกับคนล่าสุดในโซ่ (<strong>+2 แต้ม/ลิงก์</strong> + โบนัสทุก 5 ลิงก์ • ห้ามซ้ำคน & ห้ามใช้สโมสรเชื่อมซ้ำ!)`;
   }
 
   updateTimerOnly();
@@ -1342,7 +1775,7 @@ function renderPlayingView(room) {
   } else {
     lockedZone.classList.add('hidden');
     stageEl.classList.remove('hidden');
-    if (mode === 'trivia_quiz') {
+    if (mode === 'trivia_quiz' || mode === 'connections') {
       inputZone.classList.add('hidden');
     } else {
       inputZone.classList.remove('hidden');

@@ -443,6 +443,141 @@ function serializeModeDataForClients(room) {
     };
   }
 
+  // MODE 7: FOOTBALL CONNECTIONS (16 Players -> 4 Secret Groups of 4)
+  if (mode === 'connections') {
+    if (!room.connectionsBoard) {
+      room.connectionsBoard = generateConnectionsBoard(room.roundNumber || 1);
+    }
+    const board = room.connectionsBoard;
+    if (!board) return null;
+    const solvedGroupIds = new Set(board.groups.filter((g) => g.solved).map((g) => g.id));
+    return {
+      boardId: board.id,
+      title: board.title,
+      hintText: board.hintText || null,
+      solvedGroups: board.groups.filter((g) => g.solved),
+      remainingTiles: board.tiles
+        .filter((t) => !solvedGroupIds.has(t.groupId))
+        .map((t) => ({
+          id: t.id,
+          name: t.name,
+          flag: t.flag,
+          flagUrl: t.flagUrl,
+          photoUrl: t.photoUrl,
+          position: t.position
+        }))
+    };
+  }
+
+  // MODE 8: WHO ARE YA? (Blurred Photo + Wordle Attribute Matrix)
+  if (mode === 'who_are_ya_wordle') {
+    if (!room.wordleMysteryPlayer) {
+      room.wordleMysteryPlayer = pickMysteryWordlePlayer();
+    }
+    const target = room.wordleMysteryPlayer;
+    const solved = !!room.wordleSolved;
+    const revealed = !!room.wordleRevealed;
+    const guesses = room.wordleGuesses || [];
+    const hintStep = room.wordleHintStep || 0;
+    const blurSteps = [22, 14, 8, 4, 0];
+    const effectiveStep = solved || revealed ? 4 : Math.min(4, hintStep + Math.floor(guesses.length / 2));
+    const blurPx = blurSteps[effectiveStep];
+    const potentialPoints = solved || revealed ? 0 : Math.max(1, 4 - effectiveStep);
+
+    const primaryClubId = target.clubs[0];
+    const primaryClub = CLUBS.find((c) => c.id === primaryClubId);
+    const words = (target.name || '').trim().split(/\s+/);
+    const initialsHint = words
+      .map((w) => w.charAt(0).toUpperCase() + '_'.repeat(Math.max(2, w.length - 1)))
+      .join(' ');
+
+    return {
+      roundNumber: room.roundNumber,
+      photoUrl: target.photoUrl || null,
+      blurPx,
+      effectiveStep,
+      potentialPoints,
+      solved,
+      revealed,
+      solvedBy: room.wordleSolvedBy || null,
+      pointsAwarded: room.wordlePointsAwarded || 0,
+      hintClues: {
+        nationality: effectiveStep >= 1 || solved || revealed ? target.flag : null,
+        flagUrl: effectiveStep >= 1 || solved || revealed ? target.flagUrl || getFlagUrlFromEmoji(target.flag) : null,
+        position: effectiveStep >= 2 || solved || revealed ? target.position : null,
+        clubName: effectiveStep >= 3 || solved || revealed ? primaryClub?.name || 'ยุโรป' : null,
+        clubBadgeUrl: effectiveStep >= 3 || solved || revealed ? primaryClub?.badgeUrl || null : null,
+        initials: effectiveStep >= 4 || solved || revealed ? initialsHint : null
+      },
+      answerPlayer:
+        solved || revealed
+          ? {
+              id: target.id,
+              name: target.name,
+              flag: target.flag,
+              flagUrl: target.flagUrl || getFlagUrlFromEmoji(target.flag),
+              photoUrl: target.photoUrl || null,
+              position: target.position,
+              clubs: target.clubs.map((cid) => CLUBS.find((c) => c.id === cid)?.name || cid)
+            }
+          : null,
+      guesses
+    };
+  }
+
+  // MODE 9: CHAIN LINK (Player -> Shared Club -> Teammate -> Shared Club...)
+  if (mode === 'chain_link') {
+    if (!room.chainLinkHistory || room.chainLinkHistory.length === 0) {
+      const starter = pickChainStarterPlayer();
+      room.chainLinkHistory = [
+        {
+          step: 1,
+          playerId: starter.id,
+          playerName: starter.name,
+          flag: starter.flag,
+          flagUrl: starter.flagUrl || getFlagUrlFromEmoji(starter.flag),
+          photoUrl: starter.photoUrl || null,
+          position: starter.position,
+          viaClubId: null,
+          viaClubName: 'จุดเริ่มต้นลูกโซ่ (Starter)',
+          viaClubBadgeUrl: null,
+          byPlayerName: '🎲 ระบบสุ่ม',
+          pointsEarned: 0
+        }
+      ];
+      room.chainUsedClubs = [];
+      room.chainHintText = null;
+    }
+    const hist = room.chainLinkHistory;
+    const currentAnchor = hist[hist.length - 1];
+    const anchorPlayer = PLAYERS.find((p) => p.id === currentAnchor.playerId) || PLAYERS[0];
+    const usedClubSet = new Set(room.chainUsedClubs || []);
+    const availableAnchorClubs = (anchorPlayer?.clubs || [])
+      .filter((cid) => !usedClubSet.has(cid))
+      .map((cid) => {
+        const c = CLUBS.find((cl) => cl.id === cid);
+        return {
+          id: cid,
+          name: c?.name || cid,
+          badgeUrl: c?.badgeUrl || null
+        };
+      });
+
+    return {
+      chainLength: hist.length,
+      currentAnchor: {
+        ...currentAnchor,
+        availableClubs: availableAnchorClubs
+      },
+      usedClubs: (room.chainUsedClubs || []).map((cid) => {
+        const c = CLUBS.find((cl) => cl.id === cid);
+        return { id: cid, name: c?.name || cid, badgeUrl: c?.badgeUrl || null };
+      }),
+      hintText: room.chainHintText || null,
+      history: hist
+    };
+  }
+
   return null;
 }
 
@@ -744,7 +879,13 @@ function startWave(room) {
   room.lastWaveResults = [];
   room.waveStartTime = Date.now();
   const mode = room.settings.gameMode || 'multi_club_pool';
-  const isUntimedMode = mode === 'top10_stats' || mode === 'lineup_quiz' || mode === 'footy_grid';
+  const isUntimedMode =
+    mode === 'top10_stats' ||
+    mode === 'lineup_quiz' ||
+    mode === 'footy_grid' ||
+    mode === 'connections' ||
+    mode === 'who_are_ya_wordle' ||
+    mode === 'chain_link';
   room.timeLeft = isUntimedMode ? 0 : room.settings.timeLimit;
   room.totalWavesPlayed = (room.totalWavesPlayed || 0) + 1;
 
@@ -1017,6 +1158,230 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
       top10Feedback: {
         correct: true,
         message: `✅ ยึดช่องสำเร็จ! ${footballer.name}${rareTag} (+${pts} คะแนน${gotBingo ? ' รวมโบนัส BINGO +3!' : ''})`
+      }
+    };
+  }
+
+  // Continuous untimed mode for Mode 8 (Who Are Ya? Blurred Photo + Wordle Matrix)
+  if (mode === 'who_are_ya_wordle') {
+    if (!cleanInput) {
+      return {
+        ok: false,
+        top10Feedback: { correct: false, message: 'กรุณาพิมพ์ชื่อนักเตะก่อนกดส่ง' }
+      };
+    }
+    if (!room.wordleMysteryPlayer) {
+      room.wordleMysteryPlayer = pickMysteryWordlePlayer();
+    }
+    if (room.wordleSolved || room.wordleRevealed) {
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `⚠️ ข้อนี้ถูกเปิดเฉลยไปแล้ว (${room.wordleMysteryPlayer.name}) กดปุ่ม "🔄 สุ่มนักเตะคนต่อไป" ได้เลย!`
+        }
+      };
+    }
+
+    const guessedPlayer = findPlayerByInput(cleanInput, selectedPlayerId);
+    if (!guessedPlayer) {
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `❌ ไม่พบชื่อนักเตะ "${cleanInput}" ในฐานข้อมูล 5 ลีกใหญ่`
+        }
+      };
+    }
+
+    if (!room.wordleGuesses) room.wordleGuesses = [];
+    if (room.wordleGuesses.some((g) => g.playerId === guessedPlayer.id)) {
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `⚠️ ${guessedPlayer.name} ถูกทายไปแล้วในข้อนี้ ลองทายคนอื่นดู!`
+        }
+      };
+    }
+
+    const target = room.wordleMysteryPlayer;
+    const isCorrect = guessedPlayer.id === target.id || normalizeText(guessedPlayer.name) === normalizeText(target.name);
+
+    const targetPrimaryClubObj = CLUBS.find((c) => c.id === target.clubs[0]);
+    const guessPrimaryClubObj = CLUBS.find((c) => c.id === guessedPlayer.clubs[0]);
+
+    const natMatch = guessedPlayer.flag === target.flag ? 'exact' : 'wrong';
+    const posMatch = guessedPlayer.position === target.position ? 'exact' : 'wrong';
+
+    const targetLeagues = new Set(target.clubs.map((cid) => CLUBS.find((c) => c.id === cid)?.league).filter(Boolean));
+    const guessLeagues = new Set(guessedPlayer.clubs.map((cid) => CLUBS.find((c) => c.id === cid)?.league).filter(Boolean));
+    const samePrimaryLeague =
+      targetPrimaryClubObj && guessPrimaryClubObj && targetPrimaryClubObj.league === guessPrimaryClubObj.league;
+    const anySharedLeague = [...guessLeagues].some((lg) => targetLeagues.has(lg));
+    const leagueMatch = samePrimaryLeague ? 'exact' : anySharedLeague ? 'partial' : 'wrong';
+
+    const sharedClubs = guessedPlayer.clubs.filter((cid) => target.clubs.includes(cid));
+    const samePrimaryClub = guessedPlayer.clubs[0] && guessedPlayer.clubs[0] === target.clubs[0];
+    const clubMatch = isCorrect || samePrimaryClub ? 'exact' : sharedClubs.length > 0 ? 'partial' : 'wrong';
+    const sharedClubNames = sharedClubs.map((cid) => CLUBS.find((c) => c.id === cid)?.name || cid);
+
+    const hintStep = room.wordleHintStep || 0;
+    const effectiveStep = Math.min(4, hintStep + Math.floor(room.wordleGuesses.length / 2));
+    const pts = isCorrect ? Math.max(1, 4 - effectiveStep) : 0;
+
+    room.wordleGuesses.unshift({
+      guessNumber: room.wordleGuesses.length + 1,
+      byPlayerName: player ? player.name : 'ผู้เล่น',
+      byPlayerAvatar: player ? player.avatar : '⚽',
+      playerId: guessedPlayer.id,
+      playerName: guessedPlayer.name,
+      flag: guessedPlayer.flag,
+      flagUrl: guessedPlayer.flagUrl || getFlagUrlFromEmoji(guessedPlayer.flag),
+      photoUrl: guessedPlayer.photoUrl || null,
+      position: guessedPlayer.position,
+      clubName: guessPrimaryClubObj?.name || guessedPlayer.clubs[0] || '-',
+      clubBadgeUrl: guessPrimaryClubObj?.badgeUrl || null,
+      leagueName: guessPrimaryClubObj?.leagueName || guessPrimaryClubObj?.league || '-',
+      natMatch,
+      leagueMatch,
+      clubMatch,
+      posMatch,
+      sharedClubNames,
+      isCorrect
+    });
+
+    if (isCorrect) {
+      room.wordleSolved = true;
+      room.wordleSolvedBy = player ? player.name : 'ผู้เล่น';
+      room.wordlePointsAwarded = pts;
+      if (player) {
+        player.score += pts;
+        recordPlayerResultStats(player, true, null, target.name);
+      }
+      broadcastRoom(room.code, 'top10_updated', {
+        toastMessage: `🎉 ${player ? player.name : 'ผู้เล่น'} ทายถูกรูปปริศนา! เขาคือ ${target.name} (+${pts} คะแนน)`
+      });
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: true,
+          message: `✅ ถูกต้อง! นักเตะปริศนาคือ ${target.name} (+${pts} คะแนน)`
+        }
+      };
+    }
+
+    broadcastRoom(room.code, 'top10_updated');
+    return {
+      ok: true,
+      top10Feedback: {
+        correct: false,
+        message: `🔍 "${guessedPlayer.name}" ยังไม่ใช่! ดูแถบสีคำใบ้ (🟢ตรง / 🟡เคยอยู่สโมสรเดียวกัน) ด้านล่างได้เลย`
+      }
+    };
+  }
+
+  // Continuous untimed mode for Mode 9 (Chain Link: Player -> Shared Club -> Teammate)
+  if (mode === 'chain_link') {
+    if (!cleanInput) {
+      return {
+        ok: false,
+        top10Feedback: { correct: false, message: 'กรุณาพิมพ์ชื่อนักเตะก่อนกดส่ง' }
+      };
+    }
+    if (!room.chainLinkHistory || room.chainLinkHistory.length === 0) {
+      serializeModeDataForClients(room);
+    }
+    const hist = room.chainLinkHistory;
+    const anchor = hist[hist.length - 1];
+    const anchorPlayer = PLAYERS.find((p) => p.id === anchor.playerId) || PLAYERS[0];
+    const guessedPlayer = findPlayerByInput(cleanInput, selectedPlayerId);
+
+    if (!guessedPlayer) {
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `❌ ไม่พบชื่อนักเตะ "${cleanInput}" ในฐานข้อมูล`
+        }
+      };
+    }
+
+    if (hist.some((h) => h.playerId === guessedPlayer.id)) {
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `⚠️ ${guessedPlayer.name} ถูกใช้ในลูกโซ่รอบนี้ไปแล้ว ห้ามใช้ชื่อนักเตะซ้ำ!`
+        }
+      };
+    }
+
+    const sharedClubs = (guessedPlayer.clubs || []).filter((cid) => (anchorPlayer.clubs || []).includes(cid));
+    if (sharedClubs.length === 0) {
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `❌ ${guessedPlayer.name} ไม่เคยอยู่สโมสรเดียวกับ ${anchorPlayer.name}!`
+        }
+      };
+    }
+
+    const usedClubSet = new Set(room.chainUsedClubs || []);
+    const unusedSharedClubs = sharedClubs.filter((cid) => !usedClubSet.has(cid));
+    if (unusedSharedClubs.length === 0) {
+      const usedNames = sharedClubs.map((cid) => CLUBS.find((c) => c.id === cid)?.name || cid).join(', ');
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `⚠️ สโมสรเชื่อมโยง (${usedNames}) ถูกใช้เชื่อมในโซ่นี้ไปแล้ว ต้องเชื่อมผ่านสโมสรอื่นที่ยังไม่ถูกใช้!`
+        }
+      };
+    }
+
+    const chosenBridgeClubId = unusedSharedClubs[0];
+    const bridgeClubObj = CLUBS.find((c) => c.id === chosenBridgeClubId);
+    if (!room.chainUsedClubs) room.chainUsedClubs = [];
+    room.chainUsedClubs.push(chosenBridgeClubId);
+    room.chainHintText = null;
+
+    const newStepNum = hist.length + 1;
+    const milestoneBonus = newStepNum > 1 && (newStepNum - 1) % 5 === 0 ? 1 : 0;
+    const pts = 2 + milestoneBonus;
+
+    hist.push({
+      step: newStepNum,
+      playerId: guessedPlayer.id,
+      playerName: guessedPlayer.name,
+      flag: guessedPlayer.flag,
+      flagUrl: guessedPlayer.flagUrl || getFlagUrlFromEmoji(guessedPlayer.flag),
+      photoUrl: guessedPlayer.photoUrl || null,
+      position: guessedPlayer.position,
+      viaClubId: chosenBridgeClubId,
+      viaClubName: bridgeClubObj?.name || chosenBridgeClubId,
+      viaClubBadgeUrl: bridgeClubObj?.badgeUrl || null,
+      byPlayerName: player ? player.name : 'ผู้เล่น',
+      pointsEarned: pts
+    });
+
+    if (player) {
+      player.score += pts;
+      recordPlayerResultStats(player, true, null, guessedPlayer.name);
+    }
+
+    // Check if the newly added player has any remaining unused clubs with available teammates; if dead-end, auto-reset or notify
+    const bonusTxt = milestoneBonus > 0 ? ' (🔥 โบนัสโซ่ยาวครบ 5 ข้อ +1 แต้ม!)' : '';
+    broadcastRoom(room.code, 'top10_updated', {
+      toastMessage: `🔗 ${player ? player.name : 'ผู้เล่น'} เชื่อม ${anchorPlayer.name} ➔ [${bridgeClubObj?.name || chosenBridgeClubId}] ➔ ${guessedPlayer.name} (+${pts} แต้ม${bonusTxt})`
+    });
+
+    return {
+      ok: true,
+      top10Feedback: {
+        correct: true,
+        message: `✅ เชื่อมสำเร็จผ่าน [${bridgeClubObj?.name || chosenBridgeClubId}] ➔ ${guessedPlayer.name} (+${pts} คะแนน${bonusTxt})`
       }
     };
   }
@@ -1820,7 +2185,215 @@ function pickSmartClubPool(count) {
   return bestCombo || sourceClubs.slice(0, count);
 }
 
-// Generate a random 100%-solvable 3x3 Footy Tic-Tac-Toe Grid where every cell has >= 2 valid answers
+// Generate a dynamic 4x4 Football Connections board (4 secret categories of 4 players each)
+function generateConnectionsBoard(roundNum) {
+  const clubOverlapWeight = new Map();
+  for (const p of PLAYERS) {
+    if (Array.isArray(p.clubs) && p.clubs.length >= 2) {
+      for (const cid of p.clubs) {
+        clubOverlapWeight.set(cid, (clubOverlapWeight.get(cid) || 0) + 1);
+      }
+    }
+  }
+  const topClubIds = [...CLUBS]
+    .sort((a, b) => (clubOverlapWeight.get(b.id) || 0) - (clubOverlapWeight.get(a.id) || 0))
+    .slice(0, 26)
+    .map((c) => c.id);
+
+  const flagNames = {
+    '🇫🇷': 'ทีมชาติฝรั่งเศส',
+    '🇧🇷': 'ทีมชาติบราซิล',
+    '🇪🇸': 'ทีมชาติสเปน',
+    '🏴󠁧󠁢󠁥󠁮󠁧󠁿': 'ทีมชาติอังกฤษ',
+    '🇦🇷': 'ทีมชาติอาร์เจนตินา',
+    '🇵🇹': 'ทีมชาติโปรตุเกส',
+    '🇩🇪': 'ทีมชาติเยอรมนี',
+    '🇮🇹': 'ทีมชาติอิตาลี',
+    '🇳🇱': 'ทีมชาติเนเธอร์แลนด์',
+    '🇧🇪': 'ทีมชาติเบลเยียม'
+  };
+  const posNames = {
+    FW: 'กองหน้า / ตัวรุก (FW)',
+    MF: 'กองกลาง (MF)',
+    DF: 'กองหลัง (DF)',
+    GK: 'ผู้รักษาประตู (GK)'
+  };
+
+  const tier1Pool = []; // Easy (+1 pt): Played for Club X
+  const tier2Pool = []; // Medium (+2 pts): Nationality + Position OR Club + Position
+  const tier3Pool = []; // Hard (+3 pts): Nationality + Club X
+  const tier4Pool = []; // Expert (+4 pts): Played for BOTH Club X and Club Y
+
+  for (const cid of topClubIds.slice(0, 18)) {
+    const club = CLUBS.find((c) => c.id === cid);
+    if (!club) continue;
+    const clubPlayers = PLAYERS.filter((p) => p.clubs.includes(cid));
+    if (clubPlayers.length >= 8) {
+      tier1Pool.push({
+        id: `c1_${cid}`,
+        tier: 1,
+        points: 1,
+        color: '#10b981',
+        tierLabel: '🟢 ระดับง่าย (+1 แต้ม)',
+        title: `เคยค้าแข้งกับ ${club.name}`,
+        candidates: clubPlayers
+      });
+    }
+    for (const [posKey, posTitle] of Object.entries(posNames)) {
+      const cp = clubPlayers.filter((p) => p.position === posKey);
+      if (cp.length >= 5) {
+        tier2Pool.push({
+          id: `c2_${cid}_${posKey}`,
+          tier: 2,
+          points: 2,
+          color: '#f59e0b',
+          tierLabel: '🟡 ระดับปานกลาง (+2 แต้ม)',
+          title: `${posTitle} ที่เคยอยู่ ${club.name}`,
+          candidates: cp
+        });
+      }
+    }
+    for (const [flagEmoji, flagLabel] of Object.entries(flagNames)) {
+      const fp = clubPlayers.filter((p) => p.flag === flagEmoji);
+      if (fp.length >= 4) {
+        tier3Pool.push({
+          id: `c3_${cid}_${flagEmoji}`,
+          tier: 3,
+          points: 3,
+          color: '#3b82f6',
+          tierLabel: '🔵 ระดับยาก (+3 แต้ม)',
+          title: `นักเตะ${flagLabel} ที่เคยอยู่ ${club.name}`,
+          candidates: fp
+        });
+      }
+    }
+  }
+
+  for (let i = 0; i < topClubIds.length; i++) {
+    for (let j = i + 1; j < topClubIds.length; j++) {
+      const c1 = CLUBS.find((c) => c.id === topClubIds[i]);
+      const c2 = CLUBS.find((c) => c.id === topClubIds[j]);
+      if (!c1 || !c2) continue;
+      const both = PLAYERS.filter((p) => p.clubs.includes(c1.id) && p.clubs.includes(c2.id));
+      if (both.length >= 4) {
+        tier4Pool.push({
+          id: `c4_${c1.id}_${c2.id}`,
+          tier: 4,
+          points: 4,
+          color: '#a855f7',
+          tierLabel: '🟣 ระดับแฟนพันธุ์แท้ (+4 แต้ม)',
+          title: `เคยค้าแข้งทั้ง ${c1.name} และ ${c2.name}`,
+          candidates: both
+        });
+      }
+    }
+  }
+
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const g4 = tier4Pool[Math.floor(Math.random() * tier4Pool.length)];
+    const g3 = tier3Pool[Math.floor(Math.random() * tier3Pool.length)];
+    const g2 = tier2Pool[Math.floor(Math.random() * tier2Pool.length)];
+    const g1 = tier1Pool[Math.floor(Math.random() * tier1Pool.length)];
+    const chosenGroups = [g4, g3, g2, g1].filter(Boolean);
+    if (chosenGroups.length < 4) continue;
+
+    const usedPlayerIds = new Set();
+    const groupsOut = [];
+    let ok = true;
+
+    for (const grp of chosenGroups) {
+      const avail = [...grp.candidates]
+        .filter((p) => !usedPlayerIds.has(p.id))
+        .sort(() => Math.random() - 0.5);
+      if (avail.length < 4) {
+        ok = false;
+        break;
+      }
+      const picked4 = avail.slice(0, 4);
+      picked4.forEach((p) => usedPlayerIds.add(p.id));
+      groupsOut.push({
+        id: grp.id,
+        tier: grp.tier,
+        points: grp.points,
+        color: grp.color,
+        tierLabel: grp.tierLabel,
+        title: grp.title,
+        solved: false,
+        solvedBy: null,
+        revealed: false,
+        playerIds: picked4.map((p) => p.id),
+        players: picked4.map((p) => ({
+          id: p.id,
+          name: p.name,
+          flag: p.flag,
+          flagUrl: p.flagUrl || getFlagUrlFromEmoji(p.flag),
+          photoUrl: p.photoUrl || null,
+          position: p.position
+        }))
+      });
+    }
+
+    if (ok && groupsOut.length === 4) {
+      groupsOut.sort((a, b) => a.tier - b.tier);
+      const allTiles = groupsOut
+        .flatMap((g) =>
+          g.players.map((p) => ({
+            ...p,
+            groupId: g.id
+          }))
+        )
+        .sort(() => Math.random() - 0.5);
+
+      return {
+        id: 'conn_' + Date.now(),
+        title: `จับกลุ่ม 16 นักเตะ 4 ความลับ ชุดที่ #${roundNum}`,
+        groups: groupsOut,
+        tiles: allTiles,
+        hintText: null
+      };
+    }
+  }
+
+  return null;
+}
+
+// Pick a mystery player for Mode 8 (Who Are Ya? Blurred Photo + Wordle Attribute Matrix)
+function pickMysteryWordlePlayer(previousId = null) {
+  const clubOverlapWeight = new Map();
+  for (const p of PLAYERS) {
+    if (Array.isArray(p.clubs) && p.clubs.length >= 2) {
+      for (const cid of p.clubs) {
+        clubOverlapWeight.set(cid, (clubOverlapWeight.get(cid) || 0) + 1);
+      }
+    }
+  }
+  const famousClubIds = new Set(
+    [...CLUBS]
+      .sort((a, b) => (clubOverlapWeight.get(b.id) || 0) - (clubOverlapWeight.get(a.id) || 0))
+      .slice(0, 24)
+      .map((c) => c.id)
+  );
+
+  const withPhotos = PLAYERS.filter(
+    (p) =>
+      p.id !== previousId &&
+      p.photoUrl &&
+      p.clubs.some((cid) => famousClubIds.has(cid)) &&
+      (p.clubs.length >= 2 || (p.aliases && p.aliases.length >= 2))
+  );
+  const pool =
+    withPhotos.length >= 20
+      ? withPhotos
+      : PLAYERS.filter((p) => p.id !== previousId && p.clubs.some((cid) => famousClubIds.has(cid)));
+  return pool[Math.floor(Math.random() * pool.length)] || PLAYERS[0];
+}
+
+// Pick a well-connected starting player for Mode 9 (Chain Link: Player -> Club -> Teammate)
+function pickChainStarterPlayer() {
+  const multiClubStars = PLAYERS.filter((p) => Array.isArray(p.clubs) && p.clubs.length >= 3);
+  const pool = multiClubStars.length > 0 ? multiClubStars : PLAYERS;
+  return pool[Math.floor(Math.random() * pool.length)] || PLAYERS[0];
+}
 function generateRandomValidFootyGrid(roundNum) {
   const clubOverlapWeight = new Map();
   for (const p of PLAYERS) {
@@ -1950,6 +2523,55 @@ function startModeRound(room, options = {}) {
     }
     room.gridCells = Array(9).fill(null);
     room.hintedGridCells = {};
+    startWave(room);
+  } else if (mode === 'connections') {
+    room.roundNumber += 1;
+    room.waveNumber = 1;
+    room.connectionsBoard = generateConnectionsBoard(room.roundNumber);
+    startWave(room);
+  } else if (mode === 'who_are_ya_wordle') {
+    room.roundNumber += 1;
+    room.waveNumber = 1;
+    const prevId = room.wordleMysteryPlayer ? room.wordleMysteryPlayer.id : null;
+    const nextMystery = pickMysteryWordlePlayer(prevId);
+    room.wordleMysteryPlayer = nextMystery;
+    room.wordleGuesses = [];
+    room.wordleHintStep = 0;
+    room.wordleSolved = false;
+    room.wordleRevealed = false;
+    room.wordleSolvedBy = null;
+    room.wordlePointsAwarded = 0;
+    if (!nextMystery.photoUrl) {
+      getPlayerPhotoByName(nextMystery.name).then((photo) => {
+        if (photo && room.wordleMysteryPlayer && room.wordleMysteryPlayer.id === nextMystery.id) {
+          room.wordleMysteryPlayer.photoUrl = photo;
+          broadcastRoom(room.code, 'top10_updated');
+        }
+      });
+    }
+    startWave(room);
+  } else if (mode === 'chain_link') {
+    room.roundNumber += 1;
+    room.waveNumber = 1;
+    const starter = pickChainStarterPlayer();
+    room.chainLinkHistory = [
+      {
+        step: 1,
+        playerId: starter.id,
+        playerName: starter.name,
+        flag: starter.flag,
+        flagUrl: starter.flagUrl || getFlagUrlFromEmoji(starter.flag),
+        photoUrl: starter.photoUrl || null,
+        position: starter.position,
+        viaClubId: null,
+        viaClubName: 'จุดเริ่มต้นลูกโซ่ (Starter)',
+        viaClubBadgeUrl: null,
+        byPlayerName: '🎲 ระบบสุ่ม',
+        pointsEarned: 0
+      }
+    ];
+    room.chainUsedClubs = [];
+    room.chainHintText = null;
     startWave(room);
   } else {
     // club_battle: Multi-Club Pool!
@@ -2433,6 +3055,236 @@ function handleApiAction(req, res, body) {
         };
       }
     });
+    broadcastRoom(code, 'top10_updated');
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+  }
+
+  // MODE 7 ACTIONS: FOOTBALL CONNECTIONS
+  if (action === 'connections_submit_group') {
+    const selectedIds = Array.isArray(body.playerIds) ? body.playerIds : [];
+    const player = room.players.find((p) => p.id === playerId);
+    if (!room.connectionsBoard) {
+      room.connectionsBoard = generateConnectionsBoard(room.roundNumber || 1);
+    }
+    const board = room.connectionsBoard;
+    if (selectedIds.length !== 4) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(
+        JSON.stringify({
+          ok: true,
+          connectionsFeedback: { correct: false, message: 'กรุณาคลิกเลือกนักเตะให้ครบ 4 คนก่อนกดส่งกลุ่ม!' },
+          room: serializeRoomForClients(room)
+        })
+      );
+    }
+
+    const openGroups = board.groups.filter((g) => !g.solved);
+    let exactGroup = null;
+    let bestOverlap = 0;
+
+    for (const grp of openGroups) {
+      const overlap = selectedIds.filter((id) => grp.playerIds.includes(id)).length;
+      if (overlap === 4) {
+        exactGroup = grp;
+        break;
+      }
+      if (overlap > bestOverlap) bestOverlap = overlap;
+    }
+
+    if (exactGroup) {
+      exactGroup.solved = true;
+      exactGroup.revealed = false;
+      exactGroup.solvedBy = player ? player.name : 'ผู้เล่น';
+      const pts = exactGroup.points || 2;
+      if (player) {
+        player.score += pts;
+        recordPlayerResultStats(player, true, null, exactGroup.title);
+      }
+
+      // If 3 groups are solved, automatically unlock the last remaining group for +1 bonus to the solver!
+      const remainingUnsolved = board.groups.filter((g) => !g.solved);
+      let bonusLastMsg = '';
+      if (remainingUnsolved.length === 1) {
+        const lastGrp = remainingUnsolved[0];
+        lastGrp.solved = true;
+        lastGrp.revealed = false;
+        lastGrp.solvedBy = `${player ? player.name : 'ผู้เล่น'} (ปิดกระดาน!)`;
+        if (player) player.score += lastGrp.points;
+        bonusLastMsg = ` 🎉 และเปิดกลุ่มสุดท้าย "${lastGrp.title}" สำเร็จ (+${lastGrp.points} แต้ม)!`;
+      }
+
+      broadcastRoom(code, 'top10_updated', {
+        toastMessage: `🧩 ${player ? player.name : 'ผู้เล่น'} จับกลุ่มสำเร็จ: "${exactGroup.title}" (+${pts} แต้ม)${bonusLastMsg}`
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(
+        JSON.stringify({
+          ok: true,
+          connectionsFeedback: {
+            correct: true,
+            message: `✅ ถูกต้อง! กลุ่ม "${exactGroup.title}" รับ +${pts} คะแนน${bonusLastMsg}`
+          },
+          room: serializeRoomForClients(room)
+        })
+      );
+    }
+
+    const oneAwayMsg =
+      bestOverlap === 3
+        ? '🔥 เฉียดมาก! มี 3 คนในกลุ่มเดียวกันแล้ว (ขาดอีกแค่ 1 คน!)'
+        : '❌ ทั้ง 4 คนนี้ยังไม่ได้อยู่ในหมวดความลับเดียวกัน ลองจับคู่ใหม่!';
+    if (player) recordPlayerResultStats(player, false, null, null);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(
+      JSON.stringify({
+        ok: true,
+        connectionsFeedback: { correct: false, oneAway: bestOverlap === 3, message: oneAwayMsg },
+        room: serializeRoomForClients(room)
+      })
+    );
+  }
+
+  if (action === 'connections_hint') {
+    if (!room.connectionsBoard) room.connectionsBoard = generateConnectionsBoard(room.roundNumber || 1);
+    const board = room.connectionsBoard;
+    const openGrp = board.groups.find((g) => !g.solved);
+    if (openGrp) {
+      const samplePair = openGrp.players.slice(0, 2).map((p) => p.name).join(' + ');
+      board.hintText = `💡 ใบ้หมวด "${openGrp.title}": มี ${samplePair} อยู่ในกลุ่มเดียวกัน!`;
+      broadcastRoom(code, 'top10_updated');
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+  }
+
+  if (action === 'connections_reveal_one') {
+    if (!room.connectionsBoard) room.connectionsBoard = generateConnectionsBoard(room.roundNumber || 1);
+    const board = room.connectionsBoard;
+    const openGrp = board.groups.find((g) => !g.solved);
+    if (openGrp) {
+      openGrp.solved = true;
+      openGrp.revealed = true;
+      openGrp.solvedBy = '👁️ เปิดเฉลย (0 แต้ม)';
+      broadcastRoom(code, 'top10_updated');
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+  }
+
+  if (action === 'connections_reveal_all') {
+    if (!room.connectionsBoard) room.connectionsBoard = generateConnectionsBoard(room.roundNumber || 1);
+    const board = room.connectionsBoard;
+    board.groups.forEach((g) => {
+      if (!g.solved) {
+        g.solved = true;
+        g.revealed = true;
+        g.solvedBy = '👁️ เปิดเฉลย (0 แต้ม)';
+      }
+    });
+    broadcastRoom(code, 'top10_updated');
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+  }
+
+  // MODE 8 ACTIONS: WHO ARE YA? (BLURRED PHOTO + WORDLE)
+  if (action === 'wordle_hint_unblur') {
+    room.wordleHintStep = Math.min(4, (room.wordleHintStep || 0) + 1);
+    broadcastRoom(code, 'top10_updated');
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+  }
+
+  if (action === 'wordle_reveal_answer') {
+    room.wordleRevealed = true;
+    broadcastRoom(code, 'top10_updated');
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+  }
+
+  // MODE 9 ACTIONS: CHAIN LINK (TEAMMATE CHAIN)
+  if (action === 'chain_hint') {
+    if (!room.chainLinkHistory || room.chainLinkHistory.length === 0) {
+      serializeModeDataForClients(room);
+    }
+    const hist = room.chainLinkHistory;
+    const anchor = hist[hist.length - 1];
+    const anchorPlayer = PLAYERS.find((p) => p.id === anchor.playerId) || PLAYERS[0];
+    const usedPlayerIds = new Set(hist.map((h) => h.playerId));
+    const usedClubIds = new Set(room.chainUsedClubs || []);
+    const availClubs = (anchorPlayer.clubs || []).filter((cid) => !usedClubIds.has(cid));
+
+    let sampleCandidate = null;
+    let sampleClubName = '';
+    for (const cid of availClubs) {
+      const clubObj = CLUBS.find((c) => c.id === cid);
+      const mate = PLAYERS.find((p) => !usedPlayerIds.has(p.id) && p.clubs.includes(cid));
+      if (mate) {
+        sampleCandidate = mate;
+        sampleClubName = clubObj?.name || cid;
+        break;
+      }
+    }
+
+    if (sampleCandidate) {
+      const words = sampleCandidate.name.trim().split(/\s+/);
+      const initials = words.map((w) => w.charAt(0).toUpperCase() + '_'.repeat(Math.max(2, w.length - 1))).join(' ');
+      room.chainHintText = `💡 เชื่อมผ่านสโมสร [${sampleClubName}] ➔ ${sampleCandidate.flag} ${initials} (${sampleCandidate.position})`;
+    } else {
+      room.chainHintText = `⚠️ นักเตะคนนี้ไม่มีสโมสรว่างให้เชื่อมต่อแล้ว กดปุ่ม "🔄 เริ่มโซ่ใหม่" ได้เลย!`;
+    }
+    broadcastRoom(code, 'top10_updated');
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+  }
+
+  if (action === 'chain_auto_step') {
+    if (!room.chainLinkHistory || room.chainLinkHistory.length === 0) {
+      serializeModeDataForClients(room);
+    }
+    const hist = room.chainLinkHistory;
+    const anchor = hist[hist.length - 1];
+    const anchorPlayer = PLAYERS.find((p) => p.id === anchor.playerId) || PLAYERS[0];
+    const usedPlayerIds = new Set(hist.map((h) => h.playerId));
+    const usedClubIds = new Set(room.chainUsedClubs || []);
+    const availClubs = (anchorPlayer.clubs || []).filter((cid) => !usedClubIds.has(cid));
+
+    let nextPlayer = null;
+    let chosenCid = null;
+    for (const cid of availClubs) {
+      const candidates = PLAYERS.filter(
+        (p) => !usedPlayerIds.has(p.id) && p.clubs.includes(cid) && p.clubs.length >= 2
+      );
+      if (candidates.length > 0) {
+        nextPlayer = candidates[Math.floor(Math.random() * candidates.length)];
+        chosenCid = cid;
+        break;
+      }
+    }
+
+    if (nextPlayer && chosenCid) {
+      const clubObj = CLUBS.find((c) => c.id === chosenCid);
+      if (!room.chainUsedClubs) room.chainUsedClubs = [];
+      room.chainUsedClubs.push(chosenCid);
+      room.chainHintText = null;
+      hist.push({
+        step: hist.length + 1,
+        playerId: nextPlayer.id,
+        playerName: nextPlayer.name,
+        flag: nextPlayer.flag,
+        flagUrl: nextPlayer.flagUrl || getFlagUrlFromEmoji(nextPlayer.flag),
+        photoUrl: nextPlayer.photoUrl || null,
+        position: nextPlayer.position,
+        viaClubId: chosenCid,
+        viaClubName: clubObj?.name || chosenCid,
+        viaClubBadgeUrl: clubObj?.badgeUrl || null,
+        byPlayerName: '👁️ ระบบช่วยเชื่อม (0 แต้ม)',
+        pointsEarned: 0
+      });
+    } else {
+      startModeRound(room);
+    }
     broadcastRoom(code, 'top10_updated');
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
