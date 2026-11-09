@@ -844,8 +844,19 @@ function buildModeStageHTML(room, isReveal = false) {
       })
       .join('');
 
+    const clearedBannerHtml =
+      !isReveal && slots.length > 0 && unlockedCount === slots.length
+        ? `
+          <div style="padding:12px 16px;margin-bottom:12px;border-radius:12px;background:rgba(16,185,129,0.18);border:1px solid #10b981;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+            <strong style="color:#fff;font-size:0.96rem;">🎉 เคลียร์ผัง 11 ตัวจริงแมตช์นี้ครบ 100% แล้ว!</strong>
+            <button type="button" class="btn btn-primary btn-sm" data-lineup-next="1">➡️ ไปแมตช์ถัดไปเลย!</button>
+          </div>
+        `
+        : '';
+
     return `
       ${toolbarHtml}
+      ${clearedBannerHtml}
       <div class="pitch-board">
         <div class="pitch-grid">${slotsHtml}</div>
       </div>
@@ -934,7 +945,17 @@ function buildModeStageHTML(room, isReveal = false) {
       })
       .join('');
 
-    return `${toolbarHtml}<div class="top10-grid">${rowsHtml}</div>`;
+    const clearedBannerHtml =
+      !isReveal && items.length > 0 && unlockedCount === items.length
+        ? `
+          <div style="padding:12px 16px;margin-bottom:12px;border-radius:12px;background:rgba(16,185,129,0.18);border:1px solid #10b981;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+            <strong style="color:#fff;font-size:0.96rem;">🎉 เปิดครบทั้ง 10 อันดับในหัวข้อนี้เรียบร้อยแล้ว!</strong>
+            <button type="button" class="btn btn-primary btn-sm" data-top10-next-list="1">➡️ เปลี่ยนหัวข้อถัดไปเลย!</button>
+          </div>
+        `
+        : '';
+
+    return `${toolbarHtml}${clearedBannerHtml}<div class="top10-grid">${rowsHtml}</div>`;
   }
 
   // MODE 4: CAREER PATH (Who Are Ya - Hid nationality/position until Hint clicked)
@@ -1095,7 +1116,18 @@ function buildModeStageHTML(room, isReveal = false) {
       return '';
     };
 
-    let html = `${toolbarHtml}<div class="footy-grid-wrapper"><div class="footy-grid-board">`;
+    const allCellsClaimed = cells.length === 9 && cells.every(Boolean);
+    const clearedBannerHtml =
+      !isReveal && allCellsClaimed
+        ? `
+          <div style="padding:12px 16px;margin-bottom:12px;border-radius:12px;background:rgba(16,185,129,0.18);border:1px solid #10b981;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+            <strong style="color:#fff;font-size:0.96rem;">🎉 ยึดตาราง XO ครบทั้ง 9 ช่องแล้ว!</strong>
+            <button type="button" class="btn btn-primary btn-sm" data-grid-random="1">🎲 สุ่มตาราง XO ชุดใหม่เลย!</button>
+          </div>
+        `
+        : '';
+
+    let html = `${toolbarHtml}${clearedBannerHtml}<div class="footy-grid-wrapper"><div class="footy-grid-board">`;
     html += `<div class="grid-header-cell"><strong>XO 3x3</strong><small>คลิกเลือกช่อง</small></div>`;
     (md.cols || []).forEach((col) => {
       html += `<div class="grid-header-cell">${renderHdrIcon(col)}<strong>${col.label}</strong><small>${col.sub}</small></div>`;
@@ -1212,8 +1244,19 @@ function buildModeStageHTML(room, isReveal = false) {
       })
       .join('');
 
+    const clearedBannerHtml =
+      !isReveal && solvedCount === 4
+        ? `
+          <div style="padding:12px 16px;margin-bottom:12px;border-radius:12px;background:rgba(16,185,129,0.18);border:1px solid #10b981;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+            <strong style="color:#fff;font-size:0.96rem;">🎉 ไขความลับครบทั้ง 4 หมวดหมู่แล้ว!</strong>
+            <button type="button" class="btn btn-primary btn-sm" data-conn-next="1">🎲 สุ่มกระดานชุดต่อไปเลย!</button>
+          </div>
+        `
+        : '';
+
     return `
       ${toolbarHtml}
+      ${clearedBannerHtml}
       ${hintBannerHtml}
       <div class="connections-solved-list">${solvedHtml}</div>
       <div class="connections-grid-16">${tilesHtml}</div>
@@ -1425,13 +1468,12 @@ function bindDynamicStageEvents(container, room) {
       });
     }
 
-    const nextBtn = container.querySelector('[data-lineup-next]');
-    if (nextBtn) {
+    container.querySelectorAll('[data-lineup-next]').forEach((nextBtn) => {
       nextBtn.addEventListener('click', async () => {
         sfx.lockIn();
         await apiAction('start_mode_round');
       });
-    }
+    });
 
     const matchSelect = container.querySelector('#lineupMatchSelect');
     if (matchSelect) {
@@ -1467,13 +1509,12 @@ function bindDynamicStageEvents(container, room) {
       });
     }
 
-    const nextListBtn = container.querySelector('[data-top10-next-list]');
-    if (nextListBtn) {
+    container.querySelectorAll('[data-top10-next-list]').forEach((nextListBtn) => {
       nextListBtn.addEventListener('click', async () => {
         sfx.lockIn();
         await apiAction('start_mode_round');
       });
-    }
+    });
 
     const topicSelect = container.querySelector('#top10TopicSelect');
     if (topicSelect) {
@@ -1549,13 +1590,12 @@ function bindDynamicStageEvents(container, room) {
       });
     }
 
-    const randomGridBtn = container.querySelector('[data-grid-random]');
-    if (randomGridBtn) {
+    container.querySelectorAll('[data-grid-random]').forEach((randomGridBtn) => {
       randomGridBtn.addEventListener('click', async () => {
         sfx.lockIn();
         await apiAction('start_mode_round');
       });
-    }
+    });
   }
 
   if (mode === 'connections') {
@@ -1641,14 +1681,13 @@ function bindDynamicStageEvents(container, room) {
       });
     }
 
-    const nextBtn = container.querySelector('[data-conn-next]');
-    if (nextBtn) {
+    container.querySelectorAll('[data-conn-next]').forEach((nextBtn) => {
       nextBtn.addEventListener('click', async () => {
         state.selectedConnectionIds = [];
         sfx.lockIn();
         await apiAction('start_mode_round');
       });
-    }
+    });
   }
 
   if (mode === 'who_are_ya_wordle') {
@@ -1668,13 +1707,12 @@ function bindDynamicStageEvents(container, room) {
       });
     }
 
-    const nextBtn = container.querySelector('[data-wordle-next]');
-    if (nextBtn) {
+    container.querySelectorAll('[data-wordle-next]').forEach((nextBtn) => {
       nextBtn.addEventListener('click', async () => {
         sfx.lockIn();
         await apiAction('start_mode_round');
       });
-    }
+    });
   }
 
   if (mode === 'chain_link') {
@@ -2131,6 +2169,13 @@ function updateAutocomplete(query, skipLiveFetch = false) {
       ? '<span class="ac-pos" style="background:rgba(16,185,129,0.2);color:#34d399;margin-right:4px;">🌐 API</span>'
       : '';
 
+    const chainClubsBadge =
+      curMode === 'chain_link' && !m.alreadyUsed && Array.isArray(p.clubs)
+        ? p.clubs.length >= 2
+          ? `<span class="ac-pos" style="background:rgba(6,182,212,0.2);color:#67e8f9;margin-right:4px;">🔗 ${p.clubs.length} สโมสร</span>`
+          : `<span class="ac-pos" style="background:rgba(245,158,11,0.2);color:#fde68a;margin-right:4px;">1 สโมสร</span>`
+        : '';
+
     row.innerHTML = `
       <div class="ac-left">
         ${renderPlayerPhotoHTML(p.photoUrl, '⚽', 'player-photo-avatar')}
@@ -2138,7 +2183,7 @@ function updateAutocomplete(query, skipLiveFetch = false) {
         <span class="ac-name">${p.name}</span>
       </div>
       <div>
-        ${liveBadge}${m.alreadyUsed ? '<span class="ac-pos" style="background:#ef4444;color:#fff;">ถูกใช้แล้ว</span>' : `<span class="ac-pos">${p.position}</span>`}
+        ${liveBadge}${chainClubsBadge}${m.alreadyUsed ? '<span class="ac-pos" style="background:#ef4444;color:#fff;">ถูกใช้แล้ว</span>' : `<span class="ac-pos">${p.position}</span>`}
       </div>
     `;
 

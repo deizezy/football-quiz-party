@@ -683,6 +683,10 @@ function clearRoomTimers(room) {
     clearInterval(room.timerInterval);
     room.timerInterval = null;
   }
+  if (room.untimedBotInterval) {
+    clearInterval(room.untimedBotInterval);
+    room.untimedBotInterval = null;
+  }
   if (room.botTimeouts) {
     room.botTimeouts.forEach((t) => clearTimeout(t));
     room.botTimeouts = [];
@@ -773,103 +777,189 @@ function checkAllClubsPicked(room) {
 }
 
 function scheduleBotActions(room) {
+  if (room.botTimeouts) {
+    room.botTimeouts.forEach((t) => clearTimeout(t));
+  }
   room.botTimeouts = [];
+  if (room.untimedBotInterval) {
+    clearInterval(room.untimedBotInterval);
+    room.untimedBotInterval = null;
+  }
+
+  const bots = room.players.filter((p) => p.isBot);
+  if (bots.length === 0) return;
+
   const mode = room.settings.gameMode || 'multi_club_pool';
+  const isUntimedMode =
+    mode === 'top10_stats' ||
+    mode === 'lineup_quiz' ||
+    mode === 'footy_grid' ||
+    mode === 'connections' ||
+    mode === 'who_are_ya_wordle' ||
+    mode === 'chain_link';
 
-  room.players
-    .filter((p) => p.isBot)
-    .forEach((bot) => {
-      const minMs = 2300;
-      const maxMs = Math.max(3600, Math.min(room.settings.timeLimit * 1000 * 0.78, 11000));
-      const delayMs = Math.floor(minMs + Math.random() * (maxMs - minMs));
+  if (isUntimedMode) {
+    room.untimedBotInterval = setInterval(() => {
+      if (room.state !== 'PLAYING') return;
+      const activeBots = room.players.filter((p) => p.isBot);
+      if (activeBots.length === 0) return;
+      const bot = activeBots[Math.floor(Math.random() * activeBots.length)];
+      const curMode = room.settings.gameMode;
 
-      const timeout = setTimeout(() => {
-        if (room.state !== 'PLAYING' || room.submissions[bot.id]) return;
-
-        if (mode === 'club_battle' || mode === 'multi_club_pool') {
-          const activeClubIds = (room.pickedClubs || []).map((pc) => pc.clubId);
-          // Prefer players who match 2+ clubs if possible, or at least 1 club!
-          const unusedPlayers = PLAYERS.filter(
-            (p) => !room.usedPlayers.some((u) => u.id === p.id)
+      if (curMode === 'lineup_quiz') {
+        const lineup = LINEUPS.find((l) => l.id === room.currentLineupId) || LINEUPS[0];
+        const unlocked = room.unlockedLineupSlots || {};
+        const openSlots = lineup.slots.filter((s) => !unlocked[s.slotId]);
+        if (openSlots.length > 0 && Math.random() < 0.75) {
+          const pick = openSlots[Math.floor(Math.random() * openSlots.length)];
+          handlePlayerSubmission(room, bot.id, pick.playerId, null);
+        }
+      } else if (curMode === 'top10_stats') {
+        const list = TOP10_LISTS.find((l) => l.id === room.currentTop10Id) || TOP10_LISTS[0];
+        const unlocked = room.unlockedTop10Ranks || {};
+        const openItems = list.items.filter((it) => !unlocked[it.rank]);
+        if (openItems.length > 0 && Math.random() < 0.75) {
+          const pick = openItems[Math.floor(Math.random() * openItems.length)];
+          handlePlayerSubmission(room, bot.id, pick.name, null);
+        }
+      } else if (curMode === 'footy_grid') {
+        const grid =
+          room.customFootyGrid && room.customFootyGrid.id === room.currentGridId
+            ? room.customFootyGrid
+            : FOOTY_GRIDS.find((g) => g.id === room.currentGridId) || FOOTY_GRIDS[0];
+        const cells = room.gridCells || Array(9).fill(null);
+        const openIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8].filter((i) => !cells[i]);
+        if (openIndices.length > 0 && Math.random() < 0.75) {
+          const cellIdx = openIndices[Math.floor(Math.random() * openIndices.length)];
+          const rIdx = Math.floor(cellIdx / 3);
+          const cIdx = cellIdx % 3;
+          const usedNames = new Set(cells.filter(Boolean).map((c) => normalizeText(c.playerName)));
+          const valid = PLAYERS.filter(
+            (p) =>
+              !usedNames.has(normalizeText(p.name)) &&
+              playerMatchesGridCriteria(p, grid.rows[rIdx]) &&
+              playerMatchesGridCriteria(p, grid.cols[cIdx])
           );
-          const multiClubMatches = unusedPlayers.filter(
-            (p) => p.clubs.filter((cid) => activeClubIds.includes(cid)).length >= 2
-          );
-          const singleClubMatches = unusedPlayers.filter(
-            (p) => p.clubs.filter((cid) => activeClubIds.includes(cid)).length >= 1
-          );
-          const wrongPlayers = unusedPlayers.filter(
-            (p) => !p.clubs.some((cid) => activeClubIds.includes(cid))
-          );
-
-          let chosen = null;
-          if (multiClubMatches.length > 0 && Math.random() < 0.45) {
-            chosen = multiClubMatches[Math.floor(Math.random() * multiClubMatches.length)];
-          } else if (singleClubMatches.length > 0 && Math.random() < 0.82) {
-            chosen = singleClubMatches[Math.floor(Math.random() * singleClubMatches.length)];
-          } else if (wrongPlayers.length > 0) {
-            chosen = wrongPlayers[Math.floor(Math.random() * wrongPlayers.length)];
-          }
-          if (chosen) handlePlayerSubmission(room, bot.id, chosen.name, chosen.id);
-        } else if (mode === 'lineup_quiz') {
-          const lineup = LINEUPS.find((l) => l.id === room.currentLineupId) || LINEUPS[0];
-          const unlocked = room.unlockedLineupSlots || {};
-          const openSlots = lineup.slots.filter((s) => !unlocked[s.slotId]);
-          if (openSlots.length > 0 && Math.random() < 0.78) {
-            const pick = openSlots[Math.floor(Math.random() * openSlots.length)];
-            handlePlayerSubmission(room, bot.id, pick.playerId, null);
-          } else {
-            const rand = PLAYERS[Math.floor(Math.random() * PLAYERS.length)];
-            handlePlayerSubmission(room, bot.id, rand.name, rand.id);
-          }
-        } else if (mode === 'top10_stats') {
-          const list = TOP10_LISTS.find((l) => l.id === room.currentTop10Id) || TOP10_LISTS[0];
-          const unlocked = room.unlockedTop10Ranks || {};
-          const openItems = list.items.filter((it) => !unlocked[it.rank]);
-          if (openItems.length > 0 && Math.random() < 0.78) {
-            const pick = openItems[Math.floor(Math.random() * openItems.length)];
-            handlePlayerSubmission(room, bot.id, pick.name, null);
-          } else {
-            const rand = PLAYERS[Math.floor(Math.random() * PLAYERS.length)];
-            handlePlayerSubmission(room, bot.id, rand.name, rand.id);
-          }
-        } else if (mode === 'career_path') {
-          const cp = CAREER_PATHS.find((c) => c.id === room.currentCareerId) || CAREER_PATHS[0];
-          if (Math.random() < 0.72) {
-            handlePlayerSubmission(room, bot.id, cp.answerName, null);
-          } else {
-            const rand = PLAYERS[Math.floor(Math.random() * PLAYERS.length)];
-            handlePlayerSubmission(room, bot.id, rand.name, rand.id);
-          }
-        } else if (mode === 'trivia_quiz') {
-          const tr = TRIVIA_QUESTIONS.find((q) => q.id === room.currentTriviaId) || TRIVIA_QUESTIONS[0];
-          const choiceIdx =
-            Math.random() < 0.72 ? tr.correctIndex : Math.floor(Math.random() * tr.options.length);
-          handlePlayerSubmission(room, bot.id, String(choiceIdx), null, { choiceIndex: choiceIdx });
-        } else if (mode === 'footy_grid') {
-          const grid = FOOTY_GRIDS.find((g) => g.id === room.currentGridId) || FOOTY_GRIDS[0];
-          const cells = room.gridCells || Array(9).fill(null);
-          const openIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8].filter((i) => !cells[i]);
-          if (openIndices.length > 0) {
-            const cellIdx = openIndices[Math.floor(Math.random() * openIndices.length)];
-            const rIdx = Math.floor(cellIdx / 3);
-            const cIdx = cellIdx % 3;
-            const valid = PLAYERS.filter(
-              (p) =>
-                playerMatchesGridCriteria(p, grid.rows[rIdx]) &&
-                playerMatchesGridCriteria(p, grid.cols[cIdx])
-            );
-            const pick =
-              valid.length > 0 && Math.random() < 0.8
-                ? valid[Math.floor(Math.random() * valid.length)]
-                : PLAYERS[Math.floor(Math.random() * PLAYERS.length)];
+          if (valid.length > 0) {
+            const pick = valid[Math.floor(Math.random() * valid.length)];
             handlePlayerSubmission(room, bot.id, pick.name, pick.id, { cellIndex: cellIdx });
           }
         }
-      }, delayMs);
+      } else if (curMode === 'connections') {
+        if (!room.connectionsBoard) return;
+        const board = room.connectionsBoard;
+        const openGroups = board.groups.filter((g) => !g.solved);
+        if (openGroups.length > 0 && Math.random() < 0.65) {
+          const grp = openGroups[0];
+          grp.solved = true;
+          grp.revealed = false;
+          grp.solvedBy = `${bot.avatar} ${bot.name}`;
+          const pts = grp.points || 1;
+          bot.score += pts;
+          recordPlayerResultStats(bot, true, null, grp.title);
+          const rem = board.groups.filter((g) => !g.solved);
+          if (rem.length === 1) {
+            rem[0].solved = true;
+            rem[0].revealed = false;
+            rem[0].solvedBy = `${bot.avatar} ${bot.name} (ปิดกระดาน!)`;
+            bot.score += rem[0].points;
+          }
+          broadcastRoom(room.code, 'top10_updated', {
+            toastMessage: `🤖 ${bot.name} จับกลุ่มสำเร็จ: "${grp.title}" (+${pts} แต้ม)`
+          });
+        }
+      } else if (curMode === 'who_are_ya_wordle') {
+        if (room.wordleSolved || room.wordleRevealed || !room.wordleMysteryPlayer) return;
+        const target = room.wordleMysteryPlayer;
+        const guessedIds = new Set((room.wordleGuesses || []).map((g) => g.playerId));
+        const guessCount = (room.wordleGuesses || []).length;
+        const solveChance = guessCount >= 2 ? 0.55 : 0.22;
+        if (Math.random() < solveChance) {
+          handlePlayerSubmission(room, bot.id, target.name, target.id);
+        } else {
+          const teammates = PLAYERS.filter(
+            (p) => p.id !== target.id && !guessedIds.has(p.id) && p.clubs.some((c) => target.clubs.includes(c))
+          );
+          const pool = teammates.length > 0 ? teammates : PLAYERS.filter((p) => !guessedIds.has(p.id));
+          if (pool.length > 0) {
+            const pick = pool[Math.floor(Math.random() * pool.length)];
+            handlePlayerSubmission(room, bot.id, pick.name, pick.id);
+          }
+        }
+      } else if (curMode === 'chain_link') {
+        const hist = room.chainLinkHistory || [];
+        if (hist.length === 0) return;
+        const anchor = hist[hist.length - 1];
+        const anchorPlayer = PLAYERS.find((p) => p.id === anchor.playerId);
+        if (!anchorPlayer) return;
+        const usedPlayerIds = new Set(hist.map((h) => h.playerId));
+        const usedClubIds = new Set(room.chainUsedClubs || []);
+        const availClubs = (anchorPlayer.clubs || []).filter((cid) => !usedClubIds.has(cid));
+        const validNext = PLAYERS.filter(
+          (p) =>
+            !usedPlayerIds.has(p.id) &&
+            p.clubs.length >= 2 &&
+            p.clubs.some((cid) => availClubs.includes(cid))
+        );
+        if (validNext.length > 0 && Math.random() < 0.75) {
+          const pick = validNext[Math.floor(Math.random() * validNext.length)];
+          handlePlayerSubmission(room, bot.id, pick.name, pick.id);
+        }
+      }
+    }, 9500);
+    return;
+  }
 
-      room.botTimeouts.push(timeout);
-    });
+  bots.forEach((bot) => {
+    const minMs = 2300;
+    const maxMs = Math.max(3600, Math.min(room.settings.timeLimit * 1000 * 0.78, 11000));
+    const delayMs = Math.floor(minMs + Math.random() * (maxMs - minMs));
+
+    const timeout = setTimeout(() => {
+      if (room.state !== 'PLAYING' || room.submissions[bot.id]) return;
+
+      if (mode === 'club_battle' || mode === 'multi_club_pool') {
+        const activeClubIds = (room.pickedClubs || []).map((pc) => pc.clubId);
+        const unusedPlayers = PLAYERS.filter(
+          (p) => !room.usedPlayers.some((u) => u.id === p.id)
+        );
+        const multiClubMatches = unusedPlayers.filter(
+          (p) => p.clubs.filter((cid) => activeClubIds.includes(cid)).length >= 2
+        );
+        const singleClubMatches = unusedPlayers.filter(
+          (p) => p.clubs.filter((cid) => activeClubIds.includes(cid)).length >= 1
+        );
+        const wrongPlayers = unusedPlayers.filter(
+          (p) => !p.clubs.some((cid) => activeClubIds.includes(cid))
+        );
+
+        let chosen = null;
+        if (multiClubMatches.length > 0 && Math.random() < 0.45) {
+          chosen = multiClubMatches[Math.floor(Math.random() * multiClubMatches.length)];
+        } else if (singleClubMatches.length > 0 && Math.random() < 0.82) {
+          chosen = singleClubMatches[Math.floor(Math.random() * singleClubMatches.length)];
+        } else if (wrongPlayers.length > 0) {
+          chosen = wrongPlayers[Math.floor(Math.random() * wrongPlayers.length)];
+        }
+        if (chosen) handlePlayerSubmission(room, bot.id, chosen.name, chosen.id);
+      } else if (mode === 'career_path') {
+        const cp = CAREER_PATHS.find((c) => c.id === room.currentCareerId) || CAREER_PATHS[0];
+        if (Math.random() < 0.72) {
+          handlePlayerSubmission(room, bot.id, cp.answerName, null);
+        } else {
+          const rand = PLAYERS[Math.floor(Math.random() * PLAYERS.length)];
+          handlePlayerSubmission(room, bot.id, rand.name, rand.id);
+        }
+      } else if (mode === 'trivia_quiz') {
+        const tr = TRIVIA_QUESTIONS.find((q) => q.id === room.currentTriviaId) || TRIVIA_QUESTIONS[0];
+        const choiceIdx =
+          Math.random() < 0.72 ? tr.correctIndex : Math.floor(Math.random() * tr.options.length);
+        handlePlayerSubmission(room, bot.id, String(choiceIdx), null, { choiceIndex: choiceIdx });
+      }
+    }, delayMs);
+
+    room.botTimeouts.push(timeout);
+  });
 }
 
 function startWave(room) {
@@ -890,9 +980,9 @@ function startWave(room) {
   room.totalWavesPlayed = (room.totalWavesPlayed || 0) + 1;
 
   broadcastRoom(room.code, 'wave_started');
-  if (!isUntimedMode) {
-    scheduleBotActions(room);
+  scheduleBotActions(room);
 
+  if (!isUntimedMode) {
     room.timerInterval = setInterval(() => {
       const elapsedSec = Math.floor((Date.now() - room.waveStartTime) / 1000);
       const remaining = Math.max(0, room.settings.timeLimit - elapsedSec);
@@ -1382,17 +1472,56 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
       });
     }
 
-    // Check if the newly added player has any remaining unused clubs with available teammates; if dead-end, auto-reset or notify
+    // Check if the newly added player has any remaining unused clubs with available teammates; if dead-end, auto-pivot to a multi-club teammate!
+    const usedIdsNow = new Set(hist.map((h) => h.playerId));
+    const usedClubsNow = new Set(room.chainUsedClubs || []);
+    const remainingClubsOfGuessed = (guessedPlayer.clubs || []).filter((cid) => !usedClubsNow.has(cid));
+    const hasNextValidTeammate = remainingClubsOfGuessed.some((cid) =>
+      PLAYERS.some((p) => !usedIdsNow.has(p.id) && p.clubs.includes(cid))
+    );
+
+    let autoPivotMsg = '';
+    if (!hasNextValidTeammate) {
+      // Find a multi-club teammate from the same bridge club (or starter pool) who has unused clubs to keep the chain alive!
+      const pivotCandidates = PLAYERS.filter(
+        (p) =>
+          !usedIdsNow.has(p.id) &&
+          p.clubs.includes(chosenBridgeClubId) &&
+          p.clubs.some((cid) => !usedClubsNow.has(cid))
+      );
+      const pivotPlayer =
+        pivotCandidates.length > 0
+          ? pivotCandidates[Math.floor(Math.random() * pivotCandidates.length)]
+          : pickChainStarterPlayer();
+      if (pivotPlayer) {
+        hist.push({
+          step: hist.length + 1,
+          playerId: pivotPlayer.id,
+          playerName: pivotPlayer.name,
+          flag: pivotPlayer.flag,
+          flagUrl: pivotPlayer.flagUrl || getFlagUrlFromEmoji(pivotPlayer.flag),
+          photoUrl: pivotPlayer.photoUrl || null,
+          position: pivotPlayer.position,
+          viaClubId: chosenBridgeClubId,
+          viaClubName: `${bridgeClubObj?.name || chosenBridgeClubId} (🔄 ระบบช่วยต่อสายพานกันทางตัน)`,
+          viaClubBadgeUrl: bridgeClubObj?.badgeUrl || null,
+          byPlayerName: '🔄 ระบบต่อสายพานอัตโนมัติ',
+          pointsEarned: 0
+        });
+        autoPivotMsg = ` • 🔄 เนื่องจาก ${guessedPlayer.name} ไม่มีสโมสรอื่นไปต่อ ระบบจึงดึงเพื่อนร่วมทีม ${pivotPlayer.name} มาต่อสายพานให้อัตโนมัติ!`;
+      }
+    }
+
     const bonusTxt = milestoneBonus > 0 ? ' (🔥 โบนัสโซ่ยาวครบ 5 ข้อ +1 แต้ม!)' : '';
     broadcastRoom(room.code, 'top10_updated', {
-      toastMessage: `🔗 ${player ? player.name : 'ผู้เล่น'} เชื่อม ${anchorPlayer.name} ➔ [${bridgeClubObj?.name || chosenBridgeClubId}] ➔ ${guessedPlayer.name} (+${pts} แต้ม${bonusTxt})`
+      toastMessage: `🔗 ${player ? player.name : 'ผู้เล่น'} เชื่อม ${anchorPlayer.name} ➔ [${bridgeClubObj?.name || chosenBridgeClubId}] ➔ ${guessedPlayer.name} (+${pts} แต้ม${bonusTxt})${autoPivotMsg}`
     });
 
     return {
       ok: true,
       top10Feedback: {
         correct: true,
-        message: `✅ เชื่อมสำเร็จผ่าน [${bridgeClubObj?.name || chosenBridgeClubId}] ➔ ${guessedPlayer.name} (+${pts} คะแนน${bonusTxt})`
+        message: `✅ เชื่อมสำเร็จผ่าน [${bridgeClubObj?.name || chosenBridgeClubId}] ➔ ${guessedPlayer.name} (+${pts} คะแนน${bonusTxt})${autoPivotMsg}`
       }
     };
   }
@@ -2247,6 +2376,8 @@ function generateConnectionsBoard(roundNum) {
         color: '#10b981',
         tierLabel: '🟢 ระดับง่าย (+1 แต้ม)',
         title: `เคยค้าแข้งกับ ${club.name}`,
+        clubIds: [cid],
+        matches: (p) => p.clubs.includes(cid),
         candidates: clubPlayers
       });
     }
@@ -2260,6 +2391,8 @@ function generateConnectionsBoard(roundNum) {
           color: '#f59e0b',
           tierLabel: '🟡 ระดับปานกลาง (+2 แต้ม)',
           title: `${posTitle} ที่เคยอยู่ ${club.name}`,
+          clubIds: [cid],
+          matches: (p) => p.clubs.includes(cid) && p.position === posKey,
           candidates: cp
         });
       }
@@ -2274,6 +2407,8 @@ function generateConnectionsBoard(roundNum) {
           color: '#3b82f6',
           tierLabel: '🔵 ระดับยาก (+3 แต้ม)',
           title: `นักเตะ${flagLabel} ที่เคยอยู่ ${club.name}`,
+          clubIds: [cid],
+          matches: (p) => p.clubs.includes(cid) && p.flag === flagEmoji,
           candidates: fp
         });
       }
@@ -2294,13 +2429,15 @@ function generateConnectionsBoard(roundNum) {
           color: '#a855f7',
           tierLabel: '🟣 ระดับแฟนพันธุ์แท้ (+4 แต้ม)',
           title: `เคยค้าแข้งทั้ง ${c1.name} และ ${c2.name}`,
+          clubIds: [c1.id, c2.id],
+          matches: (p) => p.clubs.includes(c1.id) && p.clubs.includes(c2.id),
           candidates: both
         });
       }
     }
   }
 
-  for (let attempt = 0; attempt < 50; attempt++) {
+  for (let attempt = 0; attempt < 120; attempt++) {
     const g4 = tier4Pool[Math.floor(Math.random() * tier4Pool.length)];
     const g3 = tier3Pool[Math.floor(Math.random() * tier3Pool.length)];
     const g2 = tier2Pool[Math.floor(Math.random() * tier2Pool.length)];
@@ -2308,14 +2445,35 @@ function generateConnectionsBoard(roundNum) {
     const chosenGroups = [g4, g3, g2, g1].filter(Boolean);
     if (chosenGroups.length < 4) continue;
 
+    // Ensure no two groups use the same club ID in their category definition
+    const usedCategoryClubs = new Set();
+    let clubCollision = false;
+    for (const grp of chosenGroups) {
+      for (const cid of grp.clubIds || []) {
+        if (usedCategoryClubs.has(cid)) {
+          clubCollision = true;
+          break;
+        }
+        usedCategoryClubs.add(cid);
+      }
+      if (clubCollision) break;
+    }
+    if (clubCollision) continue;
+
     const usedPlayerIds = new Set();
     const groupsOut = [];
     let ok = true;
 
     for (const grp of chosenGroups) {
-      const avail = [...grp.candidates]
-        .filter((p) => !usedPlayerIds.has(p.id))
+      const otherGroups = chosenGroups.filter((og) => og.id !== grp.id);
+      // Strict Disjoint Filter: player must NOT satisfy any of the other 3 groups' rules!
+      const strictAvail = [...grp.candidates]
+        .filter((p) => !usedPlayerIds.has(p.id) && !otherGroups.some((og) => og.matches && og.matches(p)))
         .sort(() => Math.random() - 0.5);
+      const avail =
+        strictAvail.length >= 4
+          ? strictAvail
+          : [...grp.candidates].filter((p) => !usedPlayerIds.has(p.id)).sort(() => Math.random() - 0.5);
       if (avail.length < 4) {
         ok = false;
         break;
@@ -2368,8 +2526,35 @@ function generateConnectionsBoard(roundNum) {
   return null;
 }
 
+// Pre-seeded verified player photos so Mode 8 (Who Are Ya? Wordle) always has real photos even on cold start
+const VERIFIED_STAR_PHOTOS = {
+  'Cristiano Ronaldo': 'https://www.thesportsdb.com/images/media/player/cutout/a276871718193122.png',
+  'Lionel Messi': 'https://www.thesportsdb.com/images/media/player/cutout/r6374r1718191192.png',
+  'Kylian Mbappé': 'https://a.espncdn.com/i/headshots/soccer/players/full/231388.png',
+  'Erling Haaland': 'https://a.espncdn.com/i/headshots/soccer/players/full/253989.png',
+  'Mohamed Salah': 'https://a.espncdn.com/i/headshots/soccer/players/full/173896.png',
+  'Kevin De Bruyne': 'https://a.espncdn.com/i/headshots/soccer/players/full/134909.png',
+  'Jude Bellingham': 'https://a.espncdn.com/i/headshots/soccer/players/full/291285.png',
+  'Harry Kane': 'https://a.espncdn.com/i/headshots/soccer/players/full/142200.png',
+  'Robert Lewandowski': 'https://a.espncdn.com/i/headshots/soccer/players/full/125824.png',
+  'Luka Modrić': 'https://a.espncdn.com/i/headshots/soccer/players/full/80494.png',
+  'Antoine Griezmann': 'https://a.espncdn.com/i/headshots/soccer/players/full/139567.png',
+  'Bukayo Saka': 'https://a.espncdn.com/i/headshots/soccer/players/full/280555.png',
+  'Bruno Fernandes': 'https://a.espncdn.com/i/headshots/soccer/players/full/182383.png',
+  'Cole Palmer': 'https://a.espncdn.com/i/headshots/soccer/players/full/305089.png',
+  'Son Heung-min': 'https://a.espncdn.com/i/headshots/soccer/players/full/149945.png',
+  'Virgil van Dijk': 'https://a.espncdn.com/i/headshots/soccer/players/full/159512.png',
+  'Alisson Becker': 'https://a.espncdn.com/i/headshots/soccer/players/full/194391.png',
+  'Thibaut Courtois': 'https://a.espncdn.com/i/headshots/soccer/players/full/134912.png'
+};
+
 // Pick a mystery player for Mode 8 (Who Are Ya? Blurred Photo + Wordle Attribute Matrix)
 function pickMysteryWordlePlayer(previousId = null) {
+  for (const p of PLAYERS) {
+    if (!p.photoUrl && VERIFIED_STAR_PHOTOS[p.name]) {
+      p.photoUrl = VERIFIED_STAR_PHOTOS[p.name];
+    }
+  }
   const clubOverlapWeight = new Map();
   for (const p of PLAYERS) {
     if (Array.isArray(p.clubs) && p.clubs.length >= 2) {
@@ -2389,8 +2574,7 @@ function pickMysteryWordlePlayer(previousId = null) {
     (p) =>
       p.id !== previousId &&
       p.photoUrl &&
-      p.clubs.some((cid) => famousClubIds.has(cid)) &&
-      (p.clubs.length >= 2 || (p.aliases && p.aliases.length >= 2))
+      p.clubs.some((cid) => famousClubIds.has(cid))
   );
   const pool =
     withPhotos.length > 0
@@ -2786,6 +2970,8 @@ function handleApiAction(req, res, body) {
     broadcastRoom(code, 'player_joined');
     if (room.state === 'SELECTING_CLUB') {
       scheduleBotClubPicks(room);
+    } else if (room.state === 'PLAYING') {
+      scheduleBotActions(room);
     }
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
