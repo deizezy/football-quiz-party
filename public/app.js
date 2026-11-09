@@ -406,6 +406,46 @@ function renderRoom() {
     card.classList.toggle('active', card.dataset.mode === gameMode);
   });
 
+  // Show/hide Lobby settings dynamically based on selected gameMode
+  const isUntimed = isUntimedContinuousMode(gameMode);
+  const isClubMode = gameMode === 'multi_club_pool' || gameMode === 'club_battle';
+  const isMultiClub = gameMode === 'multi_club_pool';
+  const isTrivia = gameMode === 'trivia_quiz';
+  const showModeInfo = !isClubMode && !isTrivia;
+
+  const timerGroup = document.getElementById('settingGroupTimer');
+  const untimedNotice = document.getElementById('settingGroupUntimedNotice');
+  const clubRulesGroup = document.getElementById('settingGroupClubRules');
+  const poolSizeGroup = document.getElementById('settingGroupPoolSize');
+  const triviaDiffGroup = document.getElementById('settingGroupTriviaDiff');
+  const modeInfoGroup = document.getElementById('settingGroupModeInfo');
+  const modeInfoTitle = document.getElementById('settingModeInfoTitle');
+  const modeInfoDesc = document.getElementById('settingModeInfoDesc');
+
+  if (timerGroup) timerGroup.classList.toggle('hidden', isUntimed);
+  if (untimedNotice) untimedNotice.classList.toggle('hidden', !isUntimed);
+  if (clubRulesGroup) clubRulesGroup.classList.toggle('hidden', !isClubMode);
+  if (poolSizeGroup) poolSizeGroup.classList.toggle('hidden', !isMultiClub);
+  if (triviaDiffGroup) triviaDiffGroup.classList.toggle('hidden', !isTrivia);
+  if (modeInfoGroup) {
+    modeInfoGroup.classList.toggle('hidden', !showModeInfo);
+    if (showModeInfo && modeInfoTitle && modeInfoDesc) {
+      if (gameMode === 'lineup_quiz') {
+        modeInfoTitle.textContent = '📋 กติกาโหมดทายผัง 11 ตัวจริง (Missing 11)';
+        modeInfoDesc.innerHTML = '• เลือกแมตช์ที่ต้องการทายได้บนกระดาน<br>• ทายถูกโดยไม่เปิดคำใบ้ได้ <strong>+2 แต้ม</strong> / กดดูอักษรย่อ (💡) ได้ <strong>+1 แต้ม</strong><br>• คนที่เปิดตำแหน่งสุดท้าย (คนที่ 11) สำเร็จ รับโบนัสปิดผัง <strong>+1 แต้ม</strong>!';
+      } else if (gameMode === 'top10_stats') {
+        modeInfoTitle.textContent = '📊 กติกาโหมดทายท็อป 10 สถิติลูกหนัง';
+        modeInfoDesc.innerHTML = '• เลือกเปลี่ยนหัวข้อสถิติบนกระดานได้ตลอดเวลา<br>• อันดับ <strong>#1–#3 ได้ +1 แต้ม</strong> • <strong>#4–#7 ได้ +2 แต้ม</strong> • <strong>#8–#10 ได้ +3 แต้ม</strong><br>• หากกดดูคำใบ้ (💡) ข้อนั้นจะได้ <strong>+1 แต้ม</strong>';
+      } else if (gameMode === 'career_path') {
+        modeInfoTitle.textContent = '🕵️‍♂️ กติกาโหมดเส้นทางค้าแข้ง (ฉันคือใคร?)';
+        modeInfoDesc.innerHTML = '• เริ่มต้นจะเห็นเฉพาะตารางสโมสรที่เคยย้ายทีม จำนวนนัด และประตู<br>• ทายถูกโดยไม่เปิดคำใบ้ได้ <strong>+3 แต้ม</strong> / กดเปิดคำใบ้ (💡) ได้ <strong>+1 แต้ม</strong><br>• คนที่ตอบถูกเป็นคนแรกสุดของข้อ รับโบนัสความไว <strong>+1 แต้ม</strong>!';
+      } else if (gameMode === 'footy_grid') {
+        modeInfoTitle.textContent = '🔢 กติกาโหมดตาราง XO ฟุตบอล 3x3';
+        modeInfoDesc.innerHTML = '• คลิกเลือกช่องแล้วพิมพ์ชื่อนักเตะที่ตรงทั้งแนวนอนและแนวตั้ง (ห้ามใช้ชื่อซ้ำในตารางเดียวกัน)<br>• ช่องทั่วไป <strong>+2 แต้ม</strong> • 💎ช่องหายาก (มีคำตอบ ≤5 คน) <strong>+3 แต้ม</strong> • ใช้คำใบ้ <strong>+1 แต้ม</strong><br>• 🔥 เรียงครบ 3 ช่อง (BINGO) รับโบนัสเพิ่ม <strong>+3 แต้ม</strong>!';
+      }
+    }
+  }
+
   renderScoreboard(room);
 
   const views = {

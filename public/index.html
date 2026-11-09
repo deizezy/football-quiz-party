@@ -185,21 +185,28 @@
             </div>
 
             <div class="settings-grid">
-              <!-- Timer Setting -->
+              <!-- Timer & Target Score Setting -->
               <div class="setting-box">
-                <label>⏱️ เวลาตอบต่อรอบ (ปรับได้ 5 - 60 วินาที)</label>
-                <div class="timer-adjuster">
-                  <button class="btn btn-outline btn-sm" data-time-delta="-5">-5s</button>
-                  <button class="btn btn-outline btn-sm" data-time-delta="-1">-1s</button>
-                  <div class="timer-big-display"><span id="lobbyTimeValue">15</span> <small>วินาที</small></div>
-                  <button class="btn btn-outline btn-sm" data-time-delta="1">+1s</button>
-                  <button class="btn btn-outline btn-sm" data-time-delta="5">+5s</button>
+                <div id="settingGroupTimer">
+                  <label>⏱️ เวลาตอบต่อรอบ (ปรับได้ 5 - 60 วินาที)</label>
+                  <div class="timer-adjuster">
+                    <button class="btn btn-outline btn-sm" data-time-delta="-5">-5s</button>
+                    <button class="btn btn-outline btn-sm" data-time-delta="-1">-1s</button>
+                    <div class="timer-big-display"><span id="lobbyTimeValue">15</span> <small>วินาที</small></div>
+                    <button class="btn btn-outline btn-sm" data-time-delta="1">+1s</button>
+                    <button class="btn btn-outline btn-sm" data-time-delta="5">+5s</button>
+                  </div>
+                  <div class="preset-chips">
+                    <button class="chip" data-time-preset="10">10 วิ (ไวมาก)</button>
+                    <button class="chip active" data-time-preset="15">15 วิ (มาตรฐาน)</button>
+                    <button class="chip" data-time-preset="20">20 วิ</button>
+                    <button class="chip" data-time-preset="30">30 วิ (ชิลๆ)</button>
+                  </div>
                 </div>
-                <div class="preset-chips">
-                  <button class="chip" data-time-preset="10">10 วิ (ไวมาก)</button>
-                  <button class="chip active" data-time-preset="15">15 วิ (มาตรฐาน)</button>
-                  <button class="chip" data-time-preset="20">20 วิ</button>
-                  <button class="chip" data-time-preset="30">30 วิ (ชิลๆ)</button>
+
+                <div id="settingGroupUntimedNotice" class="hidden" style="padding:12px 14px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);border-radius:12px;margin-bottom:14px;">
+                  <div style="font-weight:700;color:#34d399;margin-bottom:4px;">♾️ โหมดกระดานสด (ไม่จำกัดเวลาต่อข้อ!)</div>
+                  <div style="font-size:0.84rem;color:#cbd5e1;">ทุกคนสามารถพิมพ์ทายคำตอบเปิดป้ายได้ต่อเนื่องทันที และมีปุ่มกดดูคำใบ้ (💡) หรือเปิดเฉลย (👁️) ได้ตลอดเวลา</div>
                 </div>
 
                 <label style="margin-top: 16px;">🏆 เป้าหมายคะแนนเพื่อคว้าแชมป์ (Target Score)</label>
@@ -212,34 +219,45 @@
                 </select>
               </div>
 
-              <!-- Duplicate & Club Rule Setting -->
-              <div class="setting-box">
-                <label>⚡ กติกาเมื่อตอบชื่อนักเตะซ้ำกันในรอบเดียวกัน</label>
-                <select id="duplicateRuleSelect" class="select-input">
-                  <option value="strict_unique">คนตอบไวกว่าได้คะแนนคนเดียว (คนช้าได้ 0)</option>
-                  <option value="speed_split">ได้คะแนนตามจำนวนสโมสรที่ตรงทั้งคู่</option>
-                  <option value="both_cancel">ใจตรงกันซ้ำกัน = โมฆะ ไม่ได้คะแนนทั้งคู่ (0)</option>
-                </select>
+              <!-- Mode-Specific Settings -->
+              <div class="setting-box" id="settingBoxModeSpecific">
+                <div id="settingGroupClubRules">
+                  <label>⚡ กติกาเมื่อตอบชื่อนักเตะซ้ำกันในรอบเดียวกัน</label>
+                  <select id="duplicateRuleSelect" class="select-input">
+                    <option value="strict_unique">คนตอบไวกว่าได้คะแนนคนเดียว (คนช้าได้ 0)</option>
+                    <option value="speed_split">ได้คะแนนตามจำนวนสโมสรที่ตรงทั้งคู่</option>
+                    <option value="both_cancel">ใจตรงกันซ้ำกัน = โมฆะ ไม่ได้คะแนนทั้งคู่ (0)</option>
+                  </select>
 
-                <label style="margin-top: 16px;">🎲 วิธีเลือกสโมสรลงกระดาน (เปลี่ยนได้ก่อนเริ่มเกม)</label>
-                <select id="clubSelectModeInput" class="select-input">
-                  <option value="random" selected>🎲 สุ่มสโมสรให้ผู้เล่นแต่ละคนอัตโนมัติ (ค่าเริ่มต้น - เริ่มไว!)</option>
-                  <option value="both">⌨️ ให้ผู้เล่นพิมพ์/คลิกเลือกสโมสรเองคนละทีม</option>
-                </select>
+                  <label style="margin-top: 16px;">🎲 วิธีเลือกสโมสรลงกระดาน (เปลี่ยนได้ก่อนเริ่มเกม)</label>
+                  <select id="clubSelectModeInput" class="select-input">
+                    <option value="random" selected>🎲 สุ่มสโมสรให้ผู้เล่นแต่ละคนอัตโนมัติ (ค่าเริ่มต้น - เริ่มไว!)</option>
+                    <option value="both">⌨️ ให้ผู้เล่นพิมพ์/คลิกเลือกสโมสรเองคนละทีม</option>
+                  </select>
+                </div>
 
-                <label style="margin-top: 16px;">🏟️ จำนวนสโมสรบนกระดาน (โหมด 🌟 ล่าแต้มคูณ)</label>
-                <select id="clubPoolSizeRuleSelect" class="select-input">
-                  <option value="fixed_3" selected>🔒 ล็อก 3 สโมสรเสมอ (แม้คนเยอะก็มีแค่ 3 ทีม)</option>
-                  <option value="by_players">👥 ตามจำนวนผู้เล่น (ขั้นต่ำ 3 ทีม • ถ้า 4–6 คนก็มี 4–6 ทีม)</option>
-                </select>
+                <div id="settingGroupPoolSize">
+                  <label style="margin-top: 16px;">🏟️ จำนวนสโมสรบนกระดาน (โหมด 🌟 ล่าแต้มคูณ)</label>
+                  <select id="clubPoolSizeRuleSelect" class="select-input">
+                    <option value="fixed_3" selected>🔒 ล็อก 3 สโมสรเสมอ (แม้คนเยอะก็มีแค่ 3 ทีม)</option>
+                    <option value="by_players">👥 ตามจำนวนผู้เล่น (ขั้นต่ำ 3 ทีม • ถ้า 4–6 คนก็มี 4–6 ทีม)</option>
+                  </select>
+                </div>
 
-                <label style="margin-top: 16px;">🎚️ ระดับความยากคำถาม (โหมด 5: ควิซแฟนพันธุ์แท้ 4 ตัวเลือก)</label>
-                <select id="triviaDifficultySelect" class="select-input">
-                  <option value="all" selected>🎲 รวมทุกระดับความยาก (ง่าย + ปานกลาง + ยาก)</option>
-                  <option value="easy">🟢 ระดับง่าย (Easy - แฟนบอลทั่วไปตอบสนุก)</option>
-                  <option value="medium">🟡 ระดับปานกลาง (Medium - แฟนบอลตัวยง)</option>
-                  <option value="hard">🔴 ระดับยาก (Hard - แฟนพันธุ์แท้ตัวจริง!)</option>
-                </select>
+                <div id="settingGroupTriviaDiff" class="hidden">
+                  <label>🎚️ ระดับความยากคำถาม (โหมด 5: ควิซแฟนพันธุ์แท้ 4 ตัวเลือก)</label>
+                  <select id="triviaDifficultySelect" class="select-input">
+                    <option value="all" selected>🎲 รวมทุกระดับความยาก (ง่าย + ปานกลาง + ยาก)</option>
+                    <option value="easy">🟢 ระดับง่าย (+1 แต้ม • แฟนบอลทั่วไปตอบสนุก)</option>
+                    <option value="medium">🟡 ระดับปานกลาง (+2 แต้ม • แฟนบอลตัวยง)</option>
+                    <option value="hard">🔴 ระดับยาก (+3 แต้ม • แฟนพันธุ์แท้ตัวจริง!)</option>
+                  </select>
+                </div>
+
+                <div id="settingGroupModeInfo" class="hidden" style="padding:12px 14px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.35);border-radius:12px;">
+                  <div id="settingModeInfoTitle" style="font-weight:700;color:#93c5fd;margin-bottom:4px;">💡 กติกาพิเศษของโหมดนี้</div>
+                  <div id="settingModeInfoDesc" style="font-size:0.84rem;color:#cbd5e1;line-height:1.5;"></div>
+                </div>
               </div>
             </div>
 
