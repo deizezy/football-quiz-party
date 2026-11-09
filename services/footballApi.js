@@ -1039,46 +1039,21 @@ async function initializeFootballApiData() {
     })
   );
 
-  if (liveCareerPaths.length >= 4) {
-    const classicCareer = CAREER_PATHS.filter(
-      (c) => !c.id.startsWith('live_cp_') && !liveCareerPaths.some((lc) => normalizeText(lc.answerName) === normalizeText(c.answerName))
+  if (liveCareerPaths.length >= 1) {
+    const classicCareer = CAREER_PATHS.filter((c) => !c.id.startsWith('live_cp_'));
+    const classicNames = new Set(classicCareer.map((c) => normalizeText(c.answerName)));
+    const uniqueLiveCareer = liveCareerPaths.filter(
+      (lc) => !classicNames.has(normalizeText(lc.answerName))
     );
     CAREER_PATHS.length = 0;
     classicCareer.forEach((cp) => CAREER_PATHS.push(cp));
-    liveCareerPaths.forEach((cp) => CAREER_PATHS.push(cp));
-    console.log(`✅ Loaded ${CAREER_PATHS.length} Career Path timelines (${classicCareer.length} Classic + ${liveCareerPaths.length} Live 2026-27)!`);
+    uniqueLiveCareer.forEach((cp) => CAREER_PATHS.push(cp));
+    console.log(
+      `✅ Loaded ${CAREER_PATHS.length} Career Path timelines (${classicCareer.length} Classic + ${uniqueLiveCareer.length} Live 2026-27)!`
+    );
   }
 
-  // 6. Build Live 2026-27 Trivia Questions from the live leaderboards (without spoiling club names!)
-  if (liveTop10Lists.length >= 2) {
-    const baseQuestions = TRIVIA_QUESTIONS.filter((q) => !q.id.startsWith('live_tr_'));
-    const liveTrivia = [];
-    liveTop10Lists.forEach((list, idx) => {
-      if (list.items.length >= 4) {
-        const top1 = list.items[0];
-        const cleanStat = top1.rawStat || top1.stat.replace(/\s*\([^)]*\)/g, '');
-        const opts = [top1.name, list.items[1].name, list.items[2].name, list.items[3].name];
-        const correctName = top1.name;
-        const shuffled = [...opts].sort((a, b) => a.localeCompare(b));
-        const correctIdx = shuffled.indexOf(correctName);
-        const diff = idx % 3 === 0 ? 'easy' : idx % 3 === 1 ? 'medium' : 'hard';
-        liveTrivia.push({
-          id: `live_tr_${idx + 1}`,
-          difficulty: diff,
-          question: `[สถิติฤดูกาล 2026-27] ใครคือผู้นำอันดับ 1 ในหัวข้อ "${list.title}" ณ ปัจจุบันด้วยผลงาน ${cleanStat}?`,
-          options: shuffled,
-          correctIndex: correctIdx,
-          explanation: `${top1.name} นำเป็นอันดับ 1 ในฤดูกาลล่าสุดด้วยผลงาน ${top1.stat}`
-        });
-      }
-    });
-    if (liveTrivia.length >= 4) {
-      TRIVIA_QUESTIONS.length = 0;
-      baseQuestions.forEach((q) => TRIVIA_QUESTIONS.push(q));
-      liveTrivia.forEach((q) => TRIVIA_QUESTIONS.push(q));
-      console.log(`✅ Loaded ${TRIVIA_QUESTIONS.length} Trivia Questions (Easy/Medium/Hard + Live 2026-27)!`);
-    }
-  }
+  console.log(`✅ Loaded ${TRIVIA_QUESTIONS.length} Unique Trivia Questions (Easy/Medium/Hard)!`);
 
   // 7. Pre-warm photos for top 24 players in background (non-blocking)
   (async () => {

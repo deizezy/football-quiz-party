@@ -643,6 +643,323 @@ const CAREER_PATHS = [
       { years: '2020–2021', club: 'Inter Milan', apps: 37, goals: 7 },
       { years: '2021–ปัจจุบัน', club: 'Paris Saint-Germain', apps: 100, goals: 14 }
     ]
+  },
+  {
+    id: 'cp_henry',
+    answerName: 'Thierry Henry',
+    flag: '🇫🇷',
+    position: 'FW',
+    aliases: ['henry', 'อองรี'],
+    hint: 'ดาวยิงสูงสุดตลอดกาลของ Arsenal และหัวหอกยุคไร้พ่าย The Invincibles',
+    steps: [
+      { years: '1994–1999', club: 'AS Monaco', apps: 105, goals: 20 },
+      { years: '1999', club: 'Juventus', apps: 16, goals: 3 },
+      { years: '1999–2007', club: 'Arsenal', apps: 254, goals: 174 },
+      { years: '2007–2010', club: 'Barcelona', apps: 80, goals: 35 },
+      { years: '2010–2014', club: 'New York Red Bulls', apps: 122, goals: 51 }
+    ]
+  },
+  {
+    id: 'cp_r9',
+    answerName: 'Ronaldo Nazário',
+    flag: '🇧🇷',
+    position: 'FW',
+    aliases: ['r9', 'ronaldo', 'โรนัลโด้อ้วน'],
+    hint: 'โล้นทองคำ R9 แชมป์โลก 2 สมัยที่เคยเล่นให้ทั้ง Barcelona, Real Madrid, Inter และ AC Milan',
+    steps: [
+      { years: '1994–1996', club: 'PSV Eindhoven', apps: 46, goals: 42 },
+      { years: '1996–1997', club: 'Barcelona', apps: 37, goals: 34 },
+      { years: '1997–2002', club: 'Inter Milan', apps: 68, goals: 49 },
+      { years: '2002–2007', club: 'Real Madrid', apps: 127, goals: 83 },
+      { years: '2007–2008', club: 'AC Milan', apps: 20, goals: 9 }
+    ]
+  },
+  {
+    id: 'cp_beckham',
+    answerName: 'David Beckham',
+    flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+    position: 'MF',
+    aliases: ['beckham', 'เบ็คแฮม'],
+    hint: 'เจ้าพ่อลูกนิ่งเบอร์ 7 แห่งโอลด์แทรฟฟอร์ดและตำนานยุค Galácticos',
+    steps: [
+      { years: '1992–2003', club: 'Manchester United', apps: 265, goals: 62 },
+      { years: '2003–2007', club: 'Real Madrid', apps: 116, goals: 13 },
+      { years: '2007–2012', club: 'LA Galaxy', apps: 98, goals: 18 },
+      { years: '2009 & 2010 (ยืมตัว)', club: 'AC Milan', apps: 29, goals: 2 },
+      { years: '2013', club: 'Paris Saint-Germain', apps: 10, goals: 0 }
+    ]
+  },
+  {
+    id: 'cp_ronaldinho',
+    answerName: 'Ronaldinho',
+    flag: '🇧🇷',
+    position: 'FW',
+    aliases: ['โรนัลดินโญ่'],
+    hint: 'พ่อมดลูกหนังเจ้าของรอยยิ้มและบัลลงดอร์ปี 2005',
+    steps: [
+      { years: '1998–2001', club: 'Grêmio', apps: 52, goals: 21 },
+      { years: '2001–2003', club: 'Paris Saint-Germain', apps: 55, goals: 17 },
+      { years: '2003–2008', club: 'Barcelona', apps: 145, goals: 70 },
+      { years: '2008–2011', club: 'AC Milan', apps: 76, goals: 20 }
+    ]
+  },
+  {
+    id: 'cp_zidane',
+    answerName: 'Zinedine Zidane',
+    flag: '🇫🇷',
+    position: 'MF',
+    aliases: ['zidane', 'zizou', 'ซีดาน'],
+    hint: 'จอมทัพหมายเลข 5 ผู้วอลเลย์ด้วยซ้ายพาเรอัล มาดริดคว้าแชมป์ UCL 2002',
+    steps: [
+      { years: '1989–1992', club: 'AS Cannes', apps: 61, goals: 6 },
+      { years: '1992–1996', club: 'Bordeaux', apps: 139, goals: 28 },
+      { years: '1996–2001', club: 'Juventus', apps: 151, goals: 24 },
+      { years: '2001–2006', club: 'Real Madrid', apps: 155, goals: 37 }
+    ]
+  },
+  {
+    id: 'cp_haaland',
+    answerName: 'Erling Haaland',
+    flag: '🇳🇴',
+    position: 'FW',
+    aliases: ['haaland', 'ฮาแลนด์'],
+    hint: 'เครื่องจักรสังหารประตูชาวนอร์เวย์ เจ้าของสถิติยิง 36 ประตูในพรีเมียร์ลีกฤดูกาลเดียว',
+    steps: [
+      { years: '2017–2019', club: 'Molde FK', apps: 39, goals: 14 },
+      { years: '2019–2020', club: 'Red Bull Salzburg', apps: 16, goals: 17 },
+      { years: '2020–2022', club: 'Borussia Dortmund', apps: 67, goals: 62 },
+      { years: '2022–ปัจจุบัน', club: 'Manchester City', apps: 75, goals: 73 }
+    ]
+  },
+  {
+    id: 'cp_mbappe',
+    answerName: 'Kylian Mbappé',
+    flag: '🇫🇷',
+    position: 'FW',
+    aliases: ['mbappe', 'เอ็มบัปเป้'],
+    hint: 'ดาวยิงความเร็วแสงทีมชาติฝรั่งเศสผู้ทำแฮตทริกในนัดชิงฟุตบอลโลก 2022',
+    steps: [
+      { years: '2015–2017', club: 'AS Monaco', apps: 41, goals: 16 },
+      { years: '2017–2024', club: 'Paris Saint-Germain', apps: 205, goals: 191 },
+      { years: '2024–ปัจจุบัน', club: 'Real Madrid', apps: 20, goals: 12 }
+    ]
+  },
+  {
+    id: 'cp_neymar',
+    answerName: 'Neymar Jr',
+    flag: '🇧🇷',
+    position: 'FW',
+    aliases: ['neymar', 'เนย์มาร์'],
+    hint: 'หนึ่งในสามประสาน MSN แห่งบาร์เซโลน่า และเจ้าของค่าตัวสถิติโลก 222 ล้านยูโร',
+    steps: [
+      { years: '2009–2013', club: 'Santos FC', apps: 177, goals: 107 },
+      { years: '2013–2017', club: 'Barcelona', apps: 123, goals: 68 },
+      { years: '2017–2023', club: 'Paris Saint-Germain', apps: 112, goals: 82 },
+      { years: '2023–ปัจจุบัน', club: 'Al-Hilal', apps: 7, goals: 1 }
+    ]
+  },
+  {
+    id: 'cp_suarez',
+    answerName: 'Luis Suárez',
+    flag: '🇺🇾',
+    position: 'FW',
+    aliases: ['suarez', 'ซัวเรซ'],
+    hint: 'กองหน้าจอมถล่มประตูชาวอุรุกวัย เจ้าของรางวัลรองเท้าทองคำยุโรป 2 สมัย',
+    steps: [
+      { years: '2007–2011', club: 'Ajax', apps: 110, goals: 81 },
+      { years: '2011–2014', club: 'Liverpool', apps: 110, goals: 69 },
+      { years: '2014–2020', club: 'Barcelona', apps: 191, goals: 147 },
+      { years: '2020–2022', club: 'Atlético Madrid', apps: 67, goals: 32 },
+      { years: '2024–ปัจจุบัน', club: 'Inter Miami', apps: 27, goals: 20 }
+    ]
+  },
+  {
+    id: 'cp_bale',
+    answerName: 'Gareth Bale',
+    flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿',
+    position: 'FW',
+    aliases: ['bale', 'เบล'],
+    hint: 'ปีกพญาวานรชาวเวลส์ผู้ตีลังกายิงประตูสุดสวยในนัดชิง UCL 2018',
+    steps: [
+      { years: '2006–2007', club: 'Southampton', apps: 40, goals: 5 },
+      { years: '2007–2013', club: 'Tottenham Hotspur', apps: 146, goals: 42 },
+      { years: '2013–2022', club: 'Real Madrid', apps: 176, goals: 81 },
+      { years: '2020–2021 (ยืมตัว)', club: 'Tottenham Hotspur', apps: 20, goals: 11 },
+      { years: '2022–2023', club: 'LAFC', apps: 12, goals: 2 }
+    ]
+  },
+  {
+    id: 'cp_hazard',
+    answerName: 'Eden Hazard',
+    flag: '🇧🇪',
+    position: 'FW',
+    aliases: ['hazard', 'อาซาร์'],
+    hint: 'จอมเลื้อยหมายเลข 10 ขวัญใจสาวกสิงห์บลูส์ผู้คว้าแชมป์ลีกเอิงกับลีลล์ก่อนย้ายมาอังกฤษ',
+    steps: [
+      { years: '2007–2012', club: 'Lille OSC', apps: 147, goals: 36 },
+      { years: '2012–2019', club: 'Chelsea', apps: 245, goals: 85 },
+      { years: '2019–2023', club: 'Real Madrid', apps: 54, goals: 4 }
+    ]
+  },
+  {
+    id: 'cp_rvp',
+    answerName: 'Robin van Persie',
+    flag: '🇳🇱',
+    position: 'FW',
+    aliases: ['van persie', 'rvp', 'ฟานเพอร์ซี่'],
+    hint: 'ดาวยิงเท้าซ้ายชั่งทองชาวดัตช์ผู้คว้าดาวซัลโวพรีเมียร์ลีกกับทั้ง Arsenal และ Man Utd',
+    steps: [
+      { years: '2001–2004', club: 'Feyenoord', apps: 61, goals: 15 },
+      { years: '2004–2012', club: 'Arsenal', apps: 194, goals: 96 },
+      { years: '2012–2015', club: 'Manchester United', apps: 86, goals: 48 },
+      { years: '2015–2018', club: 'Fenerbahçe', apps: 57, goals: 25 }
+    ]
+  },
+  {
+    id: 'cp_fabregas',
+    answerName: 'Cesc Fàbregas',
+    flag: '🇪🇸',
+    position: 'MF',
+    aliases: ['fabregas', 'ฟาเบรกาส'],
+    hint: 'มิดฟิลด์จอมแอสซิสต์ชาวสเปนที่เคยเป็นกัปตันทีมอาร์เซนอลตั้งแต่อายุยังน้อย',
+    steps: [
+      { years: '2003–2011', club: 'Arsenal', apps: 212, goals: 35 },
+      { years: '2011–2014', club: 'Barcelona', apps: 96, goals: 28 },
+      { years: '2014–2019', club: 'Chelsea', apps: 138, goals: 15 },
+      { years: '2019–2022', club: 'AS Monaco', apps: 54, goals: 3 }
+    ]
+  },
+  {
+    id: 'cp_torres',
+    answerName: 'Fernando Torres',
+    flag: '🇪🇸',
+    position: 'FW',
+    aliases: ['torres', 'ตอร์เรส', 'เอลนินโญ่'],
+    hint: 'ฉายา "เอล นินโญ่" กองหน้าผมทองผู้ยิงประตูชัยให้สเปนคว้าแชมป์ยูโร 2008',
+    steps: [
+      { years: '2001–2007', club: 'Atlético Madrid', apps: 214, goals: 82 },
+      { years: '2007–2011', club: 'Liverpool', apps: 102, goals: 65 },
+      { years: '2011–2015', club: 'Chelsea', apps: 110, goals: 20 },
+      { years: '2014–2015', club: 'AC Milan', apps: 10, goals: 1 },
+      { years: '2015–2018', club: 'Atlético Madrid', apps: 107, goals: 27 }
+    ]
+  },
+  {
+    id: 'cp_alonso',
+    answerName: 'Xabi Alonso',
+    flag: '🇪🇸',
+    position: 'MF',
+    aliases: ['xabi alonso', 'ชาบี อลอนโซ่'],
+    hint: 'กองกลางจอมวางบอลยาวผู้คว้าแชมป์ UCL กับทั้งลิเวอร์พูลและเรอัล มาดริด',
+    steps: [
+      { years: '2000–2004', club: 'Real Sociedad', apps: 114, goals: 9 },
+      { years: '2004–2009', club: 'Liverpool', apps: 143, goals: 15 },
+      { years: '2009–2014', club: 'Real Madrid', apps: 158, goals: 4 },
+      { years: '2014–2017', club: 'Bayern Munich', apps: 79, goals: 5 }
+    ]
+  },
+  {
+    id: 'cp_pirlo',
+    answerName: 'Andrea Pirlo',
+    flag: '🇮🇹',
+    position: 'MF',
+    aliases: ['pirlo', 'ปีร์โล่'],
+    hint: 'สถาปนิกลูกหนังแดนมะกะโรนีที่ผ่านการค้าแข้งกับ 3 ยักษ์ใหญ่แห่งกัลโช่ เซเรียอา',
+    steps: [
+      { years: '1998–2001', club: 'Inter Milan', apps: 22, goals: 0 },
+      { years: '2001–2011', club: 'AC Milan', apps: 284, goals: 32 },
+      { years: '2011–2015', club: 'Juventus', apps: 119, goals: 16 },
+      { years: '2015–2017', club: 'New York City FC', apps: 60, goals: 1 }
+    ]
+  },
+  {
+    id: 'cp_robben',
+    answerName: 'Arjen Robben',
+    flag: '🇳🇱',
+    position: 'FW',
+    aliases: ['robben', 'ร็อบเบน'],
+    hint: 'ปีกจรวดทางเรียบชาวดัตช์เจ้าของท่าไม้ตายลากตัดเข้าในแล้วยิงปั่นด้วยซ้าย',
+    steps: [
+      { years: '2002–2004', club: 'PSV Eindhoven', apps: 56, goals: 17 },
+      { years: '2004–2007', club: 'Chelsea', apps: 67, goals: 15 },
+      { years: '2007–2009', club: 'Real Madrid', apps: 50, goals: 11 },
+      { years: '2009–2019', club: 'Bayern Munich', apps: 201, goals: 99 }
+    ]
+  },
+  {
+    id: 'cp_alexis',
+    answerName: 'Alexis Sánchez',
+    flag: '🇨🇱',
+    position: 'FW',
+    aliases: ['alexis', 'sanchez', 'อเล็กซิส'],
+    hint: 'แนวรุกพลังไดนาโมชาวชิลีผู้พาทีมชาติคว้าแชมป์ Copa América 2 สมัยติด',
+    steps: [
+      { years: '2008–2011', club: 'Udinese', apps: 95, goals: 20 },
+      { years: '2011–2014', club: 'Barcelona', apps: 88, goals: 39 },
+      { years: '2014–2018', club: 'Arsenal', apps: 122, goals: 60 },
+      { years: '2018–2020', club: 'Manchester United', apps: 32, goals: 3 },
+      { years: '2019–2022', club: 'Inter Milan', apps: 79, goals: 16 },
+      { years: '2022–2023', club: 'Olympique Marseille', apps: 35, goals: 14 }
+    ]
+  },
+  {
+    id: 'cp_aubameyang',
+    answerName: 'Pierre-Emerick Aubameyang',
+    flag: '🇬🇦',
+    position: 'FW',
+    aliases: ['aubameyang', 'auba', 'โอบาเมยอง'],
+    hint: 'กองหน้าความเร็วสูงชาวกาบองผู้ทำท่าดีใจตีลังกาสวมหน้ากากซูเปอร์ฮีโร่',
+    steps: [
+      { years: '2011–2013', club: 'Saint-Étienne', apps: 87, goals: 37 },
+      { years: '2013–2018', club: 'Borussia Dortmund', apps: 144, goals: 98 },
+      { years: '2018–2022', club: 'Arsenal', apps: 128, goals: 68 },
+      { years: '2022', club: 'Barcelona', apps: 18, goals: 11 },
+      { years: '2022–2023', club: 'Chelsea', apps: 15, goals: 1 },
+      { years: '2023–2024', club: 'Olympique Marseille', apps: 34, goals: 17 }
+    ]
+  },
+  {
+    id: 'cp_tevez',
+    answerName: 'Carlos Tevez',
+    flag: '🇦🇷',
+    position: 'FW',
+    aliases: ['tevez', 'เตเวซ'],
+    hint: 'กองหน้ามะขามข้อเดียวชาวอาร์เจนไตน์ผู้คว้าแชมป์พรีเมียร์ลีกกับทั้งสองทีมแห่งเมืองแมนเชสเตอร์',
+    steps: [
+      { years: '2006–2007', club: 'West Ham United', apps: 26, goals: 7 },
+      { years: '2007–2009', club: 'Manchester United', apps: 63, goals: 19 },
+      { years: '2009–2013', club: 'Manchester City', apps: 113, goals: 58 },
+      { years: '2013–2015', club: 'Juventus', apps: 66, goals: 39 },
+      { years: '2015–2021', club: 'Boca Juniors', apps: 114, goals: 42 }
+    ]
+  },
+  {
+    id: 'cp_etoo',
+    answerName: 'Samuel Eto\'o',
+    flag: '🇨🇲',
+    position: 'FW',
+    aliases: ['etoo', 'เอโต้'],
+    hint: 'ตำนานกองหน้าชาวแคเมอรูนผู้คว้าทริปเปิลแชมป์ 2 ปีติดต่อกันกับ Barcelona และ Inter Milan',
+    steps: [
+      { years: '2000–2004', club: 'RCD Mallorca', apps: 133, goals: 54 },
+      { years: '2004–2009', club: 'Barcelona', apps: 144, goals: 108 },
+      { years: '2009–2011', club: 'Inter Milan', apps: 67, goals: 33 },
+      { years: '2013–2014', club: 'Chelsea', apps: 21, goals: 9 },
+      { years: '2014–2015', club: 'Everton', apps: 14, goals: 3 }
+    ]
+  },
+  {
+    id: 'cp_bellingham',
+    answerName: 'Jude Bellingham',
+    flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+    position: 'MF',
+    aliases: ['bellingham', 'เบลลิงแฮม'],
+    hint: 'มิดฟิลด์ดาวรุ่งทีมชาติอังกฤษเจ้าของท่าดีใจกางแขนและเบอร์ 5 แห่งเรอัล มาดริด',
+    steps: [
+      { years: '2019–2020', club: 'Birmingham City', apps: 41, goals: 4 },
+      { years: '2020–2023', club: 'Borussia Dortmund', apps: 92, goals: 12 },
+      { years: '2023–ปัจจุบัน', club: 'Real Madrid', apps: 45, goals: 23 }
+    ]
   }
 ];
 
@@ -843,6 +1160,199 @@ const TRIVIA_QUESTIONS = [
     options: ['Liverpool', 'Manchester United', 'Nottingham Forest', 'Aston Villa'],
     correctIndex: 1,
     explanation: 'Manchester United ของกุนซือ Sir Matt Busby เป็นทีมแรกของอังกฤษที่คว้าแชมป์ยูโรเปียนคัพในปี 1968 (ทีมแรกของสหราชอาณาจักรคือ Celtic ปี 1967)'
+  },
+  // ================= ADDITIONAL EASY / MEDIUM / HARD QUESTIONS =================
+  {
+    id: 'tr_easy_9',
+    difficulty: 'easy',
+    question: 'ฉายา "ปีศาจแดง" (The Red Devils) เป็นฉายาของสโมสรใดในศึกพรีเมียร์ลีก อังกฤษ?',
+    options: ['Liverpool', 'Arsenal', 'Manchester United', 'Nottingham Forest'],
+    correctIndex: 2,
+    explanation: 'Manchester United มีฉายาว่า "ปีศาจแดง" (The Red Devils) ส่วน Liverpool คือ "หงส์แดง"'
+  },
+  {
+    id: 'tr_easy_10',
+    difficulty: 'easy',
+    question: 'ทีมชาติใดคว้าแชมป์ฟุตบอลชิงแชมป์แห่งชาติยุโรป (UEFA Euro 2024) ที่จัดขึ้นที่ประเทศเยอรมนี?',
+    options: ['อังกฤษ', 'ฝรั่งเศส', 'สเปน', 'เยอรมนี'],
+    correctIndex: 2,
+    explanation: 'ทีมชาติสเปน เอาชนะ ทีมชาติอังกฤษ 2-1 ในนัดชิงชนะเลิศ คว้าแชมป์ยูโรสมัยที่ 4 สูงสุดในประวัติศาสตร์'
+  },
+  {
+    id: 'tr_easy_11',
+    difficulty: 'easy',
+    question: 'ศึก "เอล กลาซิโก้" (El Clásico) คือการปะทะกันระหว่างสองสโมสรยักษ์ใหญ่คู่ใด?',
+    options: ['Real Madrid พบ Atlético Madrid', 'Real Madrid พบ Barcelona', 'Barcelona พบ Sevilla', 'AC Milan พบ Inter Milan'],
+    correctIndex: 1,
+    explanation: 'El Clásico คือศึกดาร์บี้แมตช์ระดับโลกระหว่าง Real Madrid และ Barcelona'
+  },
+  {
+    id: 'tr_easy_12',
+    difficulty: 'easy',
+    question: 'เออร์ลิง ฮาแลนด์ (Erling Haaland) ลงเล่นให้กับทีมชาติใด?',
+    options: ['สวีเดน', 'เดนมาร์ก', 'นอร์เวย์', 'ฟินแลนด์'],
+    correctIndex: 2,
+    explanation: 'Erling Haaland เป็นดาวยิงทีมชาตินอร์เวย์ (Norway)'
+  },
+  {
+    id: 'tr_easy_13',
+    difficulty: 'easy',
+    question: 'สนามเหย้า "แอนฟิลด์" (Anfield) เป็นรังเหย้าของสโมสรใด?',
+    options: ['Everton', 'Liverpool', 'Manchester United', 'Aston Villa'],
+    correctIndex: 1,
+    explanation: 'Anfield คือสนามเหย้าอันเลื่องชื่อของสโมสร Liverpool'
+  },
+  {
+    id: 'tr_easy_14',
+    difficulty: 'easy',
+    question: 'นักเตะชาวเอเชียคนแรกที่คว้ารางวัลดาวซัลโวพรีเมียร์ลีก อังกฤษ (Golden Boot ฤดูกาล 2021/22) คือใคร?',
+    options: ['Park Ji-sung', 'Shinji Kagawa', 'Son Heung-min', 'Kaoru Mitoma'],
+    correctIndex: 2,
+    explanation: 'Son Heung-min ยิง 23 ประตูในพรีเมียร์ลีก 2021/22 คว้ารางวัลดาวซัลโวร่วมกับ Mohamed Salah'
+  },
+  {
+    id: 'tr_easy_15',
+    difficulty: 'easy',
+    question: 'สโมสรใดเป็นเจ้าของสถิติคว้าแชมป์ บุนเดสลีกา เยอรมนี มากที่สุดในประวัติศาสตร์?',
+    options: ['Borussia Dortmund', 'Bayer Leverkusen', 'Bayern Munich', 'Werder Bremen'],
+    correctIndex: 2,
+    explanation: 'Bayern Munich ครองความยิ่งใหญ่คว้าแชมป์บุนเดสลีกามากที่สุดเกิน 32 สมัย'
+  },
+  {
+    id: 'tr_easy_16',
+    difficulty: 'easy',
+    question: 'ใครคือผู้รักษาประตูมือหนึ่งทีมชาติอาร์เจนตินาชุดคว้าแชมป์ฟุตบอลโลก 2022 ที่กาตาร์?',
+    options: ['Sergio Romero', 'Willy Caballero', 'Emiliano Martínez', 'Franco Armani'],
+    correctIndex: 2,
+    explanation: 'Emiliano "Dibu" Martínez เป็นฮีโร่เซฟลูกหลุดเดี่ยวและจุดโทษพาอาร์เจนตินาคว้าแชมป์โลก 2022'
+  },
+  {
+    id: 'tr_med_9',
+    difficulty: 'medium',
+    question: 'สโมสรใดจากอังกฤษที่สามารถคว้า "ทริปเปิลแชมป์" (พรีเมียร์ลีก + เอฟเอคัพ + ยูฟ่า แชมเปียนส์ลีก) ในฤดูกาล 1998/99?',
+    options: ['Arsenal', 'Liverpool', 'Manchester United', 'Chelsea'],
+    correctIndex: 2,
+    explanation: 'Manchester United ของ Sir Alex Ferguson สร้างประวัติศาสตร์คว้า Treble แชมป์ในฤดูกาล 1998/99'
+  },
+  {
+    id: 'tr_med_10',
+    difficulty: 'medium',
+    question: 'ใครคือผู้ยิงประตูโทนในช่วงต่อเวลาพิเศษพาทีมชาติสเปนชนะเนเธอร์แลนด์ 1-0 คว้าแชมป์ฟุตบอลโลก 2010?',
+    options: ['David Villa', 'Fernando Torres', 'Andrés Iniesta', 'Xavi Hernández'],
+    correctIndex: 2,
+    explanation: 'Andrés Iniesta ยิงประตูชัยในนาทีที่ 116 พาสเปนคว้าแชมป์โลกสมัยแรกในประวัติศาสตร์'
+  },
+  {
+    id: 'tr_med_11',
+    difficulty: 'medium',
+    question: 'ก่อนย้ายมาสร้างชื่อกับ อาร์เซนอล เธียร์รี่ อองรี (Thierry Henry) เคยค้าแข้งกับสโมสรใดในกัลโช่ เซเรียอา อิตาลี?',
+    options: ['AC Milan', 'Inter Milan', 'Juventus', 'AS Roma'],
+    correctIndex: 2,
+    explanation: 'Thierry Henry ค้าแข้งกับ Juventus ช่วงสั้นๆ ในปี 1999 ก่อนที่ Arsène Wenger จะดึงตัวมาอยู่กับ Arsenal'
+  },
+  {
+    id: 'tr_med_12',
+    difficulty: 'medium',
+    question: 'นักเตะคนใดเป็นเจ้าของสถิติคว้าแชมป์พรีเมียร์ลีก อังกฤษ มากที่สุดในประวัติศาสตร์ (13 สมัย)?',
+    options: ['Paul Scholes', 'Ryan Giggs', 'Wayne Rooney', 'Gary Neville'],
+    correctIndex: 1,
+    explanation: 'Ryan Giggs คว้าแชมป์พรีเมียร์ลีกร่วมกับ Manchester United ไปถึง 13 สมัย'
+  },
+  {
+    id: 'tr_med_13',
+    difficulty: 'medium',
+    question: 'ดิดิเยร์ ดร็อกบา (Didier Drogba) ย้ายจากสโมสรใดในลีกเอิง ฝรั่งเศส มาร่วมทีม เชลซี ในปี 2004?',
+    options: ['Paris Saint-Germain', 'Olympique Lyonnais', 'Olympique Marseille', 'AS Monaco'],
+    correctIndex: 2,
+    explanation: 'Didier Drogba ย้ายจาก Olympique Marseille มาร่วมทัพ Chelsea ในปี 2004'
+  },
+  {
+    id: 'tr_med_14',
+    difficulty: 'medium',
+    question: 'ใครคือผู้โหม่งประตูตีเสมอ 1-1 ในนาทีที่ 92:48 พา เรอัล มาดริด รอดตายก่อนชนะ แอตฯ มาดริด คว้าแชมป์ UCL 2014 (La Décima)?',
+    options: ['Cristiano Ronaldo', 'Gareth Bale', 'Sergio Ramos', 'Karim Benzema'],
+    correctIndex: 2,
+    explanation: 'Sergio Ramos โหม่งประตูตีเสมอจากลูกเตะมุมของ Luka Modrić ในนาที 92:48'
+  },
+  {
+    id: 'tr_med_15',
+    difficulty: 'medium',
+    question: 'นักเตะคนใดคว้ารางวัล บัลลงดอร์ ปี 2018 หยุดการผูกขาด 10 ปีติดต่อกันของ เมสซี่ และ โรนัลโด้?',
+    options: ['Antoine Griezmann', 'Luka Modrić', 'Karim Benzema', 'Virgil van Dijk'],
+    correctIndex: 1,
+    explanation: 'Luka Modrić คว้าแชมป์ UCL กับเรอัล มาดริด และพาโครเอเชียเข้าชิงฟุตบอลโลก 2018 จนคว้าบัลลงดอร์ไปครอง'
+  },
+  {
+    id: 'tr_med_16',
+    difficulty: 'medium',
+    question: 'ซลาตัน อิบราฮิโมวิช เคยค้าแข้งให้กับสโมสรยักษ์ใหญ่ในอิตาลีครบทั้ง 3 ทีม (ยูเวนตุส, อินเตอร์ มิลาน, เอซี มิลาน) แต่เขาไม่เคยเล่นให้ทีมใดต่อไปนี้?',
+    options: ['Barcelona', 'Paris Saint-Germain', 'Bayern Munich', 'Manchester United'],
+    correctIndex: 2,
+    explanation: 'Zlatan เคยเล่นให้ Ajax, Juventus, Inter, Barcelona, AC Milan, PSG, Man Utd และ LA Galaxy แต่ไม่เคยเล่นให้ Bayern Munich'
+  },
+  {
+    id: 'tr_hard_9',
+    difficulty: 'hard',
+    question: 'ในนัดชิง UCL ปี 1999 ที่คัมป์นู (แมนฯ ยูไนเต็ด พลิกชนะ บาเยิร์น 2-1 ช่วงทดเจ็บ) ใครคือผู้ยิงประตูตีเสมอ 1-1 ในนาทีที่ 90+1?',
+    options: ['Ole Gunnar Solskjær', 'Teddy Sheringham', 'David Beckham', 'Dwight Yorke'],
+    correctIndex: 1,
+    explanation: 'Teddy Sheringham ยิงตีเสมอ 1-1 นาที 90+1 ก่อนที่ Ole Gunnar Solskjær จะยิงประตูชัย 2-1 ในนาที 90+3'
+  },
+  {
+    id: 'tr_hard_10',
+    difficulty: 'hard',
+    question: 'ใครคือผู้รักษาประตูที่ครองสถิติเก็บคลีนชีต (ไม่เสียประตู) สูงสุดตลอดกาลในประวัติศาสตร์ พรีเมียร์ลีก อังกฤษ (202 คลีนชีต)?',
+    options: ['David James', 'Peter Schmeichel', 'Edwin van der Sar', 'Petr Čech'],
+    correctIndex: 3,
+    explanation: 'Petr Čech เก็บคลีนชีตรวม 202 นัดในพรีเมียร์ลีกกับ Chelsea และ Arsenal'
+  },
+  {
+    id: 'tr_hard_11',
+    difficulty: 'hard',
+    question: 'ทีมชาติใดสร้างเทพนิยายคว้าแชมป์ ยูโร 2004 ที่ประเทศโปรตุเกสเป็นเจ้าภาพ ด้วยการเอาชนะโปรตุเกสทั้งนัดเปิดสนามและนัดชิงชนะเลิศ?',
+    options: ['เดนมาร์ก', 'กรีซ', 'สาธารณรัฐเช็ก', 'รัสเซีย'],
+    correctIndex: 1,
+    explanation: 'ทีมชาติกรีซ ของกุนซือ Otto Rehhagel หักปากกาเซียนคว้าแชมป์ Euro 2004 จากลูกโหม่งของ Angelos Charisteas'
+  },
+  {
+    id: 'tr_hard_12',
+    difficulty: 'hard',
+    question: 'ใครคือผู้ยิงประตูชัยในช่วงต่อเวลาพิเศษ พาทีมชาติเยอรมนี ชนะ อาร์เจนตินา 1-0 คว้าแชมป์ฟุตบอลโลก 2014 ที่บราซิล?',
+    options: ['Thomas Müller', 'Toni Kroos', 'Mario Götze', 'André Schürrle'],
+    correctIndex: 2,
+    explanation: 'Mario Götze พักอกแล้วยิงวอลเลย์ในนาทีที่ 113 จากลูกเปิดของ André Schürrle'
+  },
+  {
+    id: 'tr_hard_13',
+    difficulty: 'hard',
+    question: 'นักเตะคนใดเป็นเจ้าของสถิติลงสนามในศึก พรีเมียร์ลีก อังกฤษ มากนัดที่สุดตลอดกาล (653 นัด)?',
+    options: ['Ryan Giggs', 'Frank Lampard', 'Gareth Barry', 'James Milner'],
+    correctIndex: 2,
+    explanation: 'Gareth Barry ลงสนามในพรีเมียร์ลีกไปถึง 653 นัด (กับ Aston Villa, Man City, Everton และ West Brom)'
+  },
+  {
+    id: 'tr_hard_14',
+    difficulty: 'hard',
+    question: 'สโมสร อินเตอร์ มิลาน ยุคคว้าทริปเปิลแชมป์ปี 2010 (ชนะ บาเยิร์น มิวนิค 2-0 ในนัดชิง UCL) ใครคือผู้เหมาคนเดียวทั้ง 2 ประตูในนัดชิง?',
+    options: ['Samuel Eto\'o', 'Wesley Sneijder', 'Diego Milito', 'Goran Pandev'],
+    correctIndex: 2,
+    explanation: 'Diego Milito เหมาคนเดียว 2 ประตูในนัดชิงชนะเลิศ พา Inter Milan ของ José Mourinho คว้าแชมป์ UCL 2010'
+  },
+  {
+    id: 'tr_hard_15',
+    difficulty: 'hard',
+    question: 'ใครคือนักเตะชาวอังกฤษคนสุดท้ายที่คว้ารางวัล บัลลงดอร์ (Ballon d\'Or) มาครองได้สำเร็จ (ในปี 2001)?',
+    options: ['David Beckham', 'Michael Owen', 'Steven Gerrard', 'Wayne Rooney'],
+    correctIndex: 1,
+    explanation: 'Michael Owen คว้ารางวัล Ballon d\'Or ในปี 2001 หลังพาลิเวอร์พูลคว้า 5 แชมป์บอลถ้วย'
+  },
+  {
+    id: 'tr_hard_16',
+    difficulty: 'hard',
+    question: 'ในศึกฟุตบอลโลก 2002 รอบชิงชนะเลิศ (บราซิล ชนะ เยอรมนี 2-0) ใครคือผู้เหมาทั้ง 2 ประตูให้ทีมชาติบราซิล?',
+    options: ['Rivaldo', 'Ronaldinho', 'Ronaldo Nazário', 'Roberto Carlos'],
+    correctIndex: 2,
+    explanation: 'Ronaldo Nazário (R9) เหมาทั้ง 2 ประตูในนัดชิงชนะเลิศ และคว้ารางวัลดาวซัลโวฟุตบอลโลก 2002 ที่ 8 ประตู'
   }
 ];
 

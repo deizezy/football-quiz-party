@@ -2205,7 +2205,7 @@ async function submitCurrentGuess() {
 
   const submittedText = input.value;
   const mode = state.room?.settings?.gameMode || 'multi_club_pool';
-  if (isUntimedContinuousMode(mode)) {
+  if (isUntimedContinuousMode(mode) || mode === 'career_path') {
     input.value = '';
     state.selectedAutocompletePlayerId = null;
     setTimeout(() => input.focus(), 40);
@@ -2217,7 +2217,7 @@ async function submitCurrentGuess() {
     cellIndex: state.selectedGridCellIndex
   });
 
-  if (isUntimedContinuousMode(mode) && res) {
+  if ((isUntimedContinuousMode(mode) || mode === 'career_path') && res) {
     const fb = res.top10Feedback || res.lineupFeedback || res.gridFeedback;
     if (fb) {
       if (fb.correct) {

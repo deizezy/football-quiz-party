@@ -652,7 +652,10 @@ function serializeRoomForClients(room) {
       isBot: !!p.isBot,
       connected: p.connected !== false,
       pickedClubCount: (room.pickedClubs || []).filter((pc) => pc.playerId === p.id).length,
-      hasSubmitted: !!room.submissions[p.id],
+      hasSubmitted:
+        room.settings.gameMode === 'career_path'
+          ? !!(room.submissions[p.id] && room.submissions[p.id].isCorrect)
+          : !!room.submissions[p.id],
       submittedTimeMs: room.submissions[p.id] ? room.submissions[p.id].timeTakenMs : null
     }))
   };
@@ -911,8 +914,14 @@ function scheduleBotActions(room) {
   }
 
   bots.forEach((bot) => {
-    const minMs = 2300;
-    const maxMs = Math.max(3600, Math.min(room.settings.timeLimit * 1000 * 0.78, 11000));
+    const minMs =
+      mode === 'career_path'
+        ? Math.max(6000, Math.floor(room.settings.timeLimit * 1000 * 0.62))
+        : 2300;
+    const maxMs =
+      mode === 'career_path'
+        ? Math.max(minMs + 1500, Math.floor(room.settings.timeLimit * 1000 * 0.88))
+        : Math.max(3600, Math.min(room.settings.timeLimit * 1000 * 0.78, 11000));
     const delayMs = Math.floor(minMs + Math.random() * (maxMs - minMs));
 
     const timeout = setTimeout(() => {
@@ -1526,6 +1535,47 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
     };
   }
 
+  // Mode 4: Career Path (First player to answer correctly immediately ends the turn!)
+  if (mode === 'career_path') {
+    if (!cleanInput) {
+      return {
+        ok: false,
+        top10Feedback: { correct: false, message: 'กรุณาพิมพ์ชื่อนักเตะก่อนกดส่ง' }
+      };
+    }
+    const cp = CAREER_PATHS.find((c) => c.id === room.currentCareerId) || CAREER_PATHS[0];
+    const timeTakenMs = Math.max(100, Date.now() - room.waveStartTime);
+    const isCorrect = matchesNameOrAlias(cleanInput, cp.answerName, cp.aliases);
+
+    room.submissions[playerId] = {
+      playerId,
+      rawInput: cleanInput,
+      selectedPlayerId: selectedPlayerId || null,
+      timeTakenMs,
+      timestamp: Date.now(),
+      isCorrect
+    };
+
+    if (isCorrect) {
+      finishWave(room);
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: true,
+          message: `🎉 ถูกต้อง! เขาคือ ${cp.answerName} — จบเทิร์นทันที!`
+        }
+      };
+    }
+
+    return {
+      ok: true,
+      top10Feedback: {
+        correct: false,
+        message: `❌ "${cleanInput}" ยังไม่ใช่คนนี้! ลองทายใหม่ก่อนหมดเวลา!`
+      }
+    };
+  }
+
   if (room.submissions[playerId]) return false;
 
   const timeTakenMs = Math.max(100, Date.now() - room.waveStartTime);
@@ -2030,7 +2080,7 @@ function finishTop10Wave(room) {
   room.lastWaveResults = results;
 }
 
-// MODE 4: CAREER PATH (WHO AM I?)
+// MODE 4: CAREER PATH (WHO AM I? - First Correct Answer Immediately Ends Turn)
 function finishCareerPathWave(room) {
   const cp = CAREER_PATHS.find((c) => c.id === room.currentCareerId) || CAREER_PATHS[0];
   const ansPlayer = findPlayerByInput(cp.answerName, null);
@@ -2041,6 +2091,10 @@ function finishCareerPathWave(room) {
     .map((pl) => ({ player: pl, sub: room.submissions[pl.id] || null }))
     .sort((a, b) => (a.sub?.timeTakenMs || 999999) - (b.sub?.timeTakenMs || 999999));
 
+  const winningEntry = subs.find(
+    ({ sub }) => sub && sub.rawInput && matchesNameOrAlias(sub.rawInput, cp.answerName, cp.aliases)
+  );
+  const winnerName = winningEntry ? winningEntry.player.name : null;
   let firstCorrectAwarded = false;
 
   const results = subs.map(({ player, sub }) => {
@@ -2055,7 +2109,9 @@ function finishCareerPathWave(room) {
         status: 'TIMEOUT',
         pointsEarned: 0,
         timeTakenMs: null,
-        message: `หมดเวลา! คำตอบที่ถูกคือ ${cp.answerName}`
+        message: winnerName
+          ? `⚡ ${winnerName} ชิงตอบถูกไปก่อน! คำตอบคือ ${cp.flag} ${cp.answerName}`
+          : `หมดเวลา! คำตอบที่ถูกคือ ${cp.flag} ${cp.answerName}`
       };
     }
 
@@ -2071,7 +2127,9 @@ function finishCareerPathWave(room) {
         status: 'WRONG_CLUB',
         pointsEarned: 0,
         timeTakenMs: sub.timeTakenMs,
-        message: `ผิด! นักเตะปริศนาคนนี้คือ ${cp.flag} ${cp.answerName}`
+        message: winnerName
+          ? `ผิด! (${winnerName} ชิงตอบถูกไปก่อน: ${cp.flag} ${cp.answerName})`
+          : `ผิด! นักเตะปริศนาคนนี้คือ ${cp.flag} ${cp.answerName}`
       };
     }
 
@@ -2095,7 +2153,7 @@ function finishCareerPathWave(room) {
       status: 'CORRECT',
       pointsEarned: pts,
       timeTakenMs: sub.timeTakenMs,
-      message: `ทายถูกเผง! เขาคือ ${cp.answerName}${modeBonusText}${fastBonusText} ➔ รับ +${pts} คะแนน`
+      message: `ทายถูกคนแรก จบเทิร์นทันที! เขาคือ ${cp.answerName}${modeBonusText}${fastBonusText} ➔ รับ +${pts} คะแนน`
     };
   });
 
@@ -2679,9 +2737,25 @@ function startModeRound(room, options = {}) {
   } else if (mode === 'career_path') {
     room.roundNumber += 1;
     room.waveNumber = 1;
-    const pool = CAREER_PATHS.filter((c) => c.id !== room.currentCareerId);
+    if (!Array.isArray(room.usedCareerIds)) room.usedCareerIds = [];
+    if (!Array.isArray(room.usedCareerNames)) room.usedCareerNames = [];
+
+    const usedIdSet = new Set(room.usedCareerIds);
+    const usedNameSet = new Set(room.usedCareerNames);
+
+    let pool = CAREER_PATHS.filter(
+      (c) => !usedIdSet.has(c.id) && !usedNameSet.has(normalizeText(c.answerName))
+    );
+    if (pool.length === 0) {
+      room.usedCareerIds = room.currentCareerId ? [room.currentCareerId] : [];
+      const prevCp = CAREER_PATHS.find((c) => c.id === room.currentCareerId);
+      room.usedCareerNames = prevCp ? [normalizeText(prevCp.answerName)] : [];
+      pool = CAREER_PATHS.filter((c) => c.id !== room.currentCareerId);
+    }
     const nextCp = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : CAREER_PATHS[0];
     room.currentCareerId = nextCp.id;
+    room.usedCareerIds.push(nextCp.id);
+    room.usedCareerNames.push(normalizeText(nextCp.answerName));
     room.careerHintOpened = false;
     room.currentCareerPhotoUrl = null;
     getPlayerPhotoByName(nextCp.answerName).then((photo) => {
@@ -2694,15 +2768,32 @@ function startModeRound(room, options = {}) {
     if (options.triviaDifficulty) {
       room.settings.triviaDifficulty = options.triviaDifficulty;
     }
+    if (!Array.isArray(room.usedTriviaIds)) room.usedTriviaIds = [];
+    if (!Array.isArray(room.usedTriviaTexts)) room.usedTriviaTexts = [];
+
     const diff = room.settings.triviaDifficulty || 'all';
     const byDiff =
       diff === 'all'
         ? TRIVIA_QUESTIONS
         : TRIVIA_QUESTIONS.filter((q) => (q.difficulty || 'medium') === diff);
     const basePool = byDiff.length > 0 ? byDiff : TRIVIA_QUESTIONS;
-    const pool = basePool.filter((q) => q.id !== room.currentTriviaId);
+
+    const usedIdSet = new Set(room.usedTriviaIds);
+    const usedTextSet = new Set(room.usedTriviaTexts);
+
+    let pool = basePool.filter(
+      (q) => !usedIdSet.has(q.id) && !usedTextSet.has(normalizeText(q.question))
+    );
+    if (pool.length === 0) {
+      room.usedTriviaIds = room.currentTriviaId ? [room.currentTriviaId] : [];
+      const prevTr = basePool.find((q) => q.id === room.currentTriviaId);
+      room.usedTriviaTexts = prevTr ? [normalizeText(prevTr.question)] : [];
+      pool = basePool.filter((q) => q.id !== room.currentTriviaId);
+    }
     const nextTr = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : basePool[0];
     room.currentTriviaId = nextTr.id;
+    room.usedTriviaIds.push(nextTr.id);
+    room.usedTriviaTexts.push(normalizeText(nextTr.question));
     startWave(room);
   } else if (mode === 'footy_grid') {
     room.roundNumber += 1;
