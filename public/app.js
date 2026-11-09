@@ -786,10 +786,10 @@ function buildModeStageHTML(room, isReveal = false) {
       ? `
         <div class="top10-toolbar">
           <div class="top10-toolbar-left">
-            <select id="lineupMatchSelect" class="select-input" style="max-width:340px;padding:6px 10px;font-size:0.84rem;">
+            <select id="lineupMatchSelect" class="select-input" style="max-width:520px;padding:8px 14px;font-size:0.95rem;">
               ${matchOptionsHtml}
             </select>
-            <span class="top10-progress-pill">เปิดแล้ว <strong>${unlockedCount}/11</strong> คน</span>
+            <span class="top10-progress-pill" style="font-size:0.88rem;padding:6px 14px;">เปิดแล้ว <strong>${unlockedCount}/11</strong> คน</span>
           </div>
           <div class="top10-toolbar-actions">
             <button type="button" class="btn btn-outline btn-sm" data-lineup-reveal-all="1">👁️ เฉลยทั้งทีม</button>
@@ -803,7 +803,7 @@ function buildModeStageHTML(room, isReveal = false) {
       .map((s) => {
         const photoHtml =
           s.unlocked && s.photoUrl
-            ? `<img src="${s.photoUrl}" alt="${s.playerName}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1.5px solid #fbbf24;margin:2px auto;display:block;" onerror="this.style.display='none'" />`
+            ? `<img src="${s.photoUrl}" alt="${s.playerName}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #fbbf24;margin:4px auto;display:block;" onerror="this.style.display='none'" />`
             : '';
 
         const hintOrName = s.unlocked
@@ -815,9 +815,9 @@ function buildModeStageHTML(room, isReveal = false) {
         const miniActions =
           !s.unlocked && !isReveal
             ? `
-              <div style="display:flex;justify-content:center;gap:4px;margin-top:4px;">
-                ${!s.hinted ? `<button type="button" class="btn-mini-action hint-btn" style="padding:2px 6px;font-size:0.68rem;" data-lineup-hint="${s.slotId}" title="ดูอักษรย่อ">💡</button>` : ''}
-                <button type="button" class="btn-mini-action reveal-btn" style="padding:2px 6px;font-size:0.68rem;" data-lineup-reveal="${s.slotId}" title="เปิดเฉลยตำแหน่งนี้">👁️</button>
+              <div style="display:flex;justify-content:center;gap:6px;margin-top:6px;">
+                ${!s.hinted ? `<button type="button" class="btn-mini-action hint-btn" style="padding:5px 10px;font-size:0.78rem;border-radius:8px;" data-lineup-hint="${s.slotId}" title="ดูอักษรย่อ">💡 ใบ้</button>` : ''}
+                <button type="button" class="btn-mini-action reveal-btn" style="padding:5px 10px;font-size:0.78rem;border-radius:8px;" data-lineup-reveal="${s.slotId}" title="เปิดเฉลยตำแหน่งนี้">👁️ เฉลย</button>
               </div>
             `
             : '';
@@ -878,10 +878,10 @@ function buildModeStageHTML(room, isReveal = false) {
       ? `
         <div class="top10-toolbar">
           <div class="top10-toolbar-left">
-            <select id="top10TopicSelect" class="select-input" style="max-width:340px;padding:6px 10px;font-size:0.84rem;">
+            <select id="top10TopicSelect" class="select-input" style="max-width:520px;padding:8px 14px;font-size:0.95rem;">
               ${listOptionsHtml}
             </select>
-            <span class="top10-progress-pill">เปิดแล้ว <strong>${unlockedCount}/10</strong> อันดับ</span>
+            <span class="top10-progress-pill" style="font-size:0.88rem;padding:6px 14px;">เปิดแล้ว <strong>${unlockedCount}/10</strong> อันดับ</span>
           </div>
           <div class="top10-toolbar-actions">
             <button type="button" class="btn btn-outline btn-sm" data-top10-reveal-all="1">👁️ เฉลยทั้งหมด</button>

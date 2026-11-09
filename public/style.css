@@ -1566,68 +1566,92 @@ body {
 .pitch-board {
   position: relative;
   background:
+    radial-gradient(circle at 50% 50%, transparent 58px, rgba(255, 255, 255, 0.14) 59px, rgba(255, 255, 255, 0.14) 61px, transparent 62px),
+    linear-gradient(to bottom, transparent 49.5%, rgba(255, 255, 255, 0.14) 49.5%, rgba(255, 255, 255, 0.14) 50.5%, transparent 50.5%),
     repeating-linear-gradient(
       0deg,
       rgba(16, 185, 129, 0.18) 0px,
-      rgba(16, 185, 129, 0.18) 38px,
-      rgba(5, 150, 105, 0.24) 38px,
-      rgba(5, 150, 105, 0.24) 76px
+      rgba(16, 185, 129, 0.18) 46px,
+      rgba(5, 150, 105, 0.25) 46px,
+      rgba(5, 150, 105, 0.25) 92px
     ),
     #064e3b;
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  border-radius: 16px;
-  padding: 20px 14px;
+  border: 2px solid rgba(255, 255, 255, 0.38);
+  border-radius: 20px;
+  padding: 26px 20px;
   margin-bottom: 18px;
-  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.45);
+  box-shadow: inset 0 0 45px rgba(0, 0, 0, 0.45), 0 12px 30px rgba(0, 0, 0, 0.35);
+  overflow-x: auto;
 }
 
 .pitch-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(148px, 1fr));
   grid-template-rows: repeat(4, auto);
-  gap: 14px 8px;
-  align-items: center;
+  gap: 18px 14px;
+  align-items: stretch;
   justify-items: center;
+  min-width: 780px;
 }
 
 .pitch-slot {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
-  background: rgba(7, 11, 20, 0.82);
-  border: 2px solid rgba(255, 255, 255, 0.22);
-  border-radius: 12px;
-  padding: 8px 10px;
-  min-width: 112px;
+  background: rgba(7, 11, 20, 0.88);
+  border: 2px solid rgba(255, 255, 255, 0.24);
+  border-radius: 16px;
+  padding: 13px 14px;
+  width: 100%;
+  max-width: 215px;
+  min-width: 148px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.42);
   transition: all 0.2s;
 }
 
+.pitch-slot:hover {
+  border-color: rgba(251, 191, 36, 0.65);
+  transform: translateY(-2px);
+}
+
 .pitch-slot.unlocked {
-  background: rgba(16, 185, 129, 0.25);
+  background: rgba(16, 185, 129, 0.28);
   border-color: #34d399;
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
 }
 
 .slot-top {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.78rem;
-  font-weight: 700;
+  justify-content: center;
+  gap: 7px;
+  font-size: 0.96rem;
+  font-weight: 800;
   color: #fde68a;
+  margin-bottom: 3px;
+}
+
+.slot-top .flag-img {
+  width: 24px;
+  height: 17px;
+  border-radius: 3px;
 }
 
 .slot-name {
-  font-size: 0.86rem;
-  font-weight: 700;
+  font-size: 1.04rem;
+  font-weight: 800;
   color: #fff;
-  margin-top: 3px;
+  margin-top: 5px;
+  line-height: 1.25;
 }
 
 .slot-by {
-  font-size: 0.68rem;
+  font-size: 0.82rem;
+  font-weight: 600;
   color: #6ee7b7;
+  margin-top: 3px;
 }
 
 /* MODE 3: TOP 10 STATS BOARD */
