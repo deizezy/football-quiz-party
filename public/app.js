@@ -339,6 +339,10 @@ function connectStream(roomCode) {
   };
 }
 
+function isUntimedContinuousMode(mode) {
+  return mode === 'top10_stats' || mode === 'lineup_quiz' || mode === 'footy_grid';
+}
+
 function updateTimerOnly() {
   if (!state.room) return;
   const mode = state.room.settings?.gameMode || 'multi_club_pool';
@@ -346,7 +350,7 @@ function updateTimerOnly() {
   const circleEl = document.getElementById('countdownCircle');
   const barEl = document.getElementById('timerProgressBar');
 
-  if (mode === 'top10_stats') {
+  if (isUntimedContinuousMode(mode)) {
     if (numEl) numEl.textContent = '∞';
     if (circleEl) circleEl.classList.remove('urgent');
     if (barEl) {
@@ -692,14 +696,63 @@ function buildModeStageHTML(room, isReveal = false) {
   const md = room.modeData;
   if (!md) return '';
 
-  // MODE 2: STARTING XI PITCH
+  // MODE 2: STARTING XI PITCH (Missing 11 - Untimed Continuous Board with Hint & Reveal)
   if (mode === 'lineup_quiz') {
-    const slotsHtml = (md.slots || [])
+    const slots = md.slots || [];
+    const unlockedCount = slots.filter((s) => s.unlocked).length;
+    const matchOptionsHtml = (md.availableLineups || [])
+      .map(
+        (l) =>
+          `<option value="${l.id}" ${l.id === md.lineupId ? 'selected' : ''}>${l.title} (${l.subtitle})</option>`
+      )
+      .join('');
+
+    const toolbarHtml = !isReveal
+      ? `
+        <div class="top10-toolbar">
+          <div class="top10-toolbar-left">
+            <select id="lineupMatchSelect" class="select-input" style="max-width:340px;padding:6px 10px;font-size:0.84rem;">
+              ${matchOptionsHtml}
+            </select>
+            <span class="top10-progress-pill">เปิดแล้ว <strong>${unlockedCount}/11</strong> คน</span>
+          </div>
+          <div class="top10-toolbar-actions">
+            <button type="button" class="btn btn-outline btn-sm" data-lineup-reveal-all="1">👁️ เฉลยทั้งทีม</button>
+            <button type="button" class="btn btn-accent btn-sm" data-lineup-next="1">🔄 เปลี่ยนแมตช์ถัดไป</button>
+          </div>
+        </div>
+      `
+      : '';
+
+    const slotsHtml = slots
       .map((s) => {
         const photoHtml =
           s.unlocked && s.photoUrl
             ? `<img src="${s.photoUrl}" alt="${s.playerName}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1.5px solid #fbbf24;margin:2px auto;display:block;" onerror="this.style.display='none'" />`
             : '';
+
+        const hintOrName = s.unlocked
+          ? s.playerName
+          : s.hinted && s.hintText
+          ? `💡 ${s.hintText}`
+          : '❓ ???';
+
+        const miniActions =
+          !s.unlocked && !isReveal
+            ? `
+              <div style="display:flex;justify-content:center;gap:4px;margin-top:4px;">
+                ${!s.hinted ? `<button type="button" class="btn-mini-action hint-btn" style="padding:2px 6px;font-size:0.68rem;" data-lineup-hint="${s.slotId}" title="ดูอักษรย่อ">💡</button>` : ''}
+                <button type="button" class="btn-mini-action reveal-btn" style="padding:2px 6px;font-size:0.68rem;" data-lineup-reveal="${s.slotId}" title="เปิดเฉลยตำแหน่งนี้">👁️</button>
+              </div>
+            `
+            : '';
+
+        const byLabel = s.unlocked
+          ? s.revealed
+            ? `<div class="slot-by" style="color:#fbbf24;">👁️ เฉลยแล้ว</div>`
+            : `<div class="slot-by">✅ ${s.answeredBy}</div>`
+          : '';
+
         return `
           <div class="pitch-slot ${s.unlocked ? 'unlocked' : ''}" style="grid-row:${s.row}; grid-column:${s.col};">
             <div class="slot-top">
@@ -708,14 +761,16 @@ function buildModeStageHTML(room, isReveal = false) {
               <span>#${s.number}</span>
             </div>
             ${photoHtml}
-            <div class="slot-name">${s.unlocked ? s.playerName : '❓ ???'}</div>
-            ${s.unlocked ? `<div class="slot-by">เปิดโดย ${s.answeredBy}</div>` : ''}
+            <div class="slot-name">${hintOrName}</div>
+            ${byLabel}
+            ${miniActions}
           </div>
         `;
       })
       .join('');
 
     return `
+      ${toolbarHtml}
       <div class="pitch-board">
         <div class="pitch-grid">${slotsHtml}</div>
       </div>
@@ -805,7 +860,7 @@ function buildModeStageHTML(room, isReveal = false) {
     return `${toolbarHtml}<div class="top10-grid">${rowsHtml}</div>`;
   }
 
-  // MODE 4: CAREER PATH
+  // MODE 4: CAREER PATH (Who Are Ya - Hid nationality/position until Hint clicked)
   if (mode === 'career_path') {
     const trHtml = (md.steps || [])
       .map((st) => {
@@ -838,12 +893,28 @@ function buildModeStageHTML(room, isReveal = false) {
         `
         : '';
 
+    const careerActionsHtml = !isReveal
+      ? `
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            ${
+              !md.hintOpened
+                ? `<button type="button" class="btn btn-outline btn-sm" data-career-hint="1">💡 เปิดคำใบ้ (ธงชาติ + ตำแหน่ง + อักษรย่อ)</button>`
+                : `<span class="top10-progress-pill">💡 เปิดคำใบ้แล้ว</span>`
+            }
+            <button type="button" class="btn btn-outline btn-sm" data-career-reveal="1">👁️ ดูเฉลย / ข้ามข้อนี้</button>
+          </div>
+        </div>
+      `
+      : '';
+
     return `
       <div class="career-card">
         ${revealedHero}
+        ${careerActionsHtml}
         <div class="career-hint-bar">
           <span>💡 <strong>คำใบ้:</strong> ${md.hint}</span>
-          <span>สัญชาติ: ${renderFlagHTML(md.flag, md.flagUrl)} • ตำแหน่ง: <strong>${md.position}</strong></span>
+          <span>สัญชาติ: ${md.hintOpened || isReveal ? renderFlagHTML(md.flag, md.flagUrl) : '❓ ซ่อนอยู่'} • ตำแหน่ง: <strong>${md.position}</strong></span>
         </div>
         <div class="table-responsive">
           <table class="standings-table">
@@ -911,13 +982,30 @@ function buildModeStageHTML(room, isReveal = false) {
     `;
   }
 
-  // MODE 6: 3x3 FOOTY TIC-TAC-TOE GRID
+  // MODE 6: 3x3 FOOTY TIC-TAC-TOE GRID (Untimed Continuous Board with Random Generator & Cell Hint/Reveal)
   if (mode === 'footy_grid') {
     const cells = md.cells || Array(9).fill(null);
+    const cellMeta = md.cellMeta || [];
+    const filledCount = cells.filter(Boolean).length;
     if (cells[state.selectedGridCellIndex]) {
       const firstOpen = cells.findIndex((c) => !c);
       if (firstOpen >= 0) state.selectedGridCellIndex = firstOpen;
     }
+
+    const toolbarHtml = !isReveal
+      ? `
+        <div class="top10-toolbar">
+          <div class="top10-toolbar-left">
+            <span class="top10-progress-pill">ยึดแล้ว <strong>${filledCount}/9</strong> ช่อง</span>
+            <button type="button" class="btn btn-outline btn-sm" data-grid-hint="${state.selectedGridCellIndex}">💡 คำใบ้ช่องที่เลือก</button>
+            <button type="button" class="btn btn-outline btn-sm" data-grid-reveal="${state.selectedGridCellIndex}">👁️ เฉลยช่องที่เลือก</button>
+          </div>
+          <div class="top10-toolbar-actions">
+            <button type="button" class="btn btn-accent btn-sm" data-grid-random="1">🎲 สุ่มตาราง XO 3x3 ใหม่</button>
+          </div>
+        </div>
+      `
+      : '';
 
     const renderHdrIcon = (hdr) => {
       if (hdr.badgeUrl) {
@@ -929,7 +1017,7 @@ function buildModeStageHTML(room, isReveal = false) {
       return '';
     };
 
-    let html = `<div class="footy-grid-wrapper"><div class="footy-grid-board">`;
+    let html = `${toolbarHtml}<div class="footy-grid-wrapper"><div class="footy-grid-board">`;
     html += `<div class="grid-header-cell"><strong>XO 3x3</strong><small>คลิกเลือกช่อง</small></div>`;
     (md.cols || []).forEach((col) => {
       html += `<div class="grid-header-cell">${renderHdrIcon(col)}<strong>${col.label}</strong><small>${col.sub}</small></div>`;
@@ -940,6 +1028,7 @@ function buildModeStageHTML(room, isReveal = false) {
       for (let cIdx = 0; cIdx < 3; cIdx++) {
         const cellIdx = rIdx * 3 + cIdx;
         const claimed = cells[cellIdx];
+        const metaInfo = cellMeta[cellIdx] || {};
         const isSelected = !isReveal && !claimed && state.selectedGridCellIndex === cellIdx;
         if (claimed) {
           const cellPhoto = claimed.photoUrl
@@ -951,15 +1040,23 @@ function buildModeStageHTML(room, isReveal = false) {
               <strong style="font-size:0.82rem;color:#fde68a;display:flex;align-items:center;gap:4px;">
                 ${renderFlagHTML(claimed.playerFlag, claimed.flagUrl)} ${claimed.playerName}
               </strong>
-              <small style="font-size:0.7rem;color:#6ee7b7;">ยึดโดย ${claimed.ownerName}</small>
+              <small style="font-size:0.7rem;color:${claimed.revealed ? '#fbbf24' : '#6ee7b7'};">
+                ${claimed.revealed ? '👁️ เฉลยระบบ' : `✅ ยึดโดย ${claimed.ownerName}`}
+              </small>
             </div>
           `;
         } else {
+          const hintLine =
+            metaInfo.hinted && metaInfo.hintText
+              ? `<small style="color:#fde68a;font-weight:700;">💡 ${metaInfo.hintText}</small>`
+              : `<small style="opacity:0.65;font-size:0.68rem;">มีนักเตะที่ถูก ${metaInfo.possibleCount || '?'} คน</small>`;
+
           html += `
             <div class="grid-play-cell ${isSelected ? 'selected-target' : ''}" data-grid-cell="${cellIdx}">
               <span style="font-size:0.78rem;color:#cbd5e1;">${row.label}</span>
               <strong style="font-size:0.82rem;color:#fbbf24;">✕ ${md.cols[cIdx].label}</strong>
-              ${isSelected ? '<small style="color:#34d399;font-weight:700;">🎯 เลือกช่องนี้อยู่</small>' : '<small style="opacity:0.6;">คลิกเพื่อเล็งช่องนี้</small>'}
+              ${hintLine}
+              ${isSelected ? '<small style="color:#34d399;font-weight:700;">🎯 เลือกช่องนี้อยู่</small>' : ''}
             </div>
           `;
         }
@@ -976,6 +1073,48 @@ function buildModeStageHTML(room, isReveal = false) {
 function bindDynamicStageEvents(container, room) {
   if (!container) return;
   const mode = room.settings.gameMode || 'club_battle';
+
+  if (mode === 'lineup_quiz') {
+    container.querySelectorAll('[data-lineup-hint]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const slotId = btn.dataset.lineupHint;
+        sfx.beep(520, 0.08);
+        await apiAction('lineup_hint_slot', { slotId });
+      });
+    });
+
+    container.querySelectorAll('[data-lineup-reveal]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const slotId = btn.dataset.lineupReveal;
+        sfx.beep(360, 0.09);
+        await apiAction('lineup_reveal_slot', { slotId });
+      });
+    });
+
+    const revealAllBtn = container.querySelector('[data-lineup-reveal-all]');
+    if (revealAllBtn) {
+      revealAllBtn.addEventListener('click', async () => {
+        sfx.beep(330, 0.12);
+        await apiAction('lineup_reveal_all');
+      });
+    }
+
+    const nextBtn = container.querySelector('[data-lineup-next]');
+    if (nextBtn) {
+      nextBtn.addEventListener('click', async () => {
+        sfx.lockIn();
+        await apiAction('start_mode_round');
+      });
+    }
+
+    const matchSelect = container.querySelector('#lineupMatchSelect');
+    if (matchSelect) {
+      matchSelect.addEventListener('change', async (e) => {
+        sfx.lockIn();
+        await apiAction('start_mode_round', { lineupId: e.target.value });
+      });
+    }
+  }
 
   if (mode === 'top10_stats') {
     container.querySelectorAll('[data-top10-hint]').forEach((btn) => {
@@ -1019,6 +1158,24 @@ function bindDynamicStageEvents(container, room) {
     }
   }
 
+  if (mode === 'career_path') {
+    const hintBtn = container.querySelector('[data-career-hint]');
+    if (hintBtn) {
+      hintBtn.addEventListener('click', async () => {
+        sfx.beep(520, 0.08);
+        await apiAction('career_toggle_hint');
+      });
+    }
+
+    const revealBtn = container.querySelector('[data-career-reveal]');
+    if (revealBtn) {
+      revealBtn.addEventListener('click', async () => {
+        sfx.beep(340, 0.1);
+        await apiAction('career_reveal_now');
+      });
+    }
+  }
+
   if (mode === 'trivia_quiz') {
     container.querySelectorAll('[data-trivia-diff]').forEach((btn) => {
       btn.addEventListener('click', async () => {
@@ -1049,6 +1206,30 @@ function bindDynamicStageEvents(container, room) {
         renderPlayingView(state.room);
       });
     });
+
+    const hintBtn = container.querySelector('[data-grid-hint]');
+    if (hintBtn) {
+      hintBtn.addEventListener('click', async () => {
+        sfx.beep(520, 0.08);
+        await apiAction('grid_hint_cell', { cellIndex: state.selectedGridCellIndex });
+      });
+    }
+
+    const revealBtn = container.querySelector('[data-grid-reveal]');
+    if (revealBtn) {
+      revealBtn.addEventListener('click', async () => {
+        sfx.beep(360, 0.09);
+        await apiAction('grid_reveal_cell', { cellIndex: state.selectedGridCellIndex });
+      });
+    }
+
+    const randomGridBtn = container.querySelector('[data-grid-random]');
+    if (randomGridBtn) {
+      randomGridBtn.addEventListener('click', async () => {
+        sfx.lockIn();
+        await apiAction('start_mode_round');
+      });
+    }
   }
 }
 
@@ -1066,19 +1247,25 @@ function renderPlayingView(room) {
     banner.style.background = `linear-gradient(135deg, ${firstClub?.primaryColor || '#059669'}, #0f172a)`;
     const clubNamesStr = picked.map((pc) => pc.club?.name || pc.clubId).join('  •  ');
     document.getElementById('playingClubName').textContent = clubNamesStr || 'สโมสรบนกระดาน';
-    document.getElementById('playingClubSub').innerHTML = `ตรง 1 สโมสร = 1 แต้ม, ตรง 2 สโมสร = 2 แต้ม, ตรง 3 สโมสร = 3 แต้ม! • รอบย่อยที่ <span id="playingWaveNum">${room.waveNumber}</span>`;
+    const x2Count = room.twoClubOverlapCount || 0;
+    const x3Count = room.threeClubOverlapCount || 0;
+    const overlapBadge =
+      mode === 'multi_club_pool'
+        ? ` • 🔥 มีนักเตะคูณ <strong>x2 (${x2Count} คน)</strong> / <strong>x3 (${x3Count} คน)</strong>`
+        : '';
+    document.getElementById('playingClubSub').innerHTML = `ตรง 1 สโมสร = 1 แต้ม, ตรง 2 สโมสร = 2 แต้ม, ตรง 3 สโมสร = 3 แต้ม!${overlapBadge} • รอบย่อยที่ <span id="playingWaveNum">${room.waveNumber}</span>`;
   } else if (mode === 'lineup_quiz') {
     banner.style.background = `linear-gradient(135deg, ${room.modeData?.clubColor || '#059669'}, #0f172a)`;
     document.getElementById('playingClubName').textContent = room.modeData?.title || 'Guess the Lineup';
-    document.getElementById('playingClubSub').textContent = `${room.modeData?.subtitle || ''} • รอบย่อยที่ ${room.waveNumber}`;
+    document.getElementById('playingClubSub').textContent = `${room.modeData?.subtitle || ''} • ไม่จำกัดเวลา พิมพ์ทาย 11 ตัวจริงได้ต่อเนื่อง!`;
   } else if (mode === 'top10_stats') {
     banner.style.background = `linear-gradient(135deg, #2563eb, #0f172a)`;
     document.getElementById('playingClubName').textContent = room.modeData?.title || 'Top 10 Stats';
     document.getElementById('playingClubSub').textContent = `${room.modeData?.category || ''} • ไม่จำกัดเวลา ตอบได้ทุกข้อ!`;
   } else if (mode === 'career_path') {
     banner.style.background = `linear-gradient(135deg, #7c3aed, #0f172a)`;
-    document.getElementById('playingClubName').textContent = 'นักเตะปริศนาคนนี้คือใคร? (Who Am I?)';
-    document.getElementById('playingClubSub').textContent = `ดูประวัติสโมสรที่เคยค้าแข้งด้านล่างแล้วพิมพ์ชื่อนักเตะ!`;
+    document.getElementById('playingClubName').textContent = 'นักเตะปริศนาคนนี้คือใคร? (Who Are Ya?)';
+    document.getElementById('playingClubSub').textContent = `ดูประวัติสโมสรที่เคยค้าแข้งด้านล่างแล้วพิมพ์ชื่อนักเตะ! (กดเปิดคำใบ้ได้หากนึกไม่ออก)`;
   } else if (mode === 'trivia_quiz') {
     banner.style.background = `linear-gradient(135deg, #d97706, #0f172a)`;
     document.getElementById('playingClubName').textContent = `คำถามแฟนพันธุ์แท้ลูกหนัง ข้อที่ ${room.roundNumber}`;
@@ -1086,7 +1273,7 @@ function renderPlayingView(room) {
   } else if (mode === 'footy_grid') {
     banner.style.background = `linear-gradient(135deg, #0d9488, #0f172a)`;
     document.getElementById('playingClubName').textContent = room.modeData?.title || 'Footy Tic-Tac-Toe 3x3';
-    document.getElementById('playingClubSub').textContent = `คลิกเลือกช่องในตาราง แล้วพิมพ์ชื่อนักเตะเพื่อยึดช่อง!`;
+    document.getElementById('playingClubSub').textContent = `คลิกเลือกช่องในตาราง แล้วพิมพ์ชื่อนักเตะเพื่อยึดช่อง! (ไม่จำกัดเวลา ห้ามใช้ชื่อซ้ำในกระดานเดียวกัน)`;
   }
 
   updateTimerOnly();
@@ -1096,7 +1283,7 @@ function renderPlayingView(room) {
   bindDynamicStageEvents(stageEl, room);
 
   const me = room.players.find((p) => p.id === state.playerId);
-  const hasSubmitted = mode !== 'top10_stats' && me && me.hasSubmitted;
+  const hasSubmitted = !isUntimedContinuousMode(mode) && me && me.hasSubmitted;
 
   const inputZone = document.getElementById('answerInputZone');
   const lockedZone = document.getElementById('answerLockedZone');
@@ -1498,7 +1685,7 @@ async function submitCurrentGuess() {
 
   const submittedText = input.value;
   const mode = state.room?.settings?.gameMode || 'multi_club_pool';
-  if (mode === 'top10_stats') {
+  if (isUntimedContinuousMode(mode)) {
     input.value = '';
     state.selectedAutocompletePlayerId = null;
     setTimeout(() => input.focus(), 40);
@@ -1510,13 +1697,16 @@ async function submitCurrentGuess() {
     cellIndex: state.selectedGridCellIndex
   });
 
-  if (mode === 'top10_stats' && res && res.top10Feedback) {
-    if (res.top10Feedback.correct) {
-      sfx.success();
-    } else {
-      sfx.beep(220, 0.14, 'sawtooth', 0.08);
+  if (isUntimedContinuousMode(mode) && res) {
+    const fb = res.top10Feedback || res.lineupFeedback || res.gridFeedback;
+    if (fb) {
+      if (fb.correct) {
+        sfx.success();
+      } else {
+        sfx.beep(220, 0.14, 'sawtooth', 0.08);
+      }
+      showToast(fb.message);
     }
-    showToast(res.top10Feedback.message);
   }
 }
 

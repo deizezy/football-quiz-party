@@ -777,14 +777,20 @@ function buildPitchSlotsFromEspnStarters(starters) {
       const ath = item.athlete || {};
       const name = ath.displayName || ath.fullName || 'Unknown';
       const lastName = ath.lastName || name.split(' ').slice(-1)[0];
-      const seed = seedPlayerLookup.get(normalizeText(name));
-      const flagUrl = ath.flag?.href || (seed?.flag ? getFlagUrlFromEmoji(seed.flag) : null);
+      const normName = normalizeText(name);
+      const seed = seedPlayerLookup.get(normName);
+      const knownPlayer = PLAYERS.find((p) => normalizeText(p.name) === normName);
+      const natInfo = mapNationalityToFlagAndUrl(ath.flag?.alt || ath.citizenship, ath.flag?.href);
+      const flag = knownPlayer?.flag && knownPlayer.flag !== '⚽' ? knownPlayer.flag : seed?.flag || natInfo.flag;
+      const flagUrl = knownPlayer?.flagUrl || natInfo.flagUrl || getFlagUrlFromEmoji(flag);
+      const photoUrl = ath.headshot?.href || knownPlayer?.photoUrl || null;
       slots.push({
         slotId: `s_${rowNum}_${idx + 1}`,
         pos: item.position?.abbreviation || mapPositionShort(item.position?.name),
         number: item.jersey || idx + 1,
-        flag: seed?.flag || '⚽',
+        flag,
         flagUrl,
+        photoUrl,
         row: rowNum,
         col: cols[idx] || idx + 1,
         playerId: name,
@@ -1152,9 +1158,11 @@ async function initializeFootballApiData() {
   }
 
   if (liveLineups.length > 0) {
+    const classicLineups = LINEUPS.filter((l) => !l.id.startsWith('live_xi_'));
     LINEUPS.length = 0;
     liveLineups.forEach((l) => LINEUPS.push(l));
-    console.log(`✅ Replaced LINEUPS with ${LINEUPS.length} live 2026-27 match Starting XIs!`);
+    classicLineups.forEach((l) => LINEUPS.push(l));
+    console.log(`✅ Loaded ${LINEUPS.length} Match Lineups (${liveLineups.length} Live 2026-27 + ${classicLineups.length} Classic Finals)!`);
   }
 
   // 5. Enrich Career Histories (teamHistory) for Top Active Multi-Club Players & Build Live Career Path Puzzles
@@ -1184,6 +1192,8 @@ async function initializeFootballApiData() {
         });
 
         if (clubSteps.length >= 2 && liveCareerPaths.length < 15) {
+          const words = star.name.trim().split(/\s+/);
+          const initials = words.map((w) => w.charAt(0).toUpperCase() + '_'.repeat(Math.max(2, w.length - 1))).join(' ');
           liveCareerPaths.push({
             id: `live_cp_${star.espnId}`,
             answerName: star.name,
@@ -1191,7 +1201,7 @@ async function initializeFootballApiData() {
             flagUrl: star.flagUrl,
             position: star.position,
             aliases: star.aliases || [],
-            hint: `นักเตะชุดปัจจุบันในศึก 5 ลีกใหญ่ยุโรป ฤดูกาล 2026-27 (ข้อมูลสดจาก Live API)`,
+            hint: `ตำแหน่ง ${star.position} • อักษรย่อชื่อ: ${initials}`,
             steps: [...clubSteps].reverse()
           });
         }
@@ -1200,9 +1210,13 @@ async function initializeFootballApiData() {
   );
 
   if (liveCareerPaths.length >= 4) {
+    const classicCareer = CAREER_PATHS.filter(
+      (c) => !c.id.startsWith('live_cp_') && !liveCareerPaths.some((lc) => normalizeText(lc.answerName) === normalizeText(c.answerName))
+    );
     CAREER_PATHS.length = 0;
+    classicCareer.forEach((cp) => CAREER_PATHS.push(cp));
     liveCareerPaths.forEach((cp) => CAREER_PATHS.push(cp));
-    console.log(`✅ Replaced CAREER_PATHS with ${CAREER_PATHS.length} live 2026-27 player career timelines!`);
+    console.log(`✅ Loaded ${CAREER_PATHS.length} Career Path timelines (${classicCareer.length} Classic + ${liveCareerPaths.length} Live 2026-27)!`);
   }
 
   // 6. Build Live 2026-27 Trivia Questions from the live leaderboards (without spoiling club names!)

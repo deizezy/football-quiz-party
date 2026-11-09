@@ -264,6 +264,7 @@ function serializeModeDataForClients(room) {
   if (mode === 'lineup_quiz') {
     const lineup = LINEUPS.find((l) => l.id === room.currentLineupId) || LINEUPS[0];
     const unlockedMap = room.unlockedLineupSlots || {};
+    const hintedMap = room.hintedLineupSlots || {};
     return {
       lineupId: lineup.id,
       title: lineup.title,
@@ -273,17 +274,25 @@ function serializeModeDataForClients(room) {
       availableLineups: LINEUPS.map((l) => ({ id: l.id, title: l.title, subtitle: l.subtitle })),
       slots: lineup.slots.map((s) => {
         const u = unlockedMap[s.slotId];
+        const isHinted = !!hintedMap[s.slotId];
+        const words = (s.playerId || '').trim().split(/\s+/);
+        const initialsHint = words
+          .map((w) => w.charAt(0).toUpperCase() + '_'.repeat(Math.max(2, w.length - 1)))
+          .join(' ');
         return {
           slotId: s.slotId,
           pos: s.pos,
           number: s.number,
           flag: s.flag,
-          flagUrl: getFlagUrlFromEmoji(s.flag),
+          flagUrl: s.flagUrl || getFlagUrlFromEmoji(s.flag),
           row: s.row,
           col: s.col,
           unlocked: !!u,
+          revealed: u ? !!u.revealed : false,
+          hinted: isHinted,
+          hintText: isHinted ? initialsHint : null,
           playerName: u ? s.playerId : null,
-          photoUrl: u ? u.photoUrl || null : null,
+          photoUrl: u ? u.photoUrl || s.photoUrl || null : null,
           answeredBy: u ? u.answeredBy : null
         };
       })
@@ -335,13 +344,19 @@ function serializeModeDataForClients(room) {
   if (mode === 'career_path') {
     const cp = CAREER_PATHS.find((c) => c.id === room.currentCareerId) || CAREER_PATHS[0];
     const isRevealed = room.state === 'REVEAL';
+    const isHintOpened = !!room.careerHintOpened || isRevealed;
     const matchedAnsPlayer = PLAYERS.find((p) => normalizeText(p.name) === normalizeText(cp.answerName));
+    const words = (cp.answerName || '').trim().split(/\s+/);
+    const initialsHint = words
+      .map((w) => w.charAt(0).toUpperCase() + '_'.repeat(Math.max(2, w.length - 1)))
+      .join(' ');
     return {
       careerId: cp.id,
-      flag: cp.flag,
-      flagUrl: getFlagUrlFromEmoji(cp.flag),
-      position: cp.position,
-      hint: cp.hint,
+      hintOpened: isHintOpened,
+      flag: isHintOpened ? cp.flag : '❓',
+      flagUrl: isHintOpened ? cp.flagUrl || getFlagUrlFromEmoji(cp.flag) : null,
+      position: isHintOpened ? cp.position : '???',
+      hint: isHintOpened ? `${cp.hint} • อักษรย่อ: ${initialsHint}` : 'กดปุ่ม "💡 เปิดคำใบ้" หากต้องการดูสัญชาติ ตำแหน่ง และอักษรย่อชื่อ!',
       steps: cp.steps.map((st) => {
         const cid = mapApiTeamNameToClubId(st.club);
         const clubObj = cid ? CLUBS.find((c) => c.id === cid) : null;
@@ -370,7 +385,8 @@ function serializeModeDataForClients(room) {
   }
 
   if (mode === 'footy_grid') {
-    const grid = FOOTY_GRIDS.find((g) => g.id === room.currentGridId) || FOOTY_GRIDS[0];
+    const grid = room.customFootyGrid || FOOTY_GRIDS.find((g) => g.id === room.currentGridId) || FOOTY_GRIDS[0];
+    const hintedCells = room.hintedGridCells || {};
     const enrichHeader = (hdr) => {
       const targetVal = hdr.id || hdr.value;
       if (hdr.type === 'club') {
@@ -382,13 +398,35 @@ function serializeModeDataForClients(room) {
       }
       return hdr;
     };
+
+    const cellMeta = Array.from({ length: 9 }, (_, cellIdx) => {
+      const rIdx = Math.floor(cellIdx / 3);
+      const cIdx = cellIdx % 3;
+      const matches = PLAYERS.filter(
+        (p) => playerMatchesGridCriteria(p, grid.rows[rIdx]) && playerMatchesGridCriteria(p, grid.cols[cIdx])
+      );
+      let hintText = null;
+      if (hintedCells[cellIdx] && matches.length > 0) {
+        const sample = matches[0];
+        const words = sample.name.trim().split(/\s+/);
+        const initials = words.map((w) => w.charAt(0).toUpperCase() + '_'.repeat(Math.max(2, w.length - 1))).join(' ');
+        hintText = `${sample.flag} ${initials}`;
+      }
+      return {
+        possibleCount: matches.length,
+        hinted: !!hintedCells[cellIdx],
+        hintText
+      };
+    });
+
     return {
       gridId: grid.id,
       title: grid.title,
       cols: grid.cols.map(enrichHeader),
       rows: grid.rows.map(enrichHeader),
       availableGrids: FOOTY_GRIDS.map((g) => ({ id: g.id, title: g.title })),
-      cells: room.gridCells || Array(9).fill(null)
+      cells: room.gridCells || Array(9).fill(null),
+      cellMeta
     };
   }
 
@@ -416,6 +454,14 @@ function serializeRoomForClients(room) {
     activeClubIds.length > 0
       ? PLAYERS.filter((p) => p.clubs.some((cid) => activeClubIds.includes(cid))).length
       : 0;
+  const twoClubOverlapCount =
+    activeClubIds.length >= 2
+      ? PLAYERS.filter((p) => p.clubs.filter((cid) => activeClubIds.includes(cid)).length >= 2).length
+      : 0;
+  const threeClubOverlapCount =
+    activeClubIds.length >= 3
+      ? PLAYERS.filter((p) => p.clubs.filter((cid) => activeClubIds.includes(cid)).length >= 3).length
+      : 0;
 
   const targetScore = room.settings.targetScore || 0;
   const hasReachedTarget =
@@ -439,6 +485,8 @@ function serializeRoomForClients(room) {
     targetClubPoolSize,
     currentClub: pickedClubs[0]?.club || null,
     totalPossibleForClub,
+    twoClubOverlapCount,
+    threeClubOverlapCount,
     modeData: serializeModeDataForClients(room),
     timeLeft: room.timeLeft,
     totalTime: room.settings.timeLimit,
@@ -683,7 +731,7 @@ function startWave(room) {
   room.lastWaveResults = [];
   room.waveStartTime = Date.now();
   const mode = room.settings.gameMode || 'multi_club_pool';
-  const isUntimedMode = mode === 'top10_stats';
+  const isUntimedMode = mode === 'top10_stats' || mode === 'lineup_quiz' || mode === 'footy_grid';
   room.timeLeft = isUntimedMode ? 0 : room.settings.timeLimit;
   room.totalWavesPlayed = (room.totalWavesPlayed || 0) + 1;
 
@@ -709,13 +757,79 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
   if (room.state !== 'PLAYING') return false;
   const mode = room.settings.gameMode || 'multi_club_pool';
   const cleanInput = (rawInput || '').toString().trim();
+  const player = room.players.find((p) => p.id === playerId);
+
+  // Continuous untimed mode for Mode 2 (Guess the Lineup - Missing 11)
+  if (mode === 'lineup_quiz') {
+    if (!cleanInput) return { ok: false, top10Feedback: { correct: false, message: 'กรุณาพิมพ์ชื่อนักเตะก่อนกดส่ง' } };
+    const lineup = LINEUPS.find((l) => l.id === room.currentLineupId) || LINEUPS[0];
+    if (!room.unlockedLineupSlots) room.unlockedLineupSlots = {};
+
+    const matchedSlots = lineup.slots.filter((s) => matchesNameOrAlias(cleanInput, s.playerId, s.aliases));
+    if (matchedSlots.length === 0) {
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `❌ "${cleanInput}" ไม่ได้อยู่ใน 11 ตัวจริงของแมตช์นี้ ลองทายคนอื่นต่อได้เลย!`
+        }
+      };
+    }
+
+    const unrevealedSlot = matchedSlots.find((s) => !room.unlockedLineupSlots[s.slotId]) || matchedSlots[0];
+    if (room.unlockedLineupSlots[unrevealedSlot.slotId]) {
+      const prevOwner = room.unlockedLineupSlots[unrevealedSlot.slotId].answeredBy;
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `⚠️ ${unrevealedSlot.playerId} ถูกเปิดไปแล้ว (${prevOwner})`
+        }
+      };
+    }
+
+    const knownPlayer = findPlayerByInput(unrevealedSlot.playerId, selectedPlayerId);
+    const slotPhoto = unrevealedSlot.photoUrl || knownPlayer?.photoUrl || null;
+
+    room.unlockedLineupSlots[unrevealedSlot.slotId] = {
+      answeredBy: player ? player.name : 'ผู้เล่น',
+      playerId: unrevealedSlot.playerId,
+      revealed: false,
+      photoUrl: slotPhoto
+    };
+
+    if (player) {
+      player.score += 1;
+      recordPlayerResultStats(player, true, null, unrevealedSlot.playerId);
+    }
+
+    if (!slotPhoto) {
+      getPlayerPhotoByName(unrevealedSlot.playerId).then((photo) => {
+        if (photo && room.unlockedLineupSlots && room.unlockedLineupSlots[unrevealedSlot.slotId]) {
+          room.unlockedLineupSlots[unrevealedSlot.slotId].photoUrl = photo;
+          broadcastRoom(room.code, 'top10_updated');
+        }
+      });
+    }
+
+    broadcastRoom(room.code, 'top10_updated', {
+      toastMessage: `🎉 ${player ? player.name : 'ผู้เล่น'} เปิดตำแหน่ง ${unrevealedSlot.pos} #${unrevealedSlot.number}: ${unrevealedSlot.playerId} (+1 คะแนน)`
+    });
+
+    return {
+      ok: true,
+      top10Feedback: {
+        correct: true,
+        message: `✅ ถูกต้อง! ${unrevealedSlot.playerId} (${unrevealedSlot.pos} #${unrevealedSlot.number}) +1 คะแนน`
+      }
+    };
+  }
 
   // Continuous untimed mode for Mode 3 (Top 10 Stats): anyone can answer all 10 ranks!
   if (mode === 'top10_stats') {
     if (!cleanInput) return { ok: false, feedback: 'กรุณาพิมพ์ชื่อนักเตะก่อนกดส่ง' };
     const list = TOP10_LISTS.find((l) => l.id === room.currentTop10Id) || TOP10_LISTS[0];
     if (!room.unlockedTop10Ranks) room.unlockedTop10Ranks = {};
-    const player = room.players.find((p) => p.id === playerId);
 
     const matchedItem = list.items.find((it) =>
       matchesNameOrAlias(cleanInput, it.name, it.aliases)
@@ -777,6 +891,98 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
         rank: matchedItem.rank,
         name: matchedItem.name,
         message: `✅ ถูกต้อง! อันดับ #${matchedItem.rank}: ${matchedItem.name} (+1 คะแนน)`
+      }
+    };
+  }
+
+  // Continuous untimed mode for Mode 6 (Footy Tic-Tac-Toe 3x3 Grid)
+  if (mode === 'footy_grid') {
+    const grid = room.customFootyGrid || FOOTY_GRIDS.find((g) => g.id === room.currentGridId) || FOOTY_GRIDS[0];
+    if (!room.gridCells) room.gridCells = Array(9).fill(null);
+    const cellIdx = Math.max(0, Math.min(8, extra.cellIndex || 0));
+    const rIdx = Math.floor(cellIdx / 3);
+    const cIdx = cellIdx % 3;
+    const rowCrit = grid.rows[rIdx];
+    const colCrit = grid.cols[cIdx];
+
+    if (room.gridCells[cellIdx]) {
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `⚠️ ช่อง [${rowCrit.label} x ${colCrit.label}] ถูกยึดไปแล้ว คลิกเลือกช่องว่างอื่นได้เลย!`
+        }
+      };
+    }
+
+    const footballer = findPlayerByInput(cleanInput, selectedPlayerId);
+    if (!footballer) {
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `❌ ไม่พบชื่อนักเตะ "${cleanInput}" ในฐานข้อมูล`
+        }
+      };
+    }
+
+    const alreadyUsedInGrid = room.gridCells.some(
+      (c) => c && normalizeText(c.playerName) === normalizeText(footballer.name)
+    );
+    if (alreadyUsedInGrid) {
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `⚠️ ${footballer.name} ถูกใช้ในช่องอื่นของตารางนี้ไปแล้ว ห้ามใช้ชื่อซ้ำในตารางเดียวกัน!`
+        }
+      };
+    }
+
+    if (!playerMatchesGridCriteria(footballer, rowCrit) || !playerMatchesGridCriteria(footballer, colCrit)) {
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `❌ ${footballer.name} ไม่ตรงเงื่อนไขช่อง [${rowCrit.label} x ${colCrit.label}]`
+        }
+      };
+    }
+
+    room.gridCells[cellIdx] = {
+      ownerId: player ? player.id : 'p',
+      ownerName: player ? player.name : 'ผู้เล่น',
+      ownerAvatar: player ? player.avatar : '⚽',
+      playerName: footballer.name,
+      playerFlag: footballer.flag,
+      flagUrl: footballer.flagUrl || getFlagUrlFromEmoji(footballer.flag),
+      photoUrl: footballer.photoUrl || null
+    };
+
+    if (!footballer.photoUrl) {
+      getPlayerPhotoByName(footballer.name).then((photo) => {
+        if (photo && room.gridCells && room.gridCells[cellIdx]) {
+          room.gridCells[cellIdx].photoUrl = photo;
+          broadcastRoom(room.code, 'top10_updated');
+        }
+      });
+    }
+
+    const gotBingo = player ? checkGridBingo(room.gridCells, player.id) : false;
+    const pts = 2 + (gotBingo ? 2 : 0);
+    if (player) {
+      player.score += pts;
+      recordPlayerResultStats(player, true, null, footballer.name);
+    }
+
+    const msg = `🎉 ${player ? player.name : 'ผู้เล่น'} ยึดช่อง [${rowCrit.label} x ${colCrit.label}] ด้วย ${footballer.name} (+${pts} แต้ม${gotBingo ? ' BINGO!' : ''})`;
+    broadcastRoom(room.code, 'top10_updated', { toastMessage: msg });
+
+    return {
+      ok: true,
+      top10Feedback: {
+        correct: true,
+        message: `✅ ยึดช่องสำเร็จ! ${footballer.name} (+${pts} คะแนน)`
       }
     };
   }
@@ -1499,6 +1705,92 @@ function finishFootyGridWave(room) {
   room.lastWaveResults = results;
 }
 
+// Pick a smart set of clubs that guarantees rich 2-club and 3-club player overlaps!
+function pickSmartClubPool(count) {
+  const primaryPool = CLUBS.slice(0, 32);
+  const sourceClubs = primaryPool.length >= 10 ? primaryPool : CLUBS;
+  if (count <= 1) {
+    return [sourceClubs[Math.floor(Math.random() * sourceClubs.length)]];
+  }
+
+  let bestCombo = null;
+  let bestScore = -1;
+
+  for (let attempt = 0; attempt < 18; attempt++) {
+    const shuffled = [...sourceClubs].sort(() => Math.random() - 0.5);
+    const candidate = shuffled.slice(0, count);
+    const cids = candidate.map((c) => c.id);
+    let twoPlus = 0;
+    let threePlus = 0;
+    for (const p of PLAYERS) {
+      const m = p.clubs.filter((cid) => cids.includes(cid)).length;
+      if (m >= 2) twoPlus++;
+      if (m >= 3) threePlus++;
+    }
+    const score = threePlus * 8 + twoPlus;
+    if (score > bestScore) {
+      bestScore = score;
+      bestCombo = candidate;
+      if (threePlus >= 4 && twoPlus >= 20) break;
+    }
+  }
+  return bestCombo || sourceClubs.slice(0, count);
+}
+
+// Generate a random 100%-solvable 3x3 Footy Tic-Tac-Toe Grid where every cell has >= 2 valid answers
+function generateRandomValidFootyGrid(roundNum) {
+  const topClubs = CLUBS.slice(0, 22).map((c) => ({
+    type: 'club',
+    id: c.id,
+    label: c.name,
+    sub: c.nameTh || c.short
+  }));
+  const topFlags = [
+    { type: 'flag', id: '🇫🇷', label: 'ฝรั่งเศส', sub: 'ทีมชาติฝรั่งเศส' },
+    { type: 'flag', id: '🇧🇷', label: 'บราซิล', sub: 'ทีมชาติบราซิล' },
+    { type: 'flag', id: '🇪🇸', label: 'สเปน', sub: 'ทีมชาติสเปน' },
+    { type: 'flag', id: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', label: 'อังกฤษ', sub: 'ทีมชาติอังกฤษ' },
+    { type: 'flag', id: '🇦🇷', label: 'อาร์เจนตินา', sub: 'ทีมชาติอาร์เจนตินา' },
+    { type: 'flag', id: '🇵🇹', label: 'โปรตุเกส', sub: 'ทีมชาติโปรตุเกส' },
+    { type: 'flag', id: '🇩🇪', label: 'เยอรมนี', sub: 'ทีมชาติเยอรมนี' },
+    { type: 'flag', id: '🇮🇹', label: 'อิตาลี', sub: 'ทีมชาติอิตาลี' },
+    { type: 'flag', id: '🇳🇱', label: 'เนเธอร์แลนด์', sub: 'ทีมชาติเนเธอร์แลนด์' }
+  ];
+
+  for (let attempt = 0; attempt < 40; attempt++) {
+    const shuffledClubs = [...topClubs].sort(() => Math.random() - 0.5);
+    const cols = shuffledClubs.slice(0, 3);
+    const useFlagsInRows = Math.random() < 0.4;
+    const rows = useFlagsInRows
+      ? [...topFlags].sort(() => Math.random() - 0.5).slice(0, 3)
+      : shuffledClubs.slice(3, 6);
+
+    let allCellsValid = true;
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 3; c++) {
+        const count = PLAYERS.filter(
+          (p) => playerMatchesGridCriteria(p, rows[r]) && playerMatchesGridCriteria(p, cols[c])
+        ).length;
+        if (count < 2) {
+          allCellsValid = false;
+          break;
+        }
+      }
+      if (!allCellsValid) break;
+    }
+
+    if (allCellsValid) {
+      return {
+        id: 'random_grid_' + Date.now(),
+        title: `ตาราง XO ฟุตบอล 3x3 ชุดที่ #${roundNum} (สุ่มสด ครบทุกช่อง!)`,
+        cols,
+        rows
+      };
+    }
+  }
+  return FOOTY_GRIDS[(roundNum - 1) % FOOTY_GRIDS.length] || FOOTY_GRIDS[0];
+}
+
 function startModeRound(room, options = {}) {
   const mode = room.settings.gameMode || 'club_battle';
 
@@ -1510,6 +1802,7 @@ function startModeRound(room, options = {}) {
       : LINEUPS[(room.roundNumber - 1) % LINEUPS.length];
     room.currentLineupId = (chosen || LINEUPS[0]).id;
     room.unlockedLineupSlots = {};
+    room.hintedLineupSlots = {};
     startWave(room);
   } else if (mode === 'top10_stats') {
     room.roundNumber += 1;
@@ -1527,6 +1820,7 @@ function startModeRound(room, options = {}) {
     const pool = CAREER_PATHS.filter((c) => c.id !== room.currentCareerId);
     const nextCp = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : CAREER_PATHS[0];
     room.currentCareerId = nextCp.id;
+    room.careerHintOpened = false;
     room.currentCareerPhotoUrl = null;
     getPlayerPhotoByName(nextCp.answerName).then((photo) => {
       if (photo) room.currentCareerPhotoUrl = photo;
@@ -1551,11 +1845,17 @@ function startModeRound(room, options = {}) {
   } else if (mode === 'footy_grid') {
     room.roundNumber += 1;
     room.waveNumber = 1;
-    const chosen = options.gridId
-      ? FOOTY_GRIDS.find((g) => g.id === options.gridId)
-      : FOOTY_GRIDS[(room.roundNumber - 1) % FOOTY_GRIDS.length];
-    room.currentGridId = (chosen || FOOTY_GRIDS[0]).id;
+    if (options.gridId && options.gridId !== 'random') {
+      const chosen = FOOTY_GRIDS.find((g) => g.id === options.gridId) || FOOTY_GRIDS[0];
+      room.currentGridId = chosen.id;
+      room.customFootyGrid = null;
+    } else {
+      const randGrid = generateRandomValidFootyGrid(room.roundNumber);
+      room.currentGridId = randGrid.id;
+      room.customFootyGrid = randGrid;
+    }
     room.gridCells = Array(9).fill(null);
+    room.hintedGridCells = {};
     startWave(room);
   } else {
     // club_battle: Multi-Club Pool!
@@ -1565,11 +1865,8 @@ function startModeRound(room, options = {}) {
 
     if (room.settings.clubSelectMode === 'random') {
       const isSingleClubMode = mode === 'club_battle';
-      // Prefer top major European clubs for random pool so there are rich multi-club player overlaps
-      const primaryPool = CLUBS.slice(0, 32);
-      const sourceClubs = primaryPool.length >= 10 ? primaryPool : CLUBS;
-      const shuffled = [...sourceClubs].sort(() => Math.random() - 0.5);
       const count = getTargetClubPoolSize(room);
+      const chosenClubs = pickSmartClubPool(count);
       for (let i = 0; i < count; i++) {
         const isBonusClub = !isSingleClubMode && room.players.length === 2 && i >= room.players.length;
         const p = room.players[(room.roundNumber + i) % room.players.length];
@@ -1577,7 +1874,7 @@ function startModeRound(room, options = {}) {
           playerId: isBonusClub ? 'bonus_club_' + i : p.id,
           playerName: isBonusClub ? 'สโมสรโบนัสกลางกระดาน' : p.name,
           playerAvatar: isBonusClub ? '🎲' : p.avatar,
-          clubId: shuffled[i % shuffled.length].id
+          clubId: chosenClubs[i % chosenClubs.length].id
         });
       }
       room.roundNumber += 1;
@@ -1871,6 +2168,120 @@ function handleApiAction(req, res, body) {
     } else {
       room.waveNumber += 1;
       startWave(room);
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+  }
+
+  if (action === 'lineup_hint_slot') {
+    const slotId = body.slotId;
+    if (!room.hintedLineupSlots) room.hintedLineupSlots = {};
+    if (slotId) {
+      room.hintedLineupSlots[slotId] = true;
+      broadcastRoom(code, 'top10_updated');
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+  }
+
+  if (action === 'lineup_reveal_slot') {
+    const slotId = body.slotId;
+    const lineup = LINEUPS.find((l) => l.id === room.currentLineupId) || LINEUPS[0];
+    const slot = lineup.slots.find((s) => s.slotId === slotId);
+    if (!room.unlockedLineupSlots) room.unlockedLineupSlots = {};
+    if (slot && !room.unlockedLineupSlots[slotId]) {
+      const knownPlayer = findPlayerByInput(slot.playerId, null);
+      const slotPhoto = slot.photoUrl || knownPlayer?.photoUrl || null;
+      room.unlockedLineupSlots[slotId] = {
+        answeredBy: '👁️ เปิดเฉลย',
+        playerId: slot.playerId,
+        revealed: true,
+        photoUrl: slotPhoto
+      };
+      if (!slotPhoto) {
+        getPlayerPhotoByName(slot.playerId).then((photo) => {
+          if (photo && room.unlockedLineupSlots && room.unlockedLineupSlots[slotId]) {
+            room.unlockedLineupSlots[slotId].photoUrl = photo;
+            broadcastRoom(code, 'top10_updated');
+          }
+        });
+      }
+      broadcastRoom(code, 'top10_updated');
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+  }
+
+  if (action === 'lineup_reveal_all') {
+    const lineup = LINEUPS.find((l) => l.id === room.currentLineupId) || LINEUPS[0];
+    if (!room.unlockedLineupSlots) room.unlockedLineupSlots = {};
+    lineup.slots.forEach((slot) => {
+      if (!room.unlockedLineupSlots[slot.slotId]) {
+        const knownPlayer = findPlayerByInput(slot.playerId, null);
+        room.unlockedLineupSlots[slot.slotId] = {
+          answeredBy: '👁️ เปิดเฉลย',
+          playerId: slot.playerId,
+          revealed: true,
+          photoUrl: slot.photoUrl || knownPlayer?.photoUrl || null
+        };
+      }
+    });
+    broadcastRoom(code, 'top10_updated');
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+  }
+
+  if (action === 'career_toggle_hint') {
+    room.careerHintOpened = true;
+    broadcastRoom(code, 'top10_updated');
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+  }
+
+  if (action === 'career_reveal_now') {
+    finishWave(room);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+  }
+
+  if (action === 'grid_hint_cell') {
+    const cellIdx = Math.max(0, Math.min(8, parseInt(body.cellIndex, 10) || 0));
+    if (!room.hintedGridCells) room.hintedGridCells = {};
+    room.hintedGridCells[cellIdx] = true;
+    broadcastRoom(code, 'top10_updated');
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+  }
+
+  if (action === 'grid_reveal_cell') {
+    const cellIdx = Math.max(0, Math.min(8, parseInt(body.cellIndex, 10) || 0));
+    const grid = room.customFootyGrid || FOOTY_GRIDS.find((g) => g.id === room.currentGridId) || FOOTY_GRIDS[0];
+    if (!room.gridCells) room.gridCells = Array(9).fill(null);
+    if (!room.gridCells[cellIdx]) {
+      const rIdx = Math.floor(cellIdx / 3);
+      const cIdx = cellIdx % 3;
+      const usedNames = new Set(
+        room.gridCells.filter(Boolean).map((c) => normalizeText(c.playerName))
+      );
+      const matches = PLAYERS.filter(
+        (p) =>
+          !usedNames.has(normalizeText(p.name)) &&
+          playerMatchesGridCriteria(p, grid.rows[rIdx]) &&
+          playerMatchesGridCriteria(p, grid.cols[cIdx])
+      );
+      const sample = matches[0];
+      if (sample) {
+        room.gridCells[cellIdx] = {
+          ownerId: 'revealed',
+          ownerName: '👁️ เฉลย (0 แต้ม)',
+          ownerAvatar: '👁️',
+          playerName: sample.name,
+          playerFlag: sample.flag,
+          flagUrl: sample.flagUrl || getFlagUrlFromEmoji(sample.flag),
+          photoUrl: sample.photoUrl || null
+        };
+        broadcastRoom(code, 'top10_updated');
+      }
     }
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
