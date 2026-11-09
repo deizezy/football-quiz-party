@@ -457,7 +457,7 @@ async function getPlayerPhotoByName(playerName) {
   return photo;
 }
 
-// Live player search (ESPN Search API + TheSportsDB + Wikipedia photo enrichment)
+// Curated player search (Only returns known stars/legends in PLAYERS, never injects unknown external players)
 async function searchPlayersFromApi(query) {
   const cleanQ = (query || '').trim();
   if (cleanQ.length < 2) return [];
@@ -467,119 +467,16 @@ async function searchPlayersFromApi(query) {
     return searchCache.get(cacheKey);
   }
 
-  const results = [];
-
-  // 1. Search ESPN Live Soccer Player API + TheSportsDB in parallel
-  const apiQuery = cleanQ.replace(/\s+/g, '_');
-  const [espnSearch, sdbData] = await Promise.all([
-    fetchJsonWithTimeout(
-      `${ESPN_SEARCH_API}?query=${encodeURIComponent(cleanQ)}&limit=8&type=player`,
-      2800
-    ),
-    fetchJsonWithTimeout(
-      `${SPORTSDB_BASE}/searchplayers.php?p=${encodeURIComponent(apiQuery)}`,
-      2800
-    )
-  ]);
-
-  if (espnSearch && Array.isArray(espnSearch.items)) {
-    const soccerItems = espnSearch.items.filter((it) => it.sport === 'soccer' && !it.isRetired).slice(0, 6);
-    for (const item of soccerItems) {
-      const espnId = String(item.id);
-      const natInfo = mapNationalityToFlagAndUrl(item.flag?.alt, item.flag?.href);
-      const teamLabel = (item.label || '').split(' - ')[1] || '';
-      const currentClubId = mapApiTeamNameToClubId(teamLabel);
-
-      let existing = PLAYERS.find(
-        (loc) => String(loc.espnId) === espnId || normalizeText(loc.name) === normalizeText(item.displayName)
-      );
-
-      if (existing) {
-        existing.espnId = espnId;
-        if (natInfo.flagUrl && !existing.flagUrl) existing.flagUrl = natInfo.flagUrl;
-        if (currentClubId && !existing.clubs.includes(currentClubId)) {
-          existing.clubs.push(currentClubId);
-        }
-        results.push(existing);
-      } else {
-        const seed = seedPlayerLookup.get(normalizeText(item.displayName));
-        const clubs = Array.from(new Set([...(currentClubId ? [currentClubId] : []), ...(seed?.clubs || [])]));
-        const newPlayer = {
-          id: 'espn_' + espnId,
-          espnId,
-          name: item.displayName.trim(),
-          flag: seed?.flag || natInfo.flag,
-          flagUrl: natInfo.flagUrl,
-          photoUrl: null,
-          position: 'FW',
-          clubs,
-          rawTeams: teamLabel ? [teamLabel] : [],
-          aliases: seed?.aliases || (item.shortName ? [item.shortName] : []),
-          fromLiveApi: true,
-          apiSynced: false
-        };
-        PLAYERS.push(newPlayer);
-        results.push(newPlayer);
-      }
-    }
-  }
-
-  if (sdbData && Array.isArray(sdbData.player)) {
-    const soccerPlayers = sdbData.player.filter((p) => p.strSport === 'Soccer').slice(0, 6);
-    for (const p of soccerPlayers) {
-      const photoUrl = p.strCutout || p.strThumb || p.strRender || null;
-      const natInfo = mapNationalityToFlagAndUrl(p.strNationality);
-      const currentClubId = mapApiTeamNameToClubId(p.strTeam);
-
-      const existing = PLAYERS.find(
-        (loc) => normalizeText(loc.name) === normalizeText(p.strPlayer) || loc.apiId === p.idPlayer
-      );
-
-      if (existing) {
-        existing.apiId = p.idPlayer;
-        if (photoUrl) {
-          existing.photoUrl = photoUrl;
-          photoCache.set(normalizeText(existing.name), photoUrl);
-        }
-        if (natInfo.flagUrl && !existing.flagUrl) existing.flagUrl = natInfo.flagUrl;
-        if (currentClubId && !existing.clubs.includes(currentClubId)) {
-          existing.clubs.push(currentClubId);
-        }
-        if (!results.some((r) => r.id === existing.id)) {
-          results.push(existing);
-        }
-      } else {
-        const seed = seedPlayerLookup.get(normalizeText(p.strPlayer));
-        const newPlayer = {
-          id: 'api_' + p.idPlayer,
-          apiId: p.idPlayer,
-          name: p.strPlayer.trim(),
-          flag: seed?.flag || natInfo.flag,
-          flagUrl: natInfo.flagUrl,
-          photoUrl,
-          position: mapPositionShort(p.strPosition),
-          clubs: Array.from(new Set([...(currentClubId ? [currentClubId] : []), ...(seed?.clubs || [])])),
-          rawTeams: p.strTeam && !p.strTeam.includes('Retired') ? [p.strTeam] : [],
-          aliases: seed?.aliases || [],
-          fromLiveApi: true,
-          apiSynced: false
-        };
-        if (photoUrl) photoCache.set(normalizeText(newPlayer.name), photoUrl);
-        PLAYERS.push(newPlayer);
-        results.push(newPlayer);
-      }
-    }
-  }
-
-  // Enrich top local/live matches missing photos via Wikipedia REST API
-  const localMatches = PLAYERS.filter((p) => {
+  const results = PLAYERS.filter((p) => {
     const n = normalizeText(p.name);
     const aliasMatch = p.aliases && p.aliases.some((a) => normalizeText(a).includes(cacheKey));
-    return (n.startsWith(cacheKey) || n.includes(cacheKey) || aliasMatch) && !p.photoUrl;
-  }).slice(0, 4);
+    return n.startsWith(cacheKey) || n.includes(cacheKey) || aliasMatch;
+  }).slice(0, 8);
 
+  // Enrich top matches missing photos via Wikipedia REST API
+  const missingPhotos = results.filter((p) => !p.photoUrl).slice(0, 4);
   await Promise.allSettled(
-    localMatches.map(async (loc) => {
+    missingPhotos.map(async (loc) => {
       const wiki = await fetchWikipediaSummary(loc.name);
       if (wiki) {
         if (wiki.thumbnail?.source && !loc.photoUrl) {
@@ -589,9 +486,6 @@ async function searchPlayersFromApi(query) {
         if (wiki.wikibase_item && !loc.wikidataId) {
           loc.wikidataId = wiki.wikibase_item;
         }
-      }
-      if (!results.some((r) => r.id === loc.id)) {
-        results.push(loc);
       }
     })
   );
@@ -842,8 +736,52 @@ async function initializeFootballApiData() {
     }
   }
 
-  // 2. Fetch Live 2026-27 Active Squad Rosters for all clubs across the 5 leagues
+  // 2. Initialize Curated Stars & Legends Map (from seedPlayerLookup) and enrich via ESPN 2026-27 Active Squad Rosters
+  //    (Never dump unknown academy/reserve players into the quiz dropdown!)
   const livePlayerMap = new Map();
+
+  // Canonical alias map to merge known short/full name variants across ESPN, Seed & Wikidata
+  const CANONICAL_MERGE_KEYS = {
+    'nicolas gonzalez': 'nico gonzalez',
+    'emerson palmieri': 'emerson',
+    'pedro': 'pedro rodriguez',
+    'ronaldo': 'ronaldo nazario'
+  };
+
+  seedPlayerLookup.forEach((seed, normName) => {
+    const flagUrl = seed.flagUrl || getFlagUrlFromEmoji(seed.flag);
+    const nameParts = seed.name.split(/\s+/);
+    const lastName = normalizeText(nameParts[nameParts.length - 1]);
+    livePlayerMap.set(normName, {
+      id: seed.id || 'p_' + normName.replace(/[^a-z0-9]/g, '_'),
+      name: seed.name,
+      flag: seed.flag || '⚽',
+      flagUrl,
+      photoUrl: null,
+      position: seed.position || 'FW',
+      clubs: [...seed.clubs],
+      rawTeams: [],
+      aliases: Array.from(new Set([lastName, normName, ...(seed.aliases || [])].filter(Boolean))),
+      fromLiveApi: false,
+      isLegend: true,
+      apiSynced: false
+    });
+  });
+
+  const resolvePlayerKey = (rawNormName, aliases = []) => {
+    if (CANONICAL_MERGE_KEYS[rawNormName] && livePlayerMap.has(CANONICAL_MERGE_KEYS[rawNormName])) {
+      return CANONICAL_MERGE_KEYS[rawNormName];
+    }
+    if (livePlayerMap.has(rawNormName)) return rawNormName;
+    for (const al of aliases) {
+      const an = normalizeText(al);
+      if (an.includes(' ') && livePlayerMap.has(an)) {
+        return an;
+      }
+    }
+    return rawNormName;
+  };
+
   const batchSize = 12;
   for (let i = 0; i < espnTeamsToFetchRosters.length; i += batchSize) {
     const batch = espnTeamsToFetchRosters.slice(i, i + batchSize);
@@ -860,109 +798,41 @@ async function initializeFootballApiData() {
           const fullName = (ath.displayName || ath.fullName || '').trim();
           if (!fullName) continue;
 
-          const normName = normalizeText(fullName);
-          const seed = seedPlayerLookup.get(normName);
-          const natInfo = mapNationalityToFlagAndUrl(ath.flag?.alt || ath.citizenship, ath.flag?.href);
-          const pos = mapPositionShort(ath.position?.abbreviation || ath.position?.name);
+          const normName = resolvePlayerKey(normalizeText(fullName), [
+            ath.shortName || '',
+            ath.fullName || ''
+          ]);
+          const existing = livePlayerMap.get(normName);
+          if (!existing) continue; // Skip unknown youth/reserve players not in our curated quiz pool
 
-          if (!livePlayerMap.has(normName)) {
-            const clubs = Array.from(new Set([clubObj.id, ...(seed?.clubs || [])]));
-            const aliases = Array.from(
-              new Set([
-                ...(seed?.aliases || []),
-                ...(ath.lastName ? [ath.lastName.toLowerCase()] : []),
-                ...(ath.shortName ? [ath.shortName.toLowerCase()] : [])
-              ])
-            );
-            livePlayerMap.set(normName, {
-              id: 'espn_' + espnId,
-              espnId,
-              name: fullName,
-              flag: seed?.flag || natInfo.flag,
-              flagUrl: natInfo.flagUrl || (seed?.flag ? getFlagUrlFromEmoji(seed.flag) : null),
-              photoUrl: ath.headshot?.href || null,
-              position: pos,
-              clubs,
-              rawTeams: [clubObj.name],
-              aliases,
-              fromLiveApi: true,
-              apiSynced: false
-            });
-          } else {
-            const existing = livePlayerMap.get(normName);
-            if (!existing.clubs.includes(clubObj.id)) {
-              existing.clubs.push(clubObj.id);
-            }
+          const natInfo = mapNationalityToFlagAndUrl(ath.flag?.alt || ath.citizenship, ath.flag?.href);
+          existing.espnId = espnId;
+          if (ath.headshot?.href && !existing.photoUrl) {
+            existing.photoUrl = ath.headshot.href;
+          }
+          if (natInfo.flagUrl && !existing.flagUrl) {
+            existing.flagUrl = natInfo.flagUrl;
+          }
+          if (!existing.clubs.includes(clubObj.id)) {
+            existing.clubs.push(clubObj.id);
+          }
+          if (!existing.rawTeams.includes(clubObj.name)) {
+            existing.rawTeams.push(clubObj.name);
           }
         }
       })
     );
   }
 
-  // Canonical alias map to merge known short/full name variants across ESPN, Seed & Wikidata
-  const CANONICAL_MERGE_KEYS = {
-    'nicolas gonzalez': 'nico gonzalez',
-    'emerson palmieri': 'emerson',
-    'pedro': 'pedro rodriguez',
-    'ronaldo': 'ronaldo nazario'
-  };
-
-  const resolvePlayerKey = (rawNormName, aliases = []) => {
-    if (CANONICAL_MERGE_KEYS[rawNormName] && livePlayerMap.has(CANONICAL_MERGE_KEYS[rawNormName])) {
-      return CANONICAL_MERGE_KEYS[rawNormName];
-    }
-    if (livePlayerMap.has(rawNormName)) return rawNormName;
-    for (const al of aliases) {
-      const an = normalizeText(al);
-      if (an.includes(' ') && livePlayerMap.has(an)) {
-        return an;
-      }
-    }
-    return rawNormName;
-  };
-
-  // 2B. Merge curated Legends & Former Multi-Club Stars from seedPlayerLookup
-  seedPlayerLookup.forEach((seed, normName) => {
-    const flagUrl = seed.flagUrl || getFlagUrlFromEmoji(seed.flag);
-    const targetKey = resolvePlayerKey(normName, seed.aliases || []);
-    if (!livePlayerMap.has(targetKey)) {
-      const nameParts = seed.name.split(/\s+/);
-      const lastName = normalizeText(nameParts[nameParts.length - 1]);
-      livePlayerMap.set(targetKey, {
-        id: seed.id || 'legend_' + targetKey.replace(/[^a-z0-9]/g, '_'),
-        name: seed.name,
-        flag: seed.flag || '⚽',
-        flagUrl,
-        photoUrl: null,
-        position: seed.position || 'FW',
-        clubs: [...seed.clubs],
-        rawTeams: [],
-        aliases: Array.from(new Set([lastName, normName, ...(seed.aliases || [])].filter(Boolean))),
-        fromLiveApi: true,
-        isLegend: true,
-        apiSynced: false
-      });
-    } else {
-      const existing = livePlayerMap.get(targetKey);
-      seed.clubs.forEach((cid) => {
-        if (!existing.clubs.includes(cid)) existing.clubs.push(cid);
-      });
-      (seed.aliases || []).forEach((al) => {
-        if (al && !existing.aliases.includes(al)) existing.aliases.push(al);
-      });
-    }
-  });
-
-  // 2C. Fetch 1,700+ Historical & Multi-Club Legends across all 32 Major European Clubs via Wikidata SPARQL
+  // 2C. Enrich Historical Club Transfers for Curated Players via Wikidata SPARQL (without adding unknown players)
   try {
     const allQids = Object.keys(WIKIDATA_CLUB_QIDS);
     const qidBatches = [allQids.slice(0, 16), allQids.slice(16)];
-    let legendsAdded = 0;
     let historiesEnriched = 0;
 
     for (const qids of qidBatches) {
       const valuesStr = qids.map((q) => 'wd:' + q).join(' ');
-      const sparql = `SELECT ?player ?playerLabel ?club ?countryLabel WHERE { VALUES ?club { ${valuesStr} } ?player wdt:P31 wd:Q5 ; wdt:P106 wd:Q937857 ; wdt:P54 ?club ; wikibase:sitelinks ?sitelinks . FILTER(?sitelinks >= 40) OPTIONAL { ?player wdt:P27 ?country . } SERVICE wikibase:label { bd:serviceParam wikibase:language 'en'. } } LIMIT 3500`;
+      const sparql = `SELECT ?player ?playerLabel ?club ?countryLabel WHERE { VALUES ?club { ${valuesStr} } ?player wdt:P31 wd:Q5 ; wdt:P106 wd:Q937857 ; wdt:P54 ?club ; wikibase:sitelinks ?sitelinks . FILTER(?sitelinks >= 45) OPTIONAL { ?player wdt:P27 ?country . } SERVICE wikibase:label { bd:serviceParam wikibase:language 'en'. } } LIMIT 3500`;
       const url = `${WIKIDATA_SPARQL_URL}?format=json&query=${encodeURIComponent(sparql)}`;
       const data = await fetchJsonWithTimeout(url, 12000);
       const bindings = data?.results?.bindings || [];
@@ -978,43 +848,23 @@ async function initializeFootballApiData() {
 
         const rawNormName = normalizeText(fullName);
         const normName = resolvePlayerKey(rawNormName, [fullName]);
+        const existing = livePlayerMap.get(normName);
+        if (!existing) continue;
+
+        if (!existing.clubs.includes(cid)) {
+          existing.clubs.push(cid);
+          historiesEnriched++;
+        }
         const natName = b.countryLabel?.value || '';
         const natInfo = mapNationalityToFlagAndUrl(natName);
-
-        if (!livePlayerMap.has(normName)) {
-          const parts = fullName.split(/\s+/);
-          const lastName = normalizeText(parts[parts.length - 1]);
-          const qid = (b.player?.value || '').split('/').pop() || normName.replace(/[^a-z0-9]/g, '_');
-          livePlayerMap.set(normName, {
-            id: 'wd_' + qid,
-            name: fullName,
-            flag: natInfo.flag,
-            flagUrl: natInfo.flagUrl || getFlagUrlFromEmoji(natInfo.flag),
-            photoUrl: null,
-            position: 'FW',
-            clubs: [cid],
-            rawTeams: [],
-            aliases: Array.from(new Set([lastName, rawNormName, fullName.toLowerCase()].filter(Boolean))),
-            fromLiveApi: true,
-            isLegend: true,
-            apiSynced: false
-          });
-          legendsAdded++;
-        } else {
-          const existing = livePlayerMap.get(normName);
-          if (!existing.clubs.includes(cid)) {
-            existing.clubs.push(cid);
-            historiesEnriched++;
-          }
-          if ((existing.flag === '⚽' || !existing.flagUrl) && natInfo.flagUrl) {
-            existing.flag = natInfo.flag;
-            existing.flagUrl = natInfo.flagUrl;
-          }
+        if ((existing.flag === '⚽' || !existing.flagUrl) && natInfo.flagUrl) {
+          existing.flag = natInfo.flag;
+          existing.flagUrl = natInfo.flagUrl;
         }
       }
     }
     console.log(
-      `🌟 Wikidata Legends Sync: Added ${legendsAdded} former/legend players & enriched ${historiesEnriched} historical club transfers!`
+      `🌟 Wikidata Legends Sync: Enriched ${historiesEnriched} historical club transfers for curated players!`
     );
   } catch (err) {
     // Non-fatal if Wikidata is slow
@@ -1024,7 +874,7 @@ async function initializeFootballApiData() {
     PLAYERS.length = 0;
     livePlayerMap.forEach((p) => PLAYERS.push(p));
     console.log(
-      `✅ Total Ready Players in Memory: ${PLAYERS.length} (Active 2026-27 + Legends/Former Players across ${CLUBS.length} clubs)!`
+      `✅ Total Ready Curated Players in Memory: ${PLAYERS.length} (Famous Stars & Legends across ${CLUBS.length} clubs)!`
     );
   }
 
@@ -1104,7 +954,29 @@ async function initializeFootballApiData() {
   if (liveTop10Lists.length > 0) {
     const classicTop10 = TOP10_LISTS.filter((l) => !l.id.startsWith('live_'));
     TOP10_LISTS.length = 0;
-    liveTop10Lists.forEach((l) => TOP10_LISTS.push(l));
+    liveTop10Lists.forEach((l) => {
+      TOP10_LISTS.push(l);
+      (l.items || []).forEach((it) => {
+        const normIt = normalizeText(it.name);
+        const exists = PLAYERS.find((p) => normalizeText(p.name) === normIt);
+        if (!exists && it.name && it.name !== 'Unknown') {
+          const cid = mapApiTeamNameToClubId(it.teamName || '');
+          PLAYERS.push({
+            id: 'top10_' + normIt.replace(/[^a-z0-9]/g, '_'),
+            name: it.name,
+            flag: it.flag || '⚽',
+            flagUrl: it.flagUrl || getFlagUrlFromEmoji(it.flag),
+            photoUrl: null,
+            position: 'FW',
+            clubs: cid ? [cid] : [],
+            rawTeams: it.teamName ? [it.teamName] : [],
+            aliases: it.aliases || [],
+            fromLiveApi: false,
+            apiSynced: false
+          });
+        }
+      });
+    });
     classicTop10.forEach((l) => TOP10_LISTS.push(l));
     console.log(`✅ Loaded ${TOP10_LISTS.length} Top 10 leaderboards (${liveTop10Lists.length} Live 2026-27 + ${classicTop10.length} All-Time)!`);
   }

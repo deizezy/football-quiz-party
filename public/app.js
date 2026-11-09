@@ -2064,7 +2064,7 @@ function renderGameOverView(room) {
 let liveSearchTimeout = null;
 const liveSearchFetchedQueries = new Set();
 
-function updateAutocomplete(query, skipLiveFetch = false) {
+function updateAutocomplete(query) {
   const dropdown = document.getElementById('playerAutocompleteList');
   const norm = normalizeText(query);
 
@@ -2094,59 +2094,33 @@ function updateAutocomplete(query, skipLiveFetch = false) {
   const matches = [];
   for (const p of state.players) {
     const pNameNorm = normalizeText(p.name);
-    const startsWith = pNameNorm.startsWith(norm) || pNameNorm.split(/\s+/).some((part) => part.startsWith(norm));
+    const nameParts = pNameNorm.split(/\s+/);
+    const exactMatch =
+      pNameNorm === norm ||
+      nameParts.some((part) => part === norm) ||
+      (p.aliases && p.aliases.some((a) => normalizeText(a) === norm));
+    const startsWith = pNameNorm.startsWith(norm) || nameParts.some((part) => part.startsWith(norm));
     const aliasMatch = p.aliases && p.aliases.some((a) => normalizeText(a).includes(norm));
     const includesMatch = pNameNorm.includes(norm);
 
-    if (startsWith || aliasMatch || includesMatch) {
+    if (exactMatch || startsWith || aliasMatch || includesMatch) {
       matches.push({
         player: p,
         alreadyUsed: usedIds.has(p.id) || usedNames.has(pNameNorm),
-        priority: startsWith ? 1 : aliasMatch ? 2 : 3
+        clubCount: Array.isArray(p.clubs) ? p.clubs.length : 0,
+        priority: exactMatch ? 0 : startsWith ? 1 : aliasMatch ? 2 : 3
       });
     }
   }
 
-  matches.sort((a, b) => a.priority - b.priority || a.player.name.localeCompare(b.player.name));
+  // Sort by match priority first, then by number of major clubs (most famous multi-club stars on top!), then alphabetically
+  matches.sort(
+    (a, b) =>
+      a.priority - b.priority ||
+      b.clubCount - a.clubCount ||
+      a.player.name.localeCompare(b.player.name)
+  );
   const topMatches = matches.slice(0, 8);
-
-  if (!skipLiveFetch && norm.length >= 2 && !liveSearchFetchedQueries.has(norm)) {
-    if (liveSearchTimeout) clearTimeout(liveSearchTimeout);
-    liveSearchTimeout = setTimeout(async () => {
-      try {
-        liveSearchFetchedQueries.add(norm);
-        const res = await fetch(`/api/live-search?q=${encodeURIComponent(query.trim())}`);
-        const data = await res.json();
-        if (data && data.ok && Array.isArray(data.players) && data.players.length > 0) {
-          let updatedAny = false;
-          for (const lp of data.players) {
-            const existing = state.players.find(
-              (ex) => ex.id === lp.id || normalizeText(ex.name) === normalizeText(lp.name)
-            );
-            if (!existing) {
-              state.players.push(lp);
-              updatedAny = true;
-            } else {
-              if (lp.photoUrl && !existing.photoUrl) {
-                existing.photoUrl = lp.photoUrl;
-                updatedAny = true;
-              }
-              if (lp.flagUrl && !existing.flagUrl) {
-                existing.flagUrl = lp.flagUrl;
-                updatedAny = true;
-              }
-            }
-          }
-          const currentInput = document.getElementById('playerGuessInput')?.value || '';
-          if (updatedAny && normalizeText(currentInput) === norm) {
-            updateAutocomplete(currentInput, true);
-          }
-        }
-      } catch (e) {
-        // Ignore offline/network errors gracefully
-      }
-    }, 200);
-  }
 
   if (topMatches.length === 0) {
     hideAutocomplete();
@@ -2165,10 +2139,6 @@ function updateAutocomplete(query, skipLiveFetch = false) {
       (idx === state.autocompleteIndex ? ' active' : '') +
       (m.alreadyUsed ? ' already-used' : '');
 
-    const liveBadge = p.fromLiveApi
-      ? '<span class="ac-pos" style="background:rgba(16,185,129,0.2);color:#34d399;margin-right:4px;">🌐 API</span>'
-      : '';
-
     const chainClubsBadge =
       curMode === 'chain_link' && !m.alreadyUsed && Array.isArray(p.clubs)
         ? p.clubs.length >= 2
@@ -2183,7 +2153,7 @@ function updateAutocomplete(query, skipLiveFetch = false) {
         <span class="ac-name">${p.name}</span>
       </div>
       <div>
-        ${liveBadge}${chainClubsBadge}${m.alreadyUsed ? '<span class="ac-pos" style="background:#ef4444;color:#fff;">ถูกใช้แล้ว</span>' : `<span class="ac-pos">${p.position}</span>`}
+        ${chainClubsBadge}${m.alreadyUsed ? '<span class="ac-pos" style="background:#ef4444;color:#fff;">ถูกใช้แล้ว</span>' : `<span class="ac-pos">${p.position}</span>`}
       </div>
     `;
 

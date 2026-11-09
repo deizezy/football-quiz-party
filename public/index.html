@@ -364,11 +364,8 @@
             <div id="timerProgressBar" class="timer-progress-bar"></div>
           </div>
 
-          <!-- Dynamic Visual Stage for Lineup / Top 10 / Career Path / Trivia / 3x3 Grid -->
-          <div id="modeDynamicStage" class="mode-dynamic-stage"></div>
-
-          <!-- Text Answer Input Area (for modes 1, 2, 3, 4, 6) -->
-          <div class="answer-card" id="answerInputZone">
+          <!-- Text Answer Input Area (Moved to Top right under Question Banner for fast typing & zero scrolling!) -->
+          <div class="answer-card" id="answerInputZone" style="margin-bottom: 16px;">
             <label id="answerPromptLabel" class="answer-prompt">
               👟 พิมพ์ชื่อนักฟุตบอลของคุณ:
             </label>
@@ -390,12 +387,15 @@
           </div>
 
           <!-- Locked-in Waiting Banner -->
-          <div id="answerLockedZone" class="locked-card hidden">
+          <div id="answerLockedZone" class="locked-card hidden" style="margin-bottom: 16px;">
             <div class="locked-icon">🔒</div>
             <h3>ล็อกคำตอบของคุณเรียบร้อยแล้ว!</h3>
             <p id="lockedAnswerText" class="locked-name"></p>
             <p class="muted-text">กำลังรอผู้เล่นคนอื่นส่งคำตอบ หรือรอให้หมดเวลาเพื่อเฉลยพร้อมกัน...</p>
           </div>
+
+          <!-- Dynamic Visual Stage for Lineup / Top 10 / Career Path / Trivia / 3x3 Grid -->
+          <div id="modeDynamicStage" class="mode-dynamic-stage"></div>
 
           <!-- Used Players Board for Mode 1 -->
           <div id="clubUsedBoard" class="used-board">
