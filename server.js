@@ -139,11 +139,12 @@ function findClubByInput(input, clubId) {
 
 function playerMatchesGridCriteria(player, criteria) {
   if (!player || !criteria) return false;
+  const targetVal = criteria.id || criteria.value;
   if (criteria.type === 'club') {
-    return player.clubs.includes(criteria.id);
+    return player.clubs.includes(targetVal);
   }
   if (criteria.type === 'flag') {
-    return player.flag === criteria.id;
+    return player.flag === targetVal;
   }
   return false;
 }
@@ -1707,8 +1708,18 @@ function finishFootyGridWave(room) {
 
 // Pick a smart set of clubs that guarantees rich 2-club and 3-club player overlaps!
 function pickSmartClubPool(count) {
-  const primaryPool = CLUBS.slice(0, 32);
-  const sourceClubs = primaryPool.length >= 10 ? primaryPool : CLUBS;
+  const clubOverlapWeight = new Map();
+  for (const p of PLAYERS) {
+    if (Array.isArray(p.clubs) && p.clubs.length >= 2) {
+      for (const cid of p.clubs) {
+        clubOverlapWeight.set(cid, (clubOverlapWeight.get(cid) || 0) + 1);
+      }
+    }
+  }
+  const rankedClubs = [...CLUBS]
+    .sort((a, b) => (clubOverlapWeight.get(b.id) || 0) - (clubOverlapWeight.get(a.id) || 0))
+    .slice(0, 26);
+  const sourceClubs = rankedClubs.length >= 10 ? rankedClubs : CLUBS;
   if (count <= 1) {
     return [sourceClubs[Math.floor(Math.random() * sourceClubs.length)]];
   }
@@ -1716,7 +1727,7 @@ function pickSmartClubPool(count) {
   let bestCombo = null;
   let bestScore = -1;
 
-  for (let attempt = 0; attempt < 18; attempt++) {
+  for (let attempt = 0; attempt < 45; attempt++) {
     const shuffled = [...sourceClubs].sort(() => Math.random() - 0.5);
     const candidate = shuffled.slice(0, count);
     const cids = candidate.map((c) => c.id);
@@ -1727,11 +1738,11 @@ function pickSmartClubPool(count) {
       if (m >= 2) twoPlus++;
       if (m >= 3) threePlus++;
     }
-    const score = threePlus * 8 + twoPlus;
+    const score = (threePlus > 0 ? 500 : 0) + threePlus * 15 + twoPlus;
     if (score > bestScore) {
       bestScore = score;
       bestCombo = candidate;
-      if (threePlus >= 4 && twoPlus >= 20) break;
+      if (threePlus >= 5 && twoPlus >= 22) break;
     }
   }
   return bestCombo || sourceClubs.slice(0, count);
@@ -1739,12 +1750,23 @@ function pickSmartClubPool(count) {
 
 // Generate a random 100%-solvable 3x3 Footy Tic-Tac-Toe Grid where every cell has >= 2 valid answers
 function generateRandomValidFootyGrid(roundNum) {
-  const topClubs = CLUBS.slice(0, 22).map((c) => ({
-    type: 'club',
-    id: c.id,
-    label: c.name,
-    sub: c.nameTh || c.short
-  }));
+  const clubOverlapWeight = new Map();
+  for (const p of PLAYERS) {
+    if (Array.isArray(p.clubs) && p.clubs.length >= 2) {
+      for (const cid of p.clubs) {
+        clubOverlapWeight.set(cid, (clubOverlapWeight.get(cid) || 0) + 1);
+      }
+    }
+  }
+  const topClubs = [...CLUBS]
+    .sort((a, b) => (clubOverlapWeight.get(b.id) || 0) - (clubOverlapWeight.get(a.id) || 0))
+    .slice(0, 22)
+    .map((c) => ({
+      type: 'club',
+      id: c.id,
+      label: c.name,
+      sub: c.nameTh || c.short
+    }));
   const topFlags = [
     { type: 'flag', id: '🇫🇷', label: 'ฝรั่งเศส', sub: 'ทีมชาติฝรั่งเศส' },
     { type: 'flag', id: '🇧🇷', label: 'บราซิล', sub: 'ทีมชาติบราซิล' },
@@ -2275,6 +2297,7 @@ function handleApiAction(req, res, body) {
           ownerId: 'revealed',
           ownerName: '👁️ เฉลย (0 แต้ม)',
           ownerAvatar: '👁️',
+          revealed: true,
           playerName: sample.name,
           playerFlag: sample.flag,
           flagUrl: sample.flagUrl || getFlagUrlFromEmoji(sample.flag),
@@ -2350,8 +2373,18 @@ function handleApiAction(req, res, body) {
     });
     const ok = typeof result === 'object' ? result.ok : Boolean(result);
     const top10Feedback = typeof result === 'object' ? result.top10Feedback || null : null;
+    const lineupFeedback = typeof result === 'object' ? result.lineupFeedback || null : null;
+    const gridFeedback = typeof result === 'object' ? result.gridFeedback || null : null;
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ ok, top10Feedback, room: serializeRoomForClients(room) }));
+    return res.end(
+      JSON.stringify({
+        ok,
+        top10Feedback,
+        lineupFeedback,
+        gridFeedback,
+        room: serializeRoomForClients(room)
+      })
+    );
   }
 
   if (action === 'end_match') {
