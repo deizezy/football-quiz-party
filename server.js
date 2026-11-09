@@ -288,6 +288,8 @@ function serializeModeDataForClients(room) {
           flagUrl: s.flagUrl || getFlagUrlFromEmoji(s.flag),
           row: s.row,
           col: s.col,
+          points: isHinted ? 1 : 2,
+          pointsEarned: u ? u.pointsEarned || 0 : 0,
           unlocked: !!u,
           revealed: u ? !!u.revealed : false,
           hinted: isHinted,
@@ -313,6 +315,8 @@ function serializeModeDataForClients(room) {
       items: list.items.map((it) => {
         const u = unlockedRanks[it.rank];
         const isHinted = !!hintedRanks[it.rank];
+        const baseRankPoints = it.rank >= 8 ? 3 : it.rank >= 4 ? 2 : 1;
+        const currentPoints = isHinted ? 1 : baseRankPoints;
         const cleanStat = it.rawStat || (it.stat || '').replace(/\s*\([^)]*\)/g, '').trim();
         const parenMatch = (it.stat || '').match(/\(([^)]+)\)/);
         const clubHint = it.teamName || (parenMatch ? parenMatch[1] : '');
@@ -329,7 +333,8 @@ function serializeModeDataForClients(room) {
           flag: u || isHinted ? it.flag : '❓',
           flagUrl: u || isHinted ? it.flagUrl || getFlagUrlFromEmoji(it.flag) : null,
           stat: u || isHinted ? it.stat : cleanStat,
-          points: 1,
+          points: currentPoints,
+          pointsEarned: u ? u.pointsEarned || 0 : 0,
           unlocked: !!u,
           revealed: u ? !!u.revealed : false,
           hinted: isHinted,
@@ -354,10 +359,11 @@ function serializeModeDataForClients(room) {
     return {
       careerId: cp.id,
       hintOpened: isHintOpened,
+      potentialPoints: room.careerHintOpened ? 1 : 3,
       flag: isHintOpened ? cp.flag : '❓',
       flagUrl: isHintOpened ? cp.flagUrl || getFlagUrlFromEmoji(cp.flag) : null,
       position: isHintOpened ? cp.position : '???',
-      hint: isHintOpened ? `${cp.hint} • อักษรย่อ: ${initialsHint}` : 'กดปุ่ม "💡 เปิดคำใบ้" หากต้องการดูสัญชาติ ตำแหน่ง และอักษรย่อชื่อ!',
+      hint: isHintOpened ? `${cp.hint} • อักษรย่อ: ${initialsHint}` : 'กดปุ่ม "💡 เปิดคำใบ้" หากต้องการดูสัญชาติ ตำแหน่ง และอักษรย่อชื่อ! (ไม่เปิดคำใบ้ได้ +3 แต้ม / เปิดคำใบ้ได้ +1 แต้ม)',
       steps: cp.steps.map((st) => {
         const cid = mapApiTeamNameToClubId(st.club);
         const clubObj = cid ? CLUBS.find((c) => c.id === cid) : null;
@@ -374,9 +380,12 @@ function serializeModeDataForClients(room) {
   if (mode === 'trivia_quiz') {
     const tr = TRIVIA_QUESTIONS.find((q) => q.id === room.currentTriviaId) || TRIVIA_QUESTIONS[0];
     const isRevealed = room.state === 'REVEAL';
+    const diff = tr.difficulty || 'medium';
+    const basePoints = diff === 'hard' ? 3 : diff === 'medium' ? 2 : 1;
     return {
       triviaId: tr.id,
-      difficulty: tr.difficulty || 'medium',
+      difficulty: diff,
+      basePoints,
       selectedDifficulty: room.settings.triviaDifficulty || 'all',
       question: tr.question,
       options: tr.options,
@@ -406,8 +415,10 @@ function serializeModeDataForClients(room) {
       const matches = PLAYERS.filter(
         (p) => playerMatchesGridCriteria(p, grid.rows[rIdx]) && playerMatchesGridCriteria(p, grid.cols[cIdx])
       );
+      const isHinted = !!hintedCells[cellIdx];
+      const cellPoints = isHinted ? 1 : matches.length <= 5 ? 3 : 2;
       let hintText = null;
-      if (hintedCells[cellIdx] && matches.length > 0) {
+      if (isHinted && matches.length > 0) {
         const sample = matches[0];
         const words = sample.name.trim().split(/\s+/);
         const initials = words.map((w) => w.charAt(0).toUpperCase() + '_'.repeat(Math.max(2, w.length - 1))).join(' ');
@@ -415,7 +426,8 @@ function serializeModeDataForClients(room) {
       }
       return {
         possibleCount: matches.length,
-        hinted: !!hintedCells[cellIdx],
+        points: cellPoints,
+        hinted: isHinted,
         hintText
       };
     });
@@ -791,16 +803,21 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
 
     const knownPlayer = findPlayerByInput(unrevealedSlot.playerId, selectedPlayerId);
     const slotPhoto = unrevealedSlot.photoUrl || knownPlayer?.photoUrl || null;
+    const isHinted = !!(room.hintedLineupSlots && room.hintedLineupSlots[unrevealedSlot.slotId]);
+    const totalUnlockedAfter = Object.keys(room.unlockedLineupSlots).length + 1;
+    const finalSlotBonus = totalUnlockedAfter === lineup.slots.length ? 1 : 0;
+    const pts = (isHinted ? 1 : 2) + finalSlotBonus;
 
     room.unlockedLineupSlots[unrevealedSlot.slotId] = {
       answeredBy: player ? player.name : 'ผู้เล่น',
       playerId: unrevealedSlot.playerId,
       revealed: false,
+      pointsEarned: pts,
       photoUrl: slotPhoto
     };
 
     if (player) {
-      player.score += 1;
+      player.score += pts;
       recordPlayerResultStats(player, true, null, unrevealedSlot.playerId);
     }
 
@@ -813,15 +830,16 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
       });
     }
 
+    const bonusText = finalSlotBonus > 0 ? ' (🎉 โบนัสปิดผังคนที่ 11 +1 แต้ม!)' : '';
     broadcastRoom(room.code, 'top10_updated', {
-      toastMessage: `🎉 ${player ? player.name : 'ผู้เล่น'} เปิดตำแหน่ง ${unrevealedSlot.pos} #${unrevealedSlot.number}: ${unrevealedSlot.playerId} (+1 คะแนน)`
+      toastMessage: `🎉 ${player ? player.name : 'ผู้เล่น'} เปิดตำแหน่ง ${unrevealedSlot.pos} #${unrevealedSlot.number}: ${unrevealedSlot.playerId} (+${pts} คะแนน${bonusText})`
     });
 
     return {
       ok: true,
       top10Feedback: {
         correct: true,
-        message: `✅ ถูกต้อง! ${unrevealedSlot.playerId} (${unrevealedSlot.pos} #${unrevealedSlot.number}) +1 คะแนน`
+        message: `✅ ถูกต้อง! ${unrevealedSlot.playerId} (${unrevealedSlot.pos} #${unrevealedSlot.number}) +${pts} คะแนน${bonusText}`
       }
     };
   }
@@ -859,16 +877,20 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
 
     const knownPlayer = findPlayerByInput(matchedItem.name, selectedPlayerId);
     const itemPhoto = knownPlayer?.photoUrl || null;
+    const isHinted = !!(room.hintedTop10Ranks && room.hintedTop10Ranks[matchedItem.rank]);
+    const baseRankPts = matchedItem.rank >= 8 ? 3 : matchedItem.rank >= 4 ? 2 : 1;
+    const pts = isHinted ? 1 : baseRankPts;
 
     room.unlockedTop10Ranks[matchedItem.rank] = {
       answeredBy: player ? player.name : 'ผู้เล่น',
       playerId: player ? player.id : null,
       revealed: false,
+      pointsEarned: pts,
       photoUrl: itemPhoto
     };
 
     if (player) {
-      player.score += 1;
+      player.score += pts;
       recordPlayerResultStats(player, true, null, matchedItem.name);
     }
 
@@ -882,7 +904,7 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
     }
 
     broadcastRoom(room.code, 'top10_updated', {
-      toastMessage: `🎉 ${player ? player.name : 'ผู้เล่น'} ตอบถูก! อันดับ #${matchedItem.rank}: ${matchedItem.name} (+1 คะแนน)`
+      toastMessage: `🎉 ${player ? player.name : 'ผู้เล่น'} ตอบถูก! อันดับ #${matchedItem.rank}: ${matchedItem.name} (+${pts} คะแนน)`
     });
 
     return {
@@ -891,7 +913,7 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
         correct: true,
         rank: matchedItem.rank,
         name: matchedItem.name,
-        message: `✅ ถูกต้อง! อันดับ #${matchedItem.rank}: ${matchedItem.name} (+1 คะแนน)`
+        message: `✅ ถูกต้อง! อันดับ #${matchedItem.rank}: ${matchedItem.name} (+${pts} คะแนน)`
       }
     };
   }
@@ -950,6 +972,13 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
       };
     }
 
+    const possibleForCell = PLAYERS.filter(
+      (p) => playerMatchesGridCriteria(p, rowCrit) && playerMatchesGridCriteria(p, colCrit)
+    ).length;
+    const isHintedCell = !!(room.hintedGridCells && room.hintedGridCells[cellIdx]);
+    const isRareCell = possibleForCell <= 5;
+    const baseCellPts = isHintedCell ? 1 : isRareCell ? 3 : 2;
+
     room.gridCells[cellIdx] = {
       ownerId: player ? player.id : 'p',
       ownerName: player ? player.name : 'ผู้เล่น',
@@ -970,20 +999,24 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
     }
 
     const gotBingo = player ? checkGridBingo(room.gridCells, player.id) : false;
-    const pts = 2 + (gotBingo ? 2 : 0);
+    const bingoBonus = gotBingo ? 3 : 0;
+    const pts = baseCellPts + bingoBonus;
+    room.gridCells[cellIdx].pointsEarned = pts;
+
     if (player) {
       player.score += pts;
       recordPlayerResultStats(player, true, null, footballer.name);
     }
 
-    const msg = `🎉 ${player ? player.name : 'ผู้เล่น'} ยึดช่อง [${rowCrit.label} x ${colCrit.label}] ด้วย ${footballer.name} (+${pts} แต้ม${gotBingo ? ' BINGO!' : ''})`;
+    const rareTag = !isHintedCell && isRareCell ? ' 💎ช่องหายาก!' : '';
+    const msg = `🎉 ${player ? player.name : 'ผู้เล่น'} ยึดช่อง [${rowCrit.label} x ${colCrit.label}] ด้วย ${footballer.name}${rareTag} (+${pts} แต้ม${gotBingo ? ' 🔥BINGO +3!' : ''})`;
     broadcastRoom(room.code, 'top10_updated', { toastMessage: msg });
 
     return {
       ok: true,
       top10Feedback: {
         correct: true,
-        message: `✅ ยึดช่องสำเร็จ! ${footballer.name} (+${pts} คะแนน)`
+        message: `✅ ยึดช่องสำเร็จ! ${footballer.name}${rareTag} (+${pts} คะแนน${gotBingo ? ' รวมโบนัส BINGO +3!' : ''})`
       }
     };
   }
@@ -1206,6 +1239,23 @@ function finishClubBattleWave(room) {
     claims.sort((a, b) => a.timeTakenMs - b.timeTakenMs);
   }
 
+  const isSingleClubMode = room.settings.gameMode === 'club_battle';
+  let fastestSingleClubPlayerId = null;
+  let fastestSingleClubTime = Infinity;
+  if (isSingleClubMode) {
+    resolved.forEach((r) => {
+      if (r.status === 'PENDING_DUPLICATE_CHECK' && r.timeTakenMs && r.timeTakenMs < fastestSingleClubTime) {
+        const claims = claimedInThisWave.get(r.footballer.id);
+        const rule = room.settings.duplicateRule || 'strict_unique';
+        const winsClaim = claims.length === 1 || (rule !== 'both_cancel' && claims[0].playerId === r.playerId);
+        if (winsClaim) {
+          fastestSingleClubTime = r.timeTakenMs;
+          fastestSingleClubPlayerId = r.playerId;
+        }
+      }
+    });
+  }
+
   resolved.forEach((res) => {
     const pl = room.players.find((p) => p.id === res.playerId);
     if (res.status !== 'PENDING_DUPLICATE_CHECK') {
@@ -1217,15 +1267,31 @@ function finishClubBattleWave(room) {
     const matchedCount = res.matchedClubs.length;
     const clubsText = res.matchedClubs.join(' + ');
 
-    if (claims.length === 1) {
-      const pts = matchedCount;
+    const awardClubBattlePoints = (basePts, prefixMsg = '') => {
+      const speedBonus = isSingleClubMode && fastestSingleClubPlayerId === res.playerId ? 1 : 0;
+      const nextStreak = pl ? (pl.streak || 0) + 1 : 1;
+      const streakBonus = isSingleClubMode && nextStreak >= 3 && nextStreak % 3 === 0 ? 1 : 0;
+      const totalPts = basePts + speedBonus + streakBonus;
+
       res.status = 'CORRECT';
-      res.pointsEarned = pts;
-      res.message = `เคยอยู่ ${matchedCount} สโมสรบนกระดาน (${clubsText}) ➔ รับ +${pts} คะแนน!`;
+      res.pointsEarned = totalPts;
+      const bonusTags = [];
+      if (speedBonus > 0) bonusTags.push('⚡ไวสุดในรอบ +1');
+      if (streakBonus > 0) bonusTags.push(`🔥คอมโบ ${nextStreak} รอบติด +1`);
+      const bonusText = bonusTags.length > 0 ? ` (${bonusTags.join(' • ')})` : '';
+
+      res.message = isSingleClubMode
+        ? `${prefixMsg}ถูกต้อง! เคยอยู่ ${clubsText}${bonusText} ➔ รับ +${totalPts} คะแนน!`
+        : `${prefixMsg}เคยอยู่ ${matchedCount} สโมสรบนกระดาน (${clubsText}) ➔ รับ +${totalPts} คะแนน!`;
+
       if (pl) {
-        pl.score += pts;
+        pl.score += totalPts;
         recordPlayerResultStats(pl, true, res.timeTakenMs, res.footballer.name);
       }
+    };
+
+    if (claims.length === 1) {
+      awardClubBattlePoints(matchedCount);
       room.usedPlayers.push({
         id: res.footballer.id,
         name: res.footballer.name,
@@ -1246,24 +1312,11 @@ function finishClubBattleWave(room) {
         res.message = `ใจตรงกัน! ตอบ ${res.footballer.name} ซ้ำกับเพื่อนในรอบเดียวกัน จึงไม่ได้คะแนน`;
         recordPlayerResultStats(pl, false, null, null);
       } else if (rule === 'speed_split') {
-        const pts = matchedCount;
+        awardClubBattlePoints(matchedCount);
         res.status = isFastest ? 'CORRECT' : 'DUPLICATE_PARTIAL';
-        res.pointsEarned = pts;
-        res.message = `เคยอยู่ ${matchedCount} สโมสร (${clubsText}) ➔ รับ +${pts} คะแนน!`;
-        if (pl) {
-          pl.score += pts;
-          recordPlayerResultStats(pl, true, res.timeTakenMs, res.footballer.name);
-        }
       } else {
         if (isFastest) {
-          const pts = matchedCount;
-          res.status = 'CORRECT';
-          res.pointsEarned = pts;
-          res.message = `ไวกว่า! เคยอยู่ ${matchedCount} สโมสร (${clubsText}) ➔ รับ +${pts} คะแนน!`;
-          if (pl) {
-            pl.score += pts;
-            recordPlayerResultStats(pl, true, res.timeTakenMs, res.footballer.name);
-          }
+          awardClubBattlePoints(matchedCount, 'ไวกว่า! ');
         } else {
           res.status = 'DUPLICATE_WAVE';
           res.pointsEarned = 0;
@@ -1483,6 +1536,8 @@ function finishCareerPathWave(room) {
     .map((pl) => ({ player: pl, sub: room.submissions[pl.id] || null }))
     .sort((a, b) => (a.sub?.timeTakenMs || 999999) - (b.sub?.timeTakenMs || 999999));
 
+  let firstCorrectAwarded = false;
+
   const results = subs.map(({ player, sub }) => {
     if (!sub || !sub.rawInput) {
       recordPlayerResultStats(player, false, null, null);
@@ -1515,9 +1570,16 @@ function finishCareerPathWave(room) {
       };
     }
 
-    const pts = 2;
+    const basePts = room.careerHintOpened ? 1 : 3;
+    const speedBonus = !firstCorrectAwarded ? 1 : 0;
+    firstCorrectAwarded = true;
+    const pts = basePts + speedBonus;
+
     player.score += pts;
     recordPlayerResultStats(player, true, sub.timeTakenMs, cp.answerName);
+
+    const modeBonusText = !room.careerHintOpened ? ' (ทายสดไม่ใช้คำใบ้ +3)' : ' (เปิดคำใบ้ +1)';
+    const fastBonusText = speedBonus > 0 ? ' + ⚡ตอบถูกคนแรก +1' : '';
 
     return {
       playerId: player.id,
@@ -1528,7 +1590,7 @@ function finishCareerPathWave(room) {
       status: 'CORRECT',
       pointsEarned: pts,
       timeTakenMs: sub.timeTakenMs,
-      message: `ทายถูกเผง! เขาคือ ${cp.answerName} รับ +${pts} คะแนน`
+      message: `ทายถูกเผง! เขาคือ ${cp.answerName}${modeBonusText}${fastBonusText} ➔ รับ +${pts} คะแนน`
     };
   });
 
@@ -1539,10 +1601,15 @@ function finishCareerPathWave(room) {
 // MODE 5: 4-CHOICE FOOTBALL TRIVIA QUIZ
 function finishTriviaWave(room) {
   const tr = TRIVIA_QUESTIONS.find((q) => q.id === room.currentTriviaId) || TRIVIA_QUESTIONS[0];
+  const diff = tr.difficulty || 'medium';
+  const baseDiffPts = diff === 'hard' ? 3 : diff === 'medium' ? 2 : 1;
+  const diffLabel = diff === 'hard' ? 'ระดับยาก +3' : diff === 'medium' ? 'ระดับปานกลาง +2' : 'ระดับง่าย +1';
 
   const subs = room.players
     .map((pl) => ({ player: pl, sub: room.submissions[pl.id] || null }))
     .sort((a, b) => (a.sub?.timeTakenMs || 999999) - (b.sub?.timeTakenMs || 999999));
+
+  let firstCorrectAwarded = false;
 
   const results = subs.map(({ player, sub }) => {
     if (!sub || (sub.choiceIndex === null && sub.rawInput === '')) {
@@ -1579,20 +1646,25 @@ function finishTriviaWave(room) {
       };
     }
 
-    const pts = 1;
+    const speedBonus = !firstCorrectAwarded ? 1 : 0;
+    firstCorrectAwarded = true;
+    const pts = baseDiffPts + speedBonus;
+
     player.score += pts;
     recordPlayerResultStats(player, true, sub.timeTakenMs, chosenText);
+
+    const fastTag = speedBonus > 0 ? ' + ⚡มือไวคนแรก +1' : '';
 
     return {
       playerId: player.id,
       playerName: player.name,
       playerAvatar: player.avatar,
       rawInput: chosenText,
-      footballer: { name: chosenText, flag: '✅', position: 'Trivia' },
+      footballer: { name: chosenText, flag: '✅', position: `${diffLabel}${fastTag}` },
       status: 'CORRECT',
       pointsEarned: pts,
       timeTakenMs: sub.timeTakenMs,
-      message: `ถูกต้อง! ${tr.explanation}`
+      message: `ถูกต้อง! (${diffLabel}${fastTag}) ${tr.explanation}`
     };
   });
 

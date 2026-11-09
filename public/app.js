@@ -9,27 +9,27 @@ const MODE_META = {
   },
   club_battle: {
     badge: '🏟️ โหมดคลาสสิก: ทายนักเตะประจำสโมสร (1 ทีม)',
-    prompt: '👟 พิมพ์ชื่อนักฟุตบอลที่เคยค้าแข้งกับสโมสรนี้:'
+    prompt: '👟 พิมพ์ชื่อนักฟุตบอลที่เคยอยู่สโมสรนี้ (ตอบถูก +1 แต้ม • ⚡ไวสุดในรอบ +1 • 🔥คอมโบทุก 3 รอบติด +1):'
   },
   lineup_quiz: {
     badge: '📋 โหมดที่ 2: ทายผัง 11 ตัวจริงในตำนาน',
-    prompt: '👕 พิมพ์ชื่อนักฟุตบอลที่อยู่ในผัง 11 ตัวจริงด้านบน (ดูใบ้ธงชาติ + เบอร์เสื้อ):'
+    prompt: '👕 พิมพ์ชื่อนักฟุตบอลในผัง 11 ตัวจริง (ทายสด +2 แต้ม • ใช้คำใบ้ 💡 +1 แต้ม • ปิดผังคนที่ 11 โบนัส +1 แต้ม):'
   },
   top10_stats: {
     badge: '📊 โหมดที่ 3: ทายท็อป 10 สถิติลูกหนัง',
-    prompt: '🏅 พิมพ์ชื่อนักฟุตบอลที่ติดอยู่ใน Top 10 ของหัวข้อสถิตินี้:'
+    prompt: '🏅 พิมพ์ชื่อนักฟุตบอลใน Top 10 (อันดับ #1-#3 = +1 แต้ม • #4-#7 = +2 แต้ม • #8-#10 = +3 แต้ม • ใช้คำใบ้ = +1 แต้ม):'
   },
   career_path: {
     badge: '🕵️‍♂️ โหมดที่ 4: ทายนักเตะจากเส้นทางค้าแข้ง (ฉันคือใคร?)',
-    prompt: '🔍 จากตารางการย้ายทีมด้านบน นักเตะปริศนาคนนี้คือใคร?'
+    prompt: '🔍 ทายชื่อนักเตะปริศนา (ทายสดไม่เปิดคำใบ้ = +3 แต้ม • เปิดคำใบ้ 💡 = +1 แต้ม • ⚡ตอบถูกคนแรกโบนัส +1 แต้ม):'
   },
   trivia_quiz: {
     badge: '⚡ โหมดที่ 5: ควิซแฟนพันธุ์แท้ 4 ตัวเลือก',
-    prompt: '⚡ กดเลือกตัวเลือกที่ถูกต้องที่สุดด้านบน!'
+    prompt: '⚡ กดเลือกคำตอบที่ถูกต้อง (🟢ง่าย +1 • 🟡ปานกลาง +2 • 🔴ยาก +3 • ⚡ตอบถูกคนแรกโบนัส +1 แต้ม):'
   },
   footy_grid: {
     badge: '🔢 โหมดที่ 6: ตาราง XO ฟุตบอล 3x3',
-    prompt: '🎯 คลิกเลือกช่องว่างในตาราง 3x3 ด้านบน แล้วพิมพ์ชื่อนักเตะที่ตรงกับทั้งแนวนอนและแนวตั้ง:'
+    prompt: '🎯 คลิกเลือกช่องแล้วพิมพ์ชื่อนักเตะ (ช่องทั่วไป +2 • 💎ช่องหายาก +3 • ใช้คำใบ้ +1 • 🔥เรียงครบ 3 ช่อง BINGO โบนัส +3 แต้ม):'
   }
 };
 
@@ -749,9 +749,9 @@ function buildModeStageHTML(room, isReveal = false) {
 
         const byLabel = s.unlocked
           ? s.revealed
-            ? `<div class="slot-by" style="color:#fbbf24;">👁️ เฉลยแล้ว</div>`
-            : `<div class="slot-by">✅ ${s.answeredBy}</div>`
-          : '';
+            ? `<div class="slot-by" style="color:#fbbf24;">👁️ เฉลยแล้ว (0 แต้ม)</div>`
+            : `<div class="slot-by">✅ ${s.answeredBy} (+${s.pointsEarned || 2} แต้ม)</div>`
+          : `<div class="slot-by" style="color:#94a3b8;">🎯 +${s.points || 2} แต้ม</div>`;
 
         return `
           <div class="pitch-slot ${s.unlocked ? 'unlocked' : ''}" style="grid-row:${s.row}; grid-column:${s.col};">
@@ -816,9 +816,11 @@ function buildModeStageHTML(room, isReveal = false) {
         if (it.unlocked) {
           statusSubHtml = it.revealed
             ? `<small style="color:#fbbf24;">👁️ เปิดเฉลยแล้ว (0 คะแนน)</small>`
-            : `<small style="color:#6ee7b7;">✅ ตอบถูกโดย ${it.answeredBy} (+1 คะแนน)</small>`;
+            : `<small style="color:#6ee7b7;">✅ ตอบถูกโดย ${it.answeredBy} (+${it.pointsEarned || it.points || 1} คะแนน)</small>`;
         } else if (it.hinted && it.hintText) {
-          statusSubHtml = `<small style="color:#fde68a;font-weight:600;">💡 คำใบ้: ${it.hintText}</small>`;
+          statusSubHtml = `<small style="color:#fde68a;font-weight:600;">💡 คำใบ้: ${it.hintText} (ตอบถูกได้ +1 คะแนน)</small>`;
+        } else {
+          statusSubHtml = `<small style="color:#94a3b8;">🎯 ตอบถูกรับ <strong>+${it.points || 1} คะแนน</strong></small>`;
         }
 
         const rowActionsHtml =
@@ -896,10 +898,11 @@ function buildModeStageHTML(room, isReveal = false) {
     const careerActionsHtml = !isReveal
       ? `
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <span class="top10-progress-pill">🎯 คะแนนข้อนี้: <strong>+${md.potentialPoints || (md.hintOpened ? 1 : 3)} แต้ม</strong> (+1 โบนัสคนแรก)</span>
             ${
               !md.hintOpened
-                ? `<button type="button" class="btn btn-outline btn-sm" data-career-hint="1">💡 เปิดคำใบ้ (ธงชาติ + ตำแหน่ง + อักษรย่อ)</button>`
+                ? `<button type="button" class="btn btn-outline btn-sm" data-career-hint="1">💡 เปิดคำใบ้ (เหลือ +1 แต้ม)</button>`
                 : `<span class="top10-progress-pill">💡 เปิดคำใบ้แล้ว</span>`
             }
             <button type="button" class="btn btn-outline btn-sm" data-career-reveal="1">👁️ ดูเฉลย / ข้ามข้อนี้</button>
@@ -937,9 +940,9 @@ function buildModeStageHTML(room, isReveal = false) {
   if (mode === 'trivia_quiz') {
     const letters = ['A', 'B', 'C', 'D'];
     const diffLabels = {
-      easy: { text: '🟢 ระดับง่าย (Easy)', color: '#10b981' },
-      medium: { text: '🟡 ระดับปานกลาง (Medium)', color: '#f59e0b' },
-      hard: { text: '🔴 ระดับยาก (Hard - แฟนพันธุ์แท้)', color: '#ef4444' }
+      easy: { text: '🟢 ระดับง่าย (+1 แต้ม • ตอบคนแรก +2 แต้ม)', color: '#10b981' },
+      medium: { text: '🟡 ระดับปานกลาง (+2 แต้ม • ตอบคนแรก +3 แต้ม)', color: '#f59e0b' },
+      hard: { text: '🔴 ระดับยาก แฟนพันธุ์แท้ (+3 แต้ม • ตอบคนแรก +4 แต้ม)', color: '#ef4444' }
     };
     const qDiff = diffLabels[md.difficulty] || diffLabels.medium;
     const selDiff = md.selectedDifficulty || room.settings?.triviaDifficulty || 'all';
@@ -950,9 +953,9 @@ function buildModeStageHTML(room, isReveal = false) {
           <span>🎚️ ความยากคำถาม:</span>
           <div class="trivia-diff-pills">
             <button type="button" class="diff-pill ${selDiff === 'all' ? 'active' : ''}" data-trivia-diff="all">🎲 รวมทุกระดับ</button>
-            <button type="button" class="diff-pill ${selDiff === 'easy' ? 'active' : ''}" data-trivia-diff="easy">🟢 ง่าย</button>
-            <button type="button" class="diff-pill ${selDiff === 'medium' ? 'active' : ''}" data-trivia-diff="medium">🟡 ปานกลาง</button>
-            <button type="button" class="diff-pill ${selDiff === 'hard' ? 'active' : ''}" data-trivia-diff="hard">🔴 ยาก</button>
+            <button type="button" class="diff-pill ${selDiff === 'easy' ? 'active' : ''}" data-trivia-diff="easy">🟢 ง่าย (+1)</button>
+            <button type="button" class="diff-pill ${selDiff === 'medium' ? 'active' : ''}" data-trivia-diff="medium">🟡 ปานกลาง (+2)</button>
+            <button type="button" class="diff-pill ${selDiff === 'hard' ? 'active' : ''}" data-trivia-diff="hard">🔴 ยาก (+3)</button>
           </div>
         </div>
       `
@@ -1041,15 +1044,17 @@ function buildModeStageHTML(room, isReveal = false) {
                 ${renderFlagHTML(claimed.playerFlag, claimed.flagUrl)} ${claimed.playerName}
               </strong>
               <small style="font-size:0.7rem;color:${claimed.revealed ? '#fbbf24' : '#6ee7b7'};">
-                ${claimed.revealed ? '👁️ เฉลยระบบ' : `✅ ยึดโดย ${claimed.ownerName}`}
+                ${claimed.revealed ? '👁️ เฉลยระบบ (0 แต้ม)' : `✅ ยึดโดย ${claimed.ownerName} (+${claimed.pointsEarned || 2} แต้ม)`}
               </small>
             </div>
           `;
         } else {
+          const isRare = (metaInfo.possibleCount || 99) <= 5;
+          const ptsLabel = metaInfo.points || (isRare ? 3 : 2);
           const hintLine =
             metaInfo.hinted && metaInfo.hintText
-              ? `<small style="color:#fde68a;font-weight:700;">💡 ${metaInfo.hintText}</small>`
-              : `<small style="opacity:0.65;font-size:0.68rem;">มีนักเตะที่ถูก ${metaInfo.possibleCount || '?'} คน</small>`;
+              ? `<small style="color:#fde68a;font-weight:700;">💡 ${metaInfo.hintText} (+1 แต้ม)</small>`
+              : `<small style="opacity:0.8;font-size:0.68rem;color:${isRare ? '#f472b6' : '#cbd5e1'};">${isRare ? '💎 ช่องหายาก' : 'มีคำตอบ'} (${metaInfo.possibleCount || '?'} คน) • <strong>+${ptsLabel} แต้ม</strong></small>`;
 
           html += `
             <div class="grid-play-cell ${isSelected ? 'selected-target' : ''}" data-grid-cell="${cellIdx}">
@@ -1247,13 +1252,14 @@ function renderPlayingView(room) {
     banner.style.background = `linear-gradient(135deg, ${firstClub?.primaryColor || '#059669'}, #0f172a)`;
     const clubNamesStr = picked.map((pc) => pc.club?.name || pc.clubId).join('  •  ');
     document.getElementById('playingClubName').textContent = clubNamesStr || 'สโมสรบนกระดาน';
-    const x2Count = room.twoClubOverlapCount || 0;
-    const x3Count = room.threeClubOverlapCount || 0;
-    const overlapBadge =
-      mode === 'multi_club_pool'
-        ? ` • 🔥 มีนักเตะคูณ <strong>x2 (${x2Count} คน)</strong> / <strong>x3 (${x3Count} คน)</strong>`
-        : '';
-    document.getElementById('playingClubSub').innerHTML = `ตรง 1 สโมสร = 1 แต้ม, ตรง 2 สโมสร = 2 แต้ม, ตรง 3 สโมสร = 3 แต้ม!${overlapBadge} • รอบย่อยที่ <span id="playingWaveNum">${room.waveNumber}</span>`;
+    if (mode === 'club_battle') {
+      document.getElementById('playingClubSub').innerHTML = `ตอบถูก = <strong>+1 แต้ม</strong> • ⚡ตอบไวสุดในรอบ = <strong>+1 โบนัส</strong> • 🔥คอมโบทุก 3 รอบติด = <strong>+1 โบนัส</strong> • รอบย่อยที่ <span id="playingWaveNum">${room.waveNumber}</span>`;
+    } else {
+      const x2Count = room.twoClubOverlapCount || 0;
+      const x3Count = room.threeClubOverlapCount || 0;
+      const overlapBadge = ` • 🔥 มีนักเตะคูณ <strong>x2 (${x2Count} คน)</strong> / <strong>x3 (${x3Count} คน)</strong>`;
+      document.getElementById('playingClubSub').innerHTML = `ตรง 1 สโมสร = 1 แต้ม, ตรง 2 สโมสร = 2 แต้ม, ตรง 3 สโมสร = 3 แต้ม!${overlapBadge} • รอบย่อยที่ <span id="playingWaveNum">${room.waveNumber}</span>`;
+    }
   } else if (mode === 'lineup_quiz') {
     banner.style.background = `linear-gradient(135deg, ${room.modeData?.clubColor || '#059669'}, #0f172a)`;
     document.getElementById('playingClubName').textContent = room.modeData?.title || 'Guess the Lineup';
