@@ -3593,21 +3593,73 @@ const server = http.createServer((req, res) => {
   }
 
   if (pathname === '/api/data' && req.method === 'GET') {
+    const playerMap = new Map();
+    for (const p of PLAYERS) {
+      playerMap.set(normalizeText(p.name), {
+        id: p.id,
+        name: p.name,
+        flag: p.flag,
+        flagUrl: p.flagUrl || getFlagUrlFromEmoji(p.flag),
+        photoUrl: p.photoUrl || null,
+        position: p.position,
+        clubs: p.clubs || [],
+        aliases: Array.isArray(p.aliases) ? [...p.aliases] : [],
+        fromLiveApi: Boolean(p.fromLiveApi)
+      });
+    }
+    for (const lineup of LINEUPS) {
+      for (const s of lineup.slots || []) {
+        const key = normalizeText(s.playerId);
+        const existing = playerMap.get(key);
+        if (existing) {
+          for (const al of s.aliases || []) {
+            if (!existing.aliases.includes(al)) existing.aliases.push(al);
+          }
+        } else {
+          playerMap.set(key, {
+            id: 'lu_' + key.replace(/\s+/g, '_'),
+            name: s.playerId,
+            flag: s.flag || '⚽',
+            flagUrl: getFlagUrlFromEmoji(s.flag),
+            photoUrl: s.photoUrl || null,
+            position: s.pos || 'FW',
+            clubs: [],
+            aliases: Array.isArray(s.aliases) ? [...s.aliases] : [],
+            fromLiveApi: false
+          });
+        }
+      }
+    }
+    for (const list of TOP10_LISTS) {
+      for (const it of list.items || []) {
+        const key = normalizeText(it.name);
+        const existing = playerMap.get(key);
+        if (existing) {
+          for (const al of it.aliases || []) {
+            if (!existing.aliases.includes(al)) existing.aliases.push(al);
+          }
+        } else {
+          playerMap.set(key, {
+            id: 't10_' + key.replace(/\s+/g, '_'),
+            name: it.name,
+            flag: it.flag || '⚽',
+            flagUrl: getFlagUrlFromEmoji(it.flag),
+            photoUrl: null,
+            position: 'Legend',
+            clubs: [],
+            aliases: Array.isArray(it.aliases) ? [...it.aliases] : [],
+            fromLiveApi: false
+          });
+        }
+      }
+    }
+
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     return res.end(
       JSON.stringify({
         leagues: LEAGUES,
         clubs: CLUBS,
-        players: PLAYERS.map((p) => ({
-          id: p.id,
-          name: p.name,
-          flag: p.flag,
-          flagUrl: p.flagUrl || getFlagUrlFromEmoji(p.flag),
-          photoUrl: p.photoUrl || null,
-          position: p.position,
-          aliases: p.aliases,
-          fromLiveApi: Boolean(p.fromLiveApi)
-        }))
+        players: Array.from(playerMap.values())
       })
     );
   }
