@@ -1371,6 +1371,17 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
       recordPlayerResultStats(player, true, null, guessedPlayer.name);
     }
 
+    if (!guessedPlayer.photoUrl) {
+      getPlayerPhotoByName(guessedPlayer.name).then((photo) => {
+        if (photo) {
+          guessedPlayer.photoUrl = photo;
+          const node = (room.chainLinkHistory || []).find((h) => h.playerId === guessedPlayer.id);
+          if (node) node.photoUrl = photo;
+          broadcastRoom(room.code, 'top10_updated');
+        }
+      });
+    }
+
     // Check if the newly added player has any remaining unused clubs with available teammates; if dead-end, auto-reset or notify
     const bonusTxt = milestoneBonus > 0 ? ' (🔥 โบนัสโซ่ยาวครบ 5 ข้อ +1 แต้ม!)' : '';
     broadcastRoom(room.code, 'top10_updated', {
@@ -2382,7 +2393,7 @@ function pickMysteryWordlePlayer(previousId = null) {
       (p.clubs.length >= 2 || (p.aliases && p.aliases.length >= 2))
   );
   const pool =
-    withPhotos.length >= 20
+    withPhotos.length > 0
       ? withPhotos
       : PLAYERS.filter((p) => p.id !== previousId && p.clubs.some((cid) => famousClubIds.has(cid)));
   return pool[Math.floor(Math.random() * pool.length)] || PLAYERS[0];
@@ -2572,6 +2583,15 @@ function startModeRound(room, options = {}) {
     ];
     room.chainUsedClubs = [];
     room.chainHintText = null;
+    if (!starter.photoUrl) {
+      getPlayerPhotoByName(starter.name).then((photo) => {
+        if (photo && room.chainLinkHistory && room.chainLinkHistory[0]?.playerId === starter.id) {
+          room.chainLinkHistory[0].photoUrl = photo;
+          starter.photoUrl = photo;
+          broadcastRoom(room.code, 'top10_updated');
+        }
+      });
+    }
     startWave(room);
   } else {
     // club_battle: Multi-Club Pool!

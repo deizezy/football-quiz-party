@@ -329,8 +329,22 @@
           </div>
         </div>
 
-        <!-- STATE C: PLAYING (ALL 6 MODES) -->
+        <!-- STATE C: PLAYING (ALL 9 MODES) -->
         <div id="playingView" class="state-view">
+          <!-- Target Score Reached Banner (for Untimed Continuous Modes) -->
+          <div id="playingTargetReachedBanner" class="target-reached-banner hidden" style="margin-bottom: 14px;">
+            <div class="target-reached-text">
+              <span>🏆</span>
+              <div>
+                <strong>มีผู้เล่นทำคะแนนทะลุเป้าหมายแชมป์แล้ว!</strong>
+                <p>กดปุ่ม "มอบถ้วยแชมป์ & สรุปผลแมตช์" เพื่อเข้าสู่พิธีฉลองแชมป์ หรือจะดวลต่อก็ได้</p>
+              </div>
+            </div>
+            <button id="celebrateChampionPlayingBtn" class="btn btn-gold btn-lg">
+              🏆 มอบถ้วยแชมป์ & สรุปผลแมตช์!
+            </button>
+          </div>
+
           <div id="activeClubBanner" class="club-banner">
             <div class="club-banner-info">
               <span id="playingLeagueBadge" class="league-tag">Premier League</span>

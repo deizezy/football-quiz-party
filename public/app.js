@@ -188,7 +188,12 @@ async function apiAction(action, payload = {}) {
       ...payload
     })
   });
-  return res.json();
+  const data = await res.json();
+  if (data && data.room && state.roomCode && action !== 'create_room' && action !== 'join_room') {
+    state.room = data.room;
+    renderRoom();
+  }
+  return data;
 }
 
 async function loadDatabase(isRetry = false) {
@@ -1755,6 +1760,11 @@ function renderPlayingView(room) {
     document.getElementById('playingClubSub').innerHTML = `พิมพ์ชื่อนักเตะที่เคยอยู่สโมสรเดียวกับคนล่าสุดในโซ่ (<strong>+2 แต้ม/ลิงก์</strong> + โบนัสทุก 5 ลิงก์ • ห้ามซ้ำคน & ห้ามใช้สโมสรเชื่อมซ้ำ!)`;
   }
 
+  const playingTargetBanner = document.getElementById('playingTargetReachedBanner');
+  if (playingTargetBanner) {
+    playingTargetBanner.classList.toggle('hidden', !room.hasReachedTarget);
+  }
+
   updateTimerOnly();
 
   const stageEl = document.getElementById('modeDynamicStage');
@@ -2026,6 +2036,22 @@ function updateAutocomplete(query, skipLiveFetch = false) {
   }
 
   const usedIds = new Set((state.room?.usedPlayers || []).map((u) => u.id));
+  const usedNames = new Set();
+  const curMode = state.room?.settings?.gameMode;
+  const md = state.room?.modeData;
+  if (curMode === 'footy_grid' && md && Array.isArray(md.cells)) {
+    md.cells.forEach((c) => {
+      if (c && c.playerName) usedNames.add(normalizeText(c.playerName));
+    });
+  } else if (curMode === 'who_are_ya_wordle' && md && Array.isArray(md.guesses)) {
+    md.guesses.forEach((g) => {
+      if (g && g.playerId) usedIds.add(g.playerId);
+    });
+  } else if (curMode === 'chain_link' && md && Array.isArray(md.history)) {
+    md.history.forEach((h) => {
+      if (h && h.playerId) usedIds.add(h.playerId);
+    });
+  }
 
   const matches = [];
   for (const p of state.players) {
@@ -2037,7 +2063,7 @@ function updateAutocomplete(query, skipLiveFetch = false) {
     if (startsWith || aliasMatch || includesMatch) {
       matches.push({
         player: p,
-        alreadyUsed: usedIds.has(p.id),
+        alreadyUsed: usedIds.has(p.id) || usedNames.has(pNameNorm),
         priority: startsWith ? 1 : aliasMatch ? 2 : 3
       });
     }
@@ -2290,6 +2316,10 @@ function bindRoomEvents() {
   document.getElementById('endMatchSidebarBtn').addEventListener('click', triggerEndMatch);
   document.getElementById('endMatchRevealBtn').addEventListener('click', triggerEndMatch);
   document.getElementById('celebrateChampionBtn').addEventListener('click', triggerEndMatch);
+  const celebratePlayingBtn = document.getElementById('celebrateChampionPlayingBtn');
+  if (celebratePlayingBtn) {
+    celebratePlayingBtn.addEventListener('click', triggerEndMatch);
+  }
 
   document.getElementById('startClubSelectBtn').addEventListener('click', () => {
     sfx.init();
