@@ -385,6 +385,66 @@ const LINEUPS = [
       { slotId: 'st1', pos: 'ST', number: 11, flag: '🇧🇷', row: 1, col: 4, playerId: 'Rodrygo', aliases: ['rodrygo', 'โรดรีโก้'] },
       { slotId: 'st2', pos: 'ST', number: 7, flag: '🇧🇷', row: 1, col: 2, playerId: 'Vinícius Júnior', aliases: ['vinicius', 'vini jr', 'วินิซิอุส'] }
     ]
+  },
+  {
+    id: 'eng_2006_wc',
+    title: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 ทีมชาติอังกฤษ - ยุคทอง Golden Generation (ฟุตบอลโลก 2006)',
+    subtitle: 'ระบบ 4-4-2 • กุนซือ: Sven-Göran Eriksson',
+    formation: '4-4-2',
+    clubColor: '#DC2626',
+    slots: [
+      { slotId: 'gk', pos: 'GK', number: 1, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 4, col: 3, playerId: 'Paul Robinson', aliases: ['robinson', 'พอล โรบินสัน'] },
+      { slotId: 'rb', pos: 'RB', number: 2, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 3, col: 5, playerId: 'Gary Neville', aliases: ['gary neville', 'neville', 'แกรี่ เนวิลล์'] },
+      { slotId: 'cb1', pos: 'CB', number: 5, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 3, col: 4, playerId: 'Rio Ferdinand', aliases: ['ferdinand', 'ริโอ'] },
+      { slotId: 'cb2', pos: 'CB', number: 6, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 3, col: 2, playerId: 'John Terry', aliases: ['terry', 'john terry', 'จอห์น เทอร์รี่', 'เทอร์รี่'] },
+      { slotId: 'lb', pos: 'LB', number: 3, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 3, col: 1, playerId: 'Ashley Cole', aliases: ['ashley cole', 'แอชลีย์ โคล'] },
+      { slotId: 'rm', pos: 'RM', number: 7, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 2, col: 5, playerId: 'David Beckham', aliases: ['beckham', 'เบ็คแฮม'] },
+      { slotId: 'cm1', pos: 'CM', number: 4, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 2, col: 4, playerId: 'Steven Gerrard', aliases: ['gerrard', 'เจอร์ราร์ด'] },
+      { slotId: 'cm2', pos: 'CM', number: 8, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 2, col: 2, playerId: 'Frank Lampard', aliases: ['lampard', 'แลมพาร์ด'] },
+      { slotId: 'lm', pos: 'LM', number: 11, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 2, col: 1, playerId: 'Joe Cole', aliases: ['joe cole', 'โจ โคล'] },
+      { slotId: 'st1', pos: 'ST', number: 9, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 1, col: 4, playerId: 'Wayne Rooney', aliases: ['rooney', 'รูนี่ย์'] },
+      { slotId: 'st2', pos: 'ST', number: 10, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 1, col: 2, playerId: 'Michael Owen', aliases: ['owen', 'michael owen', 'โอเว่น'] }
+    ]
+  },
+  {
+    id: 'fra_1998_wc',
+    title: '🇫🇷 ทีมชาติฝรั่งเศส - แชมป์ฟุตบอลโลก 1998 ยุคซีดาน (ชนะบราซิล 3-0)',
+    subtitle: 'ระบบ 4-3-2-1 • กุนซือ: Aimé Jacquet',
+    formation: '4-3-2-1',
+    clubColor: '#1D4ED8',
+    slots: [
+      { slotId: 'gk', pos: 'GK', number: 16, flag: '🇫🇷', row: 4, col: 3, playerId: 'Fabien Barthez', aliases: ['barthez', 'บาร์กเตซ'] },
+      { slotId: 'rb', pos: 'RB', number: 15, flag: '🇫🇷', row: 3, col: 5, playerId: 'Lilian Thuram', aliases: ['thuram', 'ตูราม'] },
+      { slotId: 'cb1', pos: 'CB', number: 8, flag: '🇫🇷', row: 3, col: 4, playerId: 'Marcel Desailly', aliases: ['desailly', 'เดอไซญี่'] },
+      { slotId: 'cb2', pos: 'CB', number: 18, flag: '🇫🇷', row: 3, col: 2, playerId: 'Frank Leboeuf', aliases: ['leboeuf', 'เลอเบิฟ'] },
+      { slotId: 'lb', pos: 'LB', number: 3, flag: '🇫🇷', row: 3, col: 1, playerId: 'Bixente Lizarazu', aliases: ['lizarazu', 'ลิซาราซู'] },
+      { slotId: 'cm1', pos: 'CM', number: 19, flag: '🇫🇷', row: 2, col: 5, playerId: 'Christian Karembeu', aliases: ['karembeu', 'การ็องเบอ'] },
+      { slotId: 'cdm', pos: 'CDM', number: 7, flag: '🇫🇷', row: 2, col: 3, playerId: 'Didier Deschamps', aliases: ['deschamps', 'เดส์ช็องส์'] },
+      { slotId: 'cm2', pos: 'CM', number: 17, flag: '🇫🇷', row: 2, col: 1, playerId: 'Emmanuel Petit', aliases: ['petit', 'เปอตีต์'] },
+      { slotId: 'cam1', pos: 'CAM', number: 10, flag: '🇫🇷', row: 1, col: 4, playerId: 'Zinedine Zidane', aliases: ['zidane', 'zizou', 'ซีดาน'] },
+      { slotId: 'cam2', pos: 'CAM', number: 6, flag: '🇫🇷', row: 1, col: 2, playerId: 'Youri Djorkaeff', aliases: ['djorkaeff', 'จอร์คาเอฟฟ์'] },
+      { slotId: 'st', pos: 'ST', number: 9, flag: '🇫🇷', row: 1, col: 3, playerId: 'Stéphane Guivarc\'h', aliases: ['guivarch', 'กีวาร์ช'] }
+    ]
+  },
+  {
+    id: 'rma_2002_galacticos',
+    title: 'Real Madrid - ยุคกาลาติกอส แชมป์ UCL 2002 (ลูกวอลเลย์ซีดาน)',
+    subtitle: 'ระบบ 4-3-1-2 • กุนซือ: Vicente del Bosque',
+    formation: '4-3-1-2',
+    clubColor: '#00529F',
+    slots: [
+      { slotId: 'gk', pos: 'GK', number: 1, flag: '🇪🇸', row: 4, col: 3, playerId: 'Iker Casillas', aliases: ['casillas', 'กาซียาส'] },
+      { slotId: 'rb', pos: 'RB', number: 2, flag: '🇪🇸', row: 3, col: 5, playerId: 'Míchel Salgado', aliases: ['salgado', 'ซัลกาโด้'] },
+      { slotId: 'cb1', pos: 'CB', number: 4, flag: '🇪🇸', row: 3, col: 4, playerId: 'Fernando Hierro', aliases: ['hierro', 'เอียร์โร่'] },
+      { slotId: 'cb2', pos: 'CB', number: 6, flag: '🇪🇸', row: 3, col: 2, playerId: 'Iván Helguera', aliases: ['helguera', 'เอลเกร่า'] },
+      { slotId: 'lb', pos: 'LB', number: 3, flag: '🇧🇷', row: 3, col: 1, playerId: 'Roberto Carlos', aliases: ['roberto carlos', 'โรแบร์โต้ คาร์ลอส'] },
+      { slotId: 'cm1', pos: 'RM', number: 10, flag: '🇵🇹', row: 2, col: 5, playerId: 'Luís Figo', aliases: ['figo', 'ฟิโก้'] },
+      { slotId: 'cdm', pos: 'CDM', number: 24, flag: '🇫🇷', row: 2, col: 3, playerId: 'Claude Makélélé', aliases: ['makelele', 'มาเกเลเล่'] },
+      { slotId: 'cm2', pos: 'LM', number: 21, flag: '🇦🇷', row: 2, col: 1, playerId: 'Santiago Solari', aliases: ['solari', 'โซลารี่'] },
+      { slotId: 'cam', pos: 'CAM', number: 5, flag: '🇫🇷', row: 1, col: 3, playerId: 'Zinedine Zidane', aliases: ['zidane', 'ซีดาน'] },
+      { slotId: 'st1', pos: 'ST', number: 7, flag: '🇪🇸', row: 1, col: 4, playerId: 'Raúl González', aliases: ['raul', 'ราอูล'] },
+      { slotId: 'st2', pos: 'ST', number: 9, flag: '🇪🇸', row: 1, col: 2, playerId: 'Fernando Morientes', aliases: ['morientes', 'มอริเอนเตส'] }
+    ]
   }
 ];
 

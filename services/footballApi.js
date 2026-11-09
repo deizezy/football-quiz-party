@@ -838,26 +838,6 @@ async function initializeFootballApiData() {
           if (t.color) clubObj.primaryColor = '#' + t.color;
           espnTeamsToFetchRosters.push({ clubObj, espnTeamId: t.id, slug: LEAGUE_ESPN_SLUGS[leagueId].slug });
         }
-      } else {
-        // Add any additional 2026-27 club from the Top 5 Leagues so all current clubs are playable!
-        const newId = 'club_' + t.id;
-        if (!CLUBS.some((c) => c.id === newId)) {
-          const newClub = {
-            id: newId,
-            espnTeamId: t.id,
-            espnLeagueSlug: LEAGUE_ESPN_SLUGS[leagueId].slug,
-            name: t.displayName || t.name,
-            nameTh: t.shortDisplayName || t.name,
-            short: t.abbreviation || t.name.slice(0, 3).toUpperCase(),
-            league: leagueId,
-            primaryColor: t.color ? '#' + t.color : '#10b981',
-            secondaryColor: t.alternateColor ? '#' + t.alternateColor : '#1e293b',
-            badgeUrl: logo,
-            aliases: [t.name.toLowerCase(), (t.shortDisplayName || '').toLowerCase(), (t.abbreviation || '').toLowerCase()].filter(Boolean)
-          };
-          CLUBS.push(newClub);
-          espnTeamsToFetchRosters.push({ clubObj: newClub, espnTeamId: t.id, slug: LEAGUE_ESPN_SLUGS[leagueId].slug });
-        }
       }
     }
   }
@@ -1129,41 +1109,19 @@ async function initializeFootballApiData() {
     console.log(`✅ Loaded ${TOP10_LISTS.length} Top 10 leaderboards (${liveTop10Lists.length} Live 2026-27 + ${classicTop10.length} All-Time)!`);
   }
 
-  // 4. Fetch Live 2026-27 Match Lineups (11 Starting XI) from ESPN Scoreboard + Summary API
-  const liveLineups = [];
-  for (const lg of statLeagues.slice(0, 5)) {
-    const sb = await fetchJsonWithTimeout(`${ESPN_SITE_API}/${lg.slug}/scoreboard`, 4500);
-    const events = (sb?.events || []).slice(0, 2);
-    for (const ev of events) {
-      const sum = await fetchJsonWithTimeout(`${ESPN_SITE_API}/${lg.slug}/summary?event=${ev.id}`, 4500);
-      if (!sum || !Array.isArray(sum.rosters)) continue;
-      for (const r of sum.rosters) {
-        const starters = (r.roster || []).filter((x) => x.starter);
-        if (starters.length === 11) {
-          const teamName = r.team?.displayName || 'Team';
-          const oppTeam = sum.rosters.find((o) => o !== r)?.team?.displayName || '';
-          const formation = r.formation || '4-3-3';
-          const slots = buildPitchSlotsFromEspnStarters(starters);
-          liveLineups.push({
-            id: `live_xi_${ev.id}_${r.team?.id}`,
-            title: `${teamName} - 11 ตัวจริงชุดล่าสุด (พบ ${oppTeam})`,
-            subtitle: `ระบบ ${formation} • ${lg.titlePrefix} (Live API 2026-27)`,
-            formation,
-            clubColor: r.team?.color ? '#' + r.team.color : '#059669',
-            slots
-          });
-        }
+  // 4. Enrich Iconic Match Lineups (LINEUPS) with verified player photos & flagUrls (only keep curated Big Clubs & National Teams!)
+  for (const lineup of LINEUPS) {
+    for (const slot of lineup.slots || []) {
+      const known = PLAYERS.find((p) => normalizeText(p.name) === normalizeText(slot.playerId));
+      if (known && known.photoUrl && !slot.photoUrl) {
+        slot.photoUrl = known.photoUrl;
+      }
+      if (!slot.flagUrl) {
+        slot.flagUrl = getFlagUrlFromEmoji(slot.flag);
       }
     }
   }
-
-  if (liveLineups.length > 0) {
-    const classicLineups = LINEUPS.filter((l) => !l.id.startsWith('live_xi_'));
-    LINEUPS.length = 0;
-    liveLineups.forEach((l) => LINEUPS.push(l));
-    classicLineups.forEach((l) => LINEUPS.push(l));
-    console.log(`✅ Loaded ${LINEUPS.length} Match Lineups (${liveLineups.length} Live 2026-27 + ${classicLineups.length} Classic Finals)!`);
-  }
+  console.log(`✅ Loaded ${LINEUPS.length} Iconic Club & National Team Lineups!`);
 
   // 5. Enrich Career Histories (teamHistory) for Top Active Multi-Club Players & Build Live Career Path Puzzles
   const featuredStars = PLAYERS.filter((p) => seedPlayerLookup.has(normalizeText(p.name))).slice(0, 24);
