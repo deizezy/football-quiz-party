@@ -318,20 +318,22 @@ function initHomeUI() {
   });
 
   const picker = document.getElementById('avatarPicker');
-  picker.innerHTML = '';
-  AVATARS.forEach((av) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'avatar-option' + (state.avatar === av ? ' selected' : '');
-    btn.textContent = av;
-    btn.addEventListener('click', () => {
-      state.avatar = av;
-      localStorage.setItem('fcq_avatar', av);
-      picker.querySelectorAll('.avatar-option').forEach((b) => b.classList.remove('selected'));
-      btn.classList.add('selected');
+  if (picker) {
+    picker.innerHTML = '';
+    AVATARS.forEach((av) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'avatar-option' + (state.avatar === av ? ' selected' : '');
+      btn.textContent = av;
+      btn.addEventListener('click', () => {
+        state.avatar = av;
+        localStorage.setItem('fcq_avatar', av);
+        picker.querySelectorAll('.avatar-option').forEach((b) => b.classList.remove('selected'));
+        btn.classList.add('selected');
+      });
+      picker.appendChild(btn);
     });
-    picker.appendChild(btn);
-  });
+  }
 
   const params = new URLSearchParams(window.location.search);
   const roomParam = params.get('room');
