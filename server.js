@@ -2725,10 +2725,21 @@ function startModeRound(room, options = {}) {
   if (mode === 'lineup_quiz') {
     room.roundNumber += 1;
     room.waveNumber = 1;
-    const chosen = options.lineupId
-      ? LINEUPS.find((l) => l.id === options.lineupId)
-      : LINEUPS[(room.roundNumber - 1) % LINEUPS.length];
+    if (!Array.isArray(room.usedLineupIds)) room.usedLineupIds = [];
+    let chosen = options.lineupId ? LINEUPS.find((l) => l.id === options.lineupId) : null;
+    if (!chosen) {
+      const usedSet = new Set(room.usedLineupIds);
+      let pool = LINEUPS.filter((l) => !usedSet.has(l.id));
+      if (pool.length === 0) {
+        room.usedLineupIds = room.currentLineupId ? [room.currentLineupId] : [];
+        pool = LINEUPS.filter((l) => l.id !== room.currentLineupId);
+      }
+      chosen = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : LINEUPS[0];
+    }
     room.currentLineupId = (chosen || LINEUPS[0]).id;
+    if (!room.usedLineupIds.includes(room.currentLineupId)) {
+      room.usedLineupIds.push(room.currentLineupId);
+    }
     room.unlockedLineupSlots = {};
     room.hintedLineupSlots = {};
     startWave(room);

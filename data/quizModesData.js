@@ -445,6 +445,366 @@ const LINEUPS = [
       { slotId: 'st1', pos: 'ST', number: 7, flag: '🇪🇸', row: 1, col: 4, playerId: 'Raúl González', aliases: ['raul', 'ราอูล'] },
       { slotId: 'st2', pos: 'ST', number: 9, flag: '🇪🇸', row: 1, col: 2, playerId: 'Fernando Morientes', aliases: ['morientes', 'มอริเอนเตส'] }
     ]
+  },
+  {
+    id: 'liv_2005_istanbul',
+    title: 'Liverpool - ปาฏิหาริย์อิสตันบูล แชมป์ UCL 2005 (คัมแบ็กชนะเอซี มิลาน 3-3)',
+    subtitle: 'ระบบ 4-4-1-1 • กุนซือ: Rafael Benítez',
+    formation: '4-4-1-1',
+    clubColor: '#C8102E',
+    slots: [
+      { slotId: 'gk', pos: 'GK', number: 1, flag: '🇵🇱', row: 4, col: 3, playerId: 'Jerzy Dudek', aliases: ['dudek', 'ดูเด็ค'] },
+      { slotId: 'rb', pos: 'RB', number: 3, flag: '🇮🇪', row: 3, col: 5, playerId: 'Steve Finnan', aliases: ['finnan', 'ฟินแนน'] },
+      { slotId: 'cb1', pos: 'CB', number: 23, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 3, col: 4, playerId: 'Jamie Carragher', aliases: ['carragher', 'คาร์ราเกอร์'] },
+      { slotId: 'cb2', pos: 'CB', number: 4, flag: '🇫🇮', row: 3, col: 2, playerId: 'Sami Hyypiä', aliases: ['hyypia', 'ฮูเปีย'] },
+      { slotId: 'lb', pos: 'LB', number: 21, flag: '🇲🇱', row: 3, col: 1, playerId: 'Djimi Traoré', aliases: ['traore', 'ตราโอเร่'] },
+      { slotId: 'rm', pos: 'RM', number: 10, flag: '🇪🇸', row: 2, col: 5, playerId: 'Luis García', aliases: ['luis garcia', 'หลุยส์ การ์เซีย'] },
+      { slotId: 'cm1', pos: 'CM', number: 8, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 2, col: 4, playerId: 'Steven Gerrard', aliases: ['gerrard', 'เจอร์ราร์ด'] },
+      { slotId: 'cm2', pos: 'CM', number: 14, flag: '🇪🇸', row: 2, col: 2, playerId: 'Xabi Alonso', aliases: ['xabi alonso', 'ชาบี อลอนโซ่'] },
+      { slotId: 'lm', pos: 'LM', number: 6, flag: '🇳🇴', row: 2, col: 1, playerId: 'John Arne Riise', aliases: ['riise', 'รีเซ่'] },
+      { slotId: 'cam', pos: 'AM', number: 7, flag: '🇦🇺', row: 1, col: 4, playerId: 'Harry Kewell', aliases: ['kewell', 'คีเวลล์'] },
+      { slotId: 'st', pos: 'ST', number: 5, flag: '🇨🇿', row: 1, col: 2, playerId: 'Milan Baroš', aliases: ['baros', 'บารอส'] }
+    ]
+  },
+  {
+    id: 'int_2010_treble',
+    title: 'Inter Milan - ทริปเปิลแชมป์ประวัติศาสตร์ 2010 (ชนะบาเยิร์น 2-0)',
+    subtitle: 'ระบบ 4-2-3-1 • กุนซือ: José Mourinho',
+    formation: '4-2-3-1',
+    clubColor: '#010E80',
+    slots: [
+      { slotId: 'gk', pos: 'GK', number: 12, flag: '🇧🇷', row: 4, col: 3, playerId: 'Júlio César', aliases: ['julio cesar', 'ชูลิโอ เซซาร์'] },
+      { slotId: 'rb', pos: 'RB', number: 13, flag: '🇧🇷', row: 3, col: 5, playerId: 'Maicon', aliases: ['ไมคอน'] },
+      { slotId: 'cb1', pos: 'CB', number: 6, flag: '🇧🇷', row: 3, col: 4, playerId: 'Lúcio', aliases: ['lucio', 'ลูซิโอ'] },
+      { slotId: 'cb2', pos: 'CB', number: 25, flag: '🇦🇷', row: 3, col: 2, playerId: 'Walter Samuel', aliases: ['samuel', 'วอลเตอร์ ซามูเอล'] },
+      { slotId: 'lb', pos: 'LB', number: 26, flag: '🇷🇴', row: 3, col: 1, playerId: 'Cristian Chivu', aliases: ['chivu', 'คิวู'] },
+      { slotId: 'cdm1', pos: 'CDM', number: 4, flag: '🇦🇷', row: 2, col: 4, playerId: 'Javier Zanetti', aliases: ['zanetti', 'ซาเน็ตติ'] },
+      { slotId: 'cdm2', pos: 'CDM', number: 19, flag: '🇦🇷', row: 2, col: 2, playerId: 'Esteban Cambiasso', aliases: ['cambiasso', 'คัมบิอัสโซ่'] },
+      { slotId: 'cam', pos: 'CAM', number: 10, flag: '🇳🇱', row: 2, col: 3, playerId: 'Wesley Sneijder', aliases: ['sneijder', 'สไนเดอร์'] },
+      { slotId: 'rw', pos: 'RW', number: 9, flag: '🇨🇲', row: 1, col: 5, playerId: 'Samuel Eto\'o', aliases: ['etoo', 'เอโต้'] },
+      { slotId: 'st', pos: 'ST', number: 22, flag: '🇦🇷', row: 1, col: 3, playerId: 'Diego Milito', aliases: ['milito', 'มิลิโต้'] },
+      { slotId: 'lw', pos: 'LW', number: 27, flag: '🇲🇰', row: 1, col: 1, playerId: 'Goran Pandev', aliases: ['pandev', 'ปานเดฟ'] }
+    ]
+  },
+  {
+    id: 'che_2012_ucl',
+    title: 'Chelsea - แชมป์ UCL สมัยแรกที่มิวนิค 2012 (ชนะบาเยิร์นจุดโทษ)',
+    subtitle: 'ระบบ 4-2-3-1 • กุนซือ: Roberto Di Matteo',
+    formation: '4-2-3-1',
+    clubColor: '#034694',
+    slots: [
+      { slotId: 'gk', pos: 'GK', number: 1, flag: '🇨🇿', row: 4, col: 3, playerId: 'Petr Čech', aliases: ['cech', 'ปีเตอร์ เช็ก'] },
+      { slotId: 'rb', pos: 'RB', number: 17, flag: '🇵🇹', row: 3, col: 5, playerId: 'José Bosingwa', aliases: ['bosingwa', 'โบซิงวา'] },
+      { slotId: 'cb1', pos: 'CB', number: 24, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 3, col: 4, playerId: 'Gary Cahill', aliases: ['gary cahill', 'แกรี่ เคฮิลล์'] },
+      { slotId: 'cb2', pos: 'CB', number: 4, flag: '🇧🇷', row: 3, col: 2, playerId: 'David Luiz', aliases: ['david luiz', 'ดาวิด ลุยซ์'] },
+      { slotId: 'lb', pos: 'LB', number: 3, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 3, col: 1, playerId: 'Ashley Cole', aliases: ['ashley cole', 'แอชลีย์ โคล'] },
+      { slotId: 'cdm1', pos: 'CDM', number: 12, flag: '🇳🇬', row: 2, col: 4, playerId: 'John Obi Mikel', aliases: ['mikel', 'มิเกล'] },
+      { slotId: 'cdm2', pos: 'CDM', number: 8, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 2, col: 2, playerId: 'Frank Lampard', aliases: ['lampard', 'แลมพาร์ด'] },
+      { slotId: 'cam', pos: 'CAM', number: 10, flag: '🇪🇸', row: 2, col: 3, playerId: 'Juan Mata', aliases: ['mata', 'ฆวน มาต้า'] },
+      { slotId: 'rw', pos: 'RW', number: 21, flag: '🇨🇮', row: 1, col: 5, playerId: 'Salomon Kalou', aliases: ['kalou', 'กาลู'] },
+      { slotId: 'st', pos: 'ST', number: 11, flag: '🇨🇮', row: 1, col: 3, playerId: 'Didier Drogba', aliases: ['drogba', 'ดร็อกบา'] },
+      { slotId: 'lw', pos: 'LW', number: 34, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 1, col: 1, playerId: 'Ryan Bertrand', aliases: ['bertrand', 'เบอร์ทรานด์'] }
+    ]
+  },
+  {
+    id: 'bay_2013_treble',
+    title: 'Bayern Munich - ทริปเปิลแชมป์ยุค Jupp Heynckes 2013 (ชนะดอร์ทมุนด์ 2-1)',
+    subtitle: 'ระบบ 4-2-3-1 • กุนซือ: Jupp Heynckes',
+    formation: '4-2-3-1',
+    clubColor: '#DC052D',
+    slots: [
+      { slotId: 'gk', pos: 'GK', number: 1, flag: '🇩🇪', row: 4, col: 3, playerId: 'Manuel Neuer', aliases: ['neuer', 'นอยเออร์'] },
+      { slotId: 'rb', pos: 'RB', number: 21, flag: '🇩🇪', row: 3, col: 5, playerId: 'Philipp Lahm', aliases: ['lahm', 'ลาห์ม'] },
+      { slotId: 'cb1', pos: 'CB', number: 17, flag: '🇩🇪', row: 3, col: 4, playerId: 'Jérôme Boateng', aliases: ['boateng', 'บัวเต็ง'] },
+      { slotId: 'cb2', pos: 'CB', number: 4, flag: '🇧🇷', row: 3, col: 2, playerId: 'Dante', aliases: ['ดันเต้'] },
+      { slotId: 'lb', pos: 'LB', number: 27, flag: '🇦🇹', row: 3, col: 1, playerId: 'David Alaba', aliases: ['alaba', 'อลาบา'] },
+      { slotId: 'cdm1', pos: 'CDM', number: 8, flag: '🇪🇸', row: 2, col: 4, playerId: 'Javi Martínez', aliases: ['javi martinez', 'ฆาบี มาร์ติเนซ'] },
+      { slotId: 'cdm2', pos: 'CDM', number: 31, flag: '🇩🇪', row: 2, col: 2, playerId: 'Bastian Schweinsteiger', aliases: ['schweinsteiger', 'ชไวน์สไตเกอร์'] },
+      { slotId: 'cam', pos: 'CAM', number: 25, flag: '🇩🇪', row: 2, col: 3, playerId: 'Thomas Müller', aliases: ['muller', 'มุลเลอร์'] },
+      { slotId: 'rw', pos: 'RW', number: 10, flag: '🇳🇱', row: 1, col: 5, playerId: 'Arjen Robben', aliases: ['robben', 'ร็อบเบน'] },
+      { slotId: 'st', pos: 'ST', number: 9, flag: '🇭🇷', row: 1, col: 3, playerId: 'Mario Mandžukić', aliases: ['mandzukic', 'มานด์ซูคิช'] },
+      { slotId: 'lw', pos: 'LW', number: 7, flag: '🇫🇷', row: 1, col: 1, playerId: 'Franck Ribéry', aliases: ['ribery', 'ริเบรี่'] }
+    ]
+  },
+  {
+    id: 'rma_2014_decima',
+    title: 'Real Madrid - แชมป์ UCL สมัยที่ 10 La Décima 2014 (ชนะแอตฯ มาดริด 4-1)',
+    subtitle: 'ระบบ 4-3-3 • กุนซือ: Carlo Ancelotti',
+    formation: '4-3-3',
+    clubColor: '#00529F',
+    slots: [
+      { slotId: 'gk', pos: 'GK', number: 1, flag: '🇪🇸', row: 4, col: 3, playerId: 'Iker Casillas', aliases: ['casillas', 'กาซียาส'] },
+      { slotId: 'rb', pos: 'RB', number: 15, flag: '🇪🇸', row: 3, col: 5, playerId: 'Dani Carvajal', aliases: ['carvajal', 'การ์บาฆาล'] },
+      { slotId: 'cb1', pos: 'CB', number: 4, flag: '🇪🇸', row: 3, col: 4, playerId: 'Sergio Ramos', aliases: ['ramos', 'รามอส'] },
+      { slotId: 'cb2', pos: 'CB', number: 2, flag: '🇫🇷', row: 3, col: 2, playerId: 'Raphaël Varane', aliases: ['varane', 'วาราน'] },
+      { slotId: 'lb', pos: 'LB', number: 5, flag: '🇵🇹', row: 3, col: 1, playerId: 'Fábio Coentrão', aliases: ['coentrao', 'โคเอนเทรา'] },
+      { slotId: 'cm1', pos: 'CM', number: 19, flag: '🇭🇷', row: 2, col: 4, playerId: 'Luka Modrić', aliases: ['modric', 'โมดริช'] },
+      { slotId: 'cdm', pos: 'CDM', number: 6, flag: '🇩🇪', row: 2, col: 3, playerId: 'Sami Khedira', aliases: ['khedira', 'เคดิร่า'] },
+      { slotId: 'cm2', pos: 'CM', number: 22, flag: '🇦🇷', row: 2, col: 2, playerId: 'Ángel Di María', aliases: ['di maria', 'ดิมาเรีย'] },
+      { slotId: 'rw', pos: 'RW', number: 11, flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', row: 1, col: 5, playerId: 'Gareth Bale', aliases: ['bale', 'เบล'] },
+      { slotId: 'st', pos: 'ST', number: 9, flag: '🇫🇷', row: 1, col: 3, playerId: 'Karim Benzema', aliases: ['benzema', 'เบนเซม่า'] },
+      { slotId: 'lw', pos: 'LW', number: 7, flag: '🇵🇹', row: 1, col: 1, playerId: 'Cristiano Ronaldo', aliases: ['ronaldo', 'cr7', 'โรนัลโด้'] }
+    ]
+  },
+  {
+    id: 'bar_2009_sextuple',
+    title: 'Barcelona - หกแชมป์ประวัติศาสตร์ 2009 (ชนะแมนฯ ยูไนเต็ด 2-0 ที่โรม)',
+    subtitle: 'ระบบ 4-3-3 • กุนซือ: Pep Guardiola',
+    formation: '4-3-3',
+    clubColor: '#A50044',
+    slots: [
+      { slotId: 'gk', pos: 'GK', number: 1, flag: '🇪🇸', row: 4, col: 3, playerId: 'Víctor Valdés', aliases: ['valdes', 'บัลเดส'] },
+      { slotId: 'rb', pos: 'RB', number: 5, flag: '🇪🇸', row: 3, col: 5, playerId: 'Carles Puyol', aliases: ['puyol', 'ปูโยล'] },
+      { slotId: 'cb1', pos: 'CB', number: 24, flag: '🇨🇮', row: 3, col: 4, playerId: 'Yaya Touré', aliases: ['yaya toure', 'ยาย่า ตูเร่'] },
+      { slotId: 'cb2', pos: 'CB', number: 3, flag: '🇪🇸', row: 3, col: 2, playerId: 'Gerard Piqué', aliases: ['pique', 'ปิเก้'] },
+      { slotId: 'lb', pos: 'LB', number: 16, flag: '🇧🇷', row: 3, col: 1, playerId: 'Sylvinho', aliases: ['ซิลวินโญ่'] },
+      { slotId: 'cdm', pos: 'CDM', number: 28, flag: '🇪🇸', row: 2, col: 3, playerId: 'Sergio Busquets', aliases: ['busquets', 'บุสเก็ตส์'] },
+      { slotId: 'cm1', pos: 'CM', number: 6, flag: '🇪🇸', row: 2, col: 4, playerId: 'Xavi Hernández', aliases: ['xavi', 'ชาบี'] },
+      { slotId: 'cm2', pos: 'CM', number: 8, flag: '🇪🇸', row: 2, col: 2, playerId: 'Andrés Iniesta', aliases: ['iniesta', 'อิเนียสต้า'] },
+      { slotId: 'rw', pos: 'RW', number: 10, flag: '🇦🇷', row: 1, col: 5, playerId: 'Lionel Messi', aliases: ['messi', 'เมสซี่'] },
+      { slotId: 'st', pos: 'ST', number: 9, flag: '🇨🇲', row: 1, col: 3, playerId: 'Samuel Eto\'o', aliases: ['etoo', 'เอโต้'] },
+      { slotId: 'lw', pos: 'LW', number: 14, flag: '🇫🇷', row: 1, col: 1, playerId: 'Thierry Henry', aliases: ['henry', 'อองรี'] }
+    ]
+  },
+  {
+    id: 'che_2005_mourinho',
+    title: 'Chelsea - แชมป์พรีเมียร์ลีกยุคเสีย 15 ประตู 2004/05',
+    subtitle: 'ระบบ 4-3-3 • กุนซือ: José Mourinho',
+    formation: '4-3-3',
+    clubColor: '#034694',
+    slots: [
+      { slotId: 'gk', pos: 'GK', number: 1, flag: '🇨🇿', row: 4, col: 3, playerId: 'Petr Čech', aliases: ['cech', 'ปีเตอร์ เช็ก'] },
+      { slotId: 'rb', pos: 'RB', number: 20, flag: '🇵🇹', row: 3, col: 5, playerId: 'Paulo Ferreira', aliases: ['ferreira', 'เปาโล แฟร์เรร่า'] },
+      { slotId: 'cb1', pos: 'CB', number: 26, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 3, col: 4, playerId: 'John Terry', aliases: ['terry', 'เทอร์รี่'] },
+      { slotId: 'cb2', pos: 'CB', number: 6, flag: '🇵🇹', row: 3, col: 2, playerId: 'Ricardo Carvalho', aliases: ['carvalho', 'คาร์วัลโญ่'] },
+      { slotId: 'lb', pos: 'LB', number: 13, flag: '🇫🇷', row: 3, col: 1, playerId: 'William Gallas', aliases: ['gallas', 'กัลลาส'] },
+      { slotId: 'cdm', pos: 'CDM', number: 4, flag: '🇫🇷', row: 2, col: 3, playerId: 'Claude Makélélé', aliases: ['makelele', 'มาเกเลเล่'] },
+      { slotId: 'cm1', pos: 'CM', number: 8, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 2, col: 4, playerId: 'Frank Lampard', aliases: ['lampard', 'แลมพาร์ด'] },
+      { slotId: 'cm2', pos: 'CM', number: 5, flag: '🇵🇹', row: 2, col: 2, playerId: 'Tiago Mendes', aliases: ['tiago', 'ติอาโก้ เมนเดส'] },
+      { slotId: 'rw', pos: 'RW', number: 11, flag: '🇮🇪', row: 1, col: 5, playerId: 'Damien Duff', aliases: ['duff', 'เดเมียน ดัฟฟ์'] },
+      { slotId: 'st', pos: 'ST', number: 15, flag: '🇨🇮', row: 1, col: 3, playerId: 'Didier Drogba', aliases: ['drogba', 'ดร็อกบา'] },
+      { slotId: 'lw', pos: 'LW', number: 16, flag: '🇳🇱', row: 1, col: 1, playerId: 'Arjen Robben', aliases: ['robben', 'ร็อบเบน'] }
+    ]
+  },
+  {
+    id: 'juv_2015_ucl',
+    title: 'Juventus - ชุดเข้าชิง UCL 2015 ยุคแผงมิดฟิลด์เพชร (Pirlo - Pogba - Vidal - Marchisio)',
+    subtitle: 'ระบบ 4-3-1-2 • กุนซือ: Massimiliano Allegri',
+    formation: '4-3-1-2',
+    clubColor: '#000000',
+    slots: [
+      { slotId: 'gk', pos: 'GK', number: 1, flag: '🇮🇹', row: 4, col: 3, playerId: 'Gianluigi Buffon', aliases: ['buffon', 'บุฟฟ่อน'] },
+      { slotId: 'rb', pos: 'RB', number: 26, flag: '🇨🇭', row: 3, col: 5, playerId: 'Stephan Lichtsteiner', aliases: ['lichtsteiner', 'ลิชท์สไตเนอร์'] },
+      { slotId: 'cb1', pos: 'CB', number: 15, flag: '🇮🇹', row: 3, col: 4, playerId: 'Andrea Barzagli', aliases: ['barzagli', 'บาร์ซาญี่'] },
+      { slotId: 'cb2', pos: 'CB', number: 19, flag: '🇮🇹', row: 3, col: 2, playerId: 'Leonardo Bonucci', aliases: ['bonucci', 'โบนุชชี่'] },
+      { slotId: 'lb', pos: 'LB', number: 33, flag: '🇫🇷', row: 3, col: 1, playerId: 'Patrice Evra', aliases: ['evra', 'เอวร่า'] },
+      { slotId: 'cdm', pos: 'CDM', number: 21, flag: '🇮🇹', row: 2, col: 3, playerId: 'Andrea Pirlo', aliases: ['pirlo', 'ปีร์โล่'] },
+      { slotId: 'cm1', pos: 'CM', number: 8, flag: '🇮🇹', row: 2, col: 5, playerId: 'Claudio Marchisio', aliases: ['marchisio', 'มาร์คิซิโอ'] },
+      { slotId: 'cm2', pos: 'CM', number: 6, flag: '🇫🇷', row: 2, col: 1, playerId: 'Paul Pogba', aliases: ['pogba', 'ป็อกบา'] },
+      { slotId: 'cam', pos: 'CAM', number: 23, flag: '🇨🇱', row: 1, col: 3, playerId: 'Arturo Vidal', aliases: ['vidal', 'วิดัล'] },
+      { slotId: 'st1', pos: 'ST', number: 10, flag: '🇦🇷', row: 1, col: 4, playerId: 'Carlos Tevez', aliases: ['tevez', 'เตเวซ'] },
+      { slotId: 'st2', pos: 'ST', number: 9, flag: '🇪🇸', row: 1, col: 2, playerId: 'Álvaro Morata', aliases: ['morata', 'โมราต้า'] }
+    ]
+  },
+  {
+    id: 'bvb_2013_klopp',
+    title: 'Borussia Dortmund - ยุคเกเก้นเพรสซิ่ง Jürgen Klopp เข้าชิง UCL 2013',
+    subtitle: 'ระบบ 4-2-3-1 • กุนซือ: Jürgen Klopp',
+    formation: '4-2-3-1',
+    clubColor: '#D97706',
+    slots: [
+      { slotId: 'gk', pos: 'GK', number: 1, flag: '🇩🇪', row: 4, col: 3, playerId: 'Roman Weidenfeller', aliases: ['weidenfeller', 'ไวเดนเฟลเลอร์'] },
+      { slotId: 'rb', pos: 'RB', number: 26, flag: '🇵🇱', row: 3, col: 5, playerId: 'Łukasz Piszczek', aliases: ['piszczek', 'พิสเช็ค'] },
+      { slotId: 'cb1', pos: 'CB', number: 4, flag: '🇷🇸', row: 3, col: 4, playerId: 'Neven Subotić', aliases: ['subotic', 'ซูโบติช'] },
+      { slotId: 'cb2', pos: 'CB', number: 15, flag: '🇩🇪', row: 3, col: 2, playerId: 'Mats Hummels', aliases: ['hummels', 'ฮุมเมิลส์'] },
+      { slotId: 'lb', pos: 'LB', number: 29, flag: '🇩🇪', row: 3, col: 1, playerId: 'Marcel Schmelzer', aliases: ['schmelzer', 'ชเมลเซอร์'] },
+      { slotId: 'cdm1', pos: 'CDM', number: 6, flag: '🇩🇪', row: 2, col: 4, playerId: 'Sven Bender', aliases: ['sven bender', 'สเวน เบนเดอร์'] },
+      { slotId: 'cdm2', pos: 'CDM', number: 8, flag: '🇩🇪', row: 2, col: 2, playerId: 'İlkay Gündoğan', aliases: ['gundogan', 'กุนโดกัน'] },
+      { slotId: 'cam', pos: 'CAM', number: 11, flag: '🇩🇪', row: 2, col: 3, playerId: 'Marco Reus', aliases: ['reus', 'รอยส์'] },
+      { slotId: 'rw', pos: 'RW', number: 16, flag: '🇵🇱', row: 1, col: 5, playerId: 'Jakub Błaszczykowski', aliases: ['blaszczykowski', 'kuba', 'บลัซซีคอฟสกี้'] },
+      { slotId: 'st', pos: 'ST', number: 9, flag: '🇵🇱', row: 1, col: 3, playerId: 'Robert Lewandowski', aliases: ['lewandowski', 'เลวานดอฟสกี้'] },
+      { slotId: 'lw', pos: 'LW', number: 19, flag: '🇩🇪', row: 1, col: 1, playerId: 'Kevin Großkreutz', aliases: ['grosskreutz', 'โกรสครอยท์ซ'] }
+    ]
+  },
+  {
+    id: 'psg_2022_mnm',
+    title: 'Paris Saint-Germain - ยุคสามประสานซูเปอร์สตาร์ MNM (Messi - Neymar - Mbappé)',
+    subtitle: 'ระบบ 3-4-1-2 • กุนซือ: Christophe Galtier',
+    formation: '3-4-1-2',
+    clubColor: '#004170',
+    slots: [
+      { slotId: 'gk', pos: 'GK', number: 99, flag: '🇮🇹', row: 4, col: 3, playerId: 'Gianluigi Donnarumma', aliases: ['donnarumma', 'ดอนนารุมม่า'] },
+      { slotId: 'cb1', pos: 'CB', number: 4, flag: '🇪🇸', row: 3, col: 5, playerId: 'Sergio Ramos', aliases: ['ramos', 'รามอส'] },
+      { slotId: 'cb2', pos: 'CB', number: 5, flag: '🇧🇷', row: 3, col: 3, playerId: 'Marquinhos', aliases: ['มาร์ควินญอส'] },
+      { slotId: 'cb3', pos: 'CB', number: 3, flag: '🇫🇷', row: 3, col: 1, playerId: 'Presnel Kimpembe', aliases: ['kimpembe', 'คิมเพมเบ้'] },
+      { slotId: 'rwb', pos: 'RWB', number: 2, flag: '🇲🇦', row: 2, col: 5, playerId: 'Achraf Hakimi', aliases: ['hakimi', 'ฮาคิมี่'] },
+      { slotId: 'cm1', pos: 'CM', number: 6, flag: '🇮🇹', row: 2, col: 4, playerId: 'Marco Verratti', aliases: ['verratti', 'แวร์รัตติ'] },
+      { slotId: 'cm2', pos: 'CM', number: 17, flag: '🇵🇹', row: 2, col: 2, playerId: 'Vitinha', aliases: ['วิตินญ่า'] },
+      { slotId: 'lwb', pos: 'LWB', number: 25, flag: '🇵🇹', row: 2, col: 1, playerId: 'Nuno Mendes', aliases: ['nuno mendes', 'นูโน่ เมนเดส'] },
+      { slotId: 'cam', pos: 'CAM', number: 30, flag: '🇦🇷', row: 1, col: 3, playerId: 'Lionel Messi', aliases: ['messi', 'เมสซี่'] },
+      { slotId: 'st1', pos: 'ST', number: 7, flag: '🇫🇷', row: 1, col: 5, playerId: 'Kylian Mbappé', aliases: ['mbappe', 'เอ็มบัปเป้'] },
+      { slotId: 'st2', pos: 'ST', number: 10, flag: '🇧🇷', row: 1, col: 1, playerId: 'Neymar Jr', aliases: ['neymar', 'เนย์มาร์'] }
+    ]
+  },
+  {
+    id: 'rma_2022_ucl',
+    title: 'Real Madrid - แชมป์ UCL 2022 ที่ปารีส (ชนะลิเวอร์พูล 1-0)',
+    subtitle: 'ระบบ 4-3-3 • กุนซือ: Carlo Ancelotti',
+    formation: '4-3-3',
+    clubColor: '#00529F',
+    slots: [
+      { slotId: 'gk', pos: 'GK', number: 1, flag: '🇧🇪', row: 4, col: 3, playerId: 'Thibaut Courtois', aliases: ['courtois', 'กูร์กตัวส์'] },
+      { slotId: 'rb', pos: 'RB', number: 2, flag: '🇪🇸', row: 3, col: 5, playerId: 'Dani Carvajal', aliases: ['carvajal', 'การ์บาฆาล'] },
+      { slotId: 'cb1', pos: 'CB', number: 3, flag: '🇧🇷', row: 3, col: 4, playerId: 'Éder Militão', aliases: ['militao', 'มิลิเตา'] },
+      { slotId: 'cb2', pos: 'CB', number: 4, flag: '🇦🇹', row: 3, col: 2, playerId: 'David Alaba', aliases: ['alaba', 'อลาบา'] },
+      { slotId: 'lb', pos: 'LB', number: 23, flag: '🇫🇷', row: 3, col: 1, playerId: 'Ferland Mendy', aliases: ['ferland mendy', 'แฟร์กล็องด์ เมนดี้'] },
+      { slotId: 'cm1', pos: 'CM', number: 10, flag: '🇭🇷', row: 2, col: 4, playerId: 'Luka Modrić', aliases: ['modric', 'โมดริช'] },
+      { slotId: 'cdm', pos: 'CDM', number: 14, flag: '🇧🇷', row: 2, col: 3, playerId: 'Casemiro', aliases: ['คาเซมิโร่'] },
+      { slotId: 'cm2', pos: 'CM', number: 8, flag: '🇩🇪', row: 2, col: 2, playerId: 'Toni Kroos', aliases: ['kroos', 'โครส'] },
+      { slotId: 'rw', pos: 'RW', number: 15, flag: '🇺🇾', row: 1, col: 5, playerId: 'Federico Valverde', aliases: ['valverde', 'บัลเบร์เด้'] },
+      { slotId: 'st', pos: 'ST', number: 9, flag: '🇫🇷', row: 1, col: 3, playerId: 'Karim Benzema', aliases: ['benzema', 'เบนเซม่า'] },
+      { slotId: 'lw', pos: 'LW', number: 20, flag: '🇧🇷', row: 1, col: 1, playerId: 'Vinícius Júnior', aliases: ['vinicius', 'vini jr', 'วินิซิอุส'] }
+    ]
+  },
+  {
+    id: 'mci_2018_centurions',
+    title: 'Manchester City - แชมป์พรีเมียร์ลีก 100 คะแนน (The Centurions 2017/18)',
+    subtitle: 'ระบบ 4-3-3 • กุนซือ: Pep Guardiola',
+    formation: '4-3-3',
+    clubColor: '#6CABDD',
+    slots: [
+      { slotId: 'gk', pos: 'GK', number: 31, flag: '🇧🇷', row: 4, col: 3, playerId: 'Ederson', aliases: ['เอแดร์ซอน'] },
+      { slotId: 'rb', pos: 'RB', number: 2, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 3, col: 5, playerId: 'Kyle Walker', aliases: ['walker', 'ไคล์ วอล์คเกอร์'] },
+      { slotId: 'cb1', pos: 'CB', number: 4, flag: '🇧🇪', row: 3, col: 4, playerId: 'Vincent Kompany', aliases: ['kompany', 'กอมปานี'] },
+      { slotId: 'cb2', pos: 'CB', number: 30, flag: '🇦🇷', row: 3, col: 2, playerId: 'Nicolás Otamendi', aliases: ['otamendi', 'โอตาเมนดี้'] },
+      { slotId: 'lb', pos: 'LB', number: 18, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 3, col: 1, playerId: 'Fabian Delph', aliases: ['delph', 'ฟาเบียน เดลฟ์'] },
+      { slotId: 'cdm', pos: 'CDM', number: 25, flag: '🇧🇷', row: 2, col: 3, playerId: 'Fernandinho', aliases: ['แฟร์นันดินโญ่'] },
+      { slotId: 'cm1', pos: 'CM', number: 17, flag: '🇧🇪', row: 2, col: 4, playerId: 'Kevin De Bruyne', aliases: ['de bruyne', 'kdb', 'เดอบรอยน์'] },
+      { slotId: 'cm2', pos: 'CM', number: 21, flag: '🇪🇸', row: 2, col: 2, playerId: 'David Silva', aliases: ['david silva', 'ดาบิด ซิลบา'] },
+      { slotId: 'rw', pos: 'RW', number: 7, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 1, col: 5, playerId: 'Raheem Sterling', aliases: ['sterling', 'สเตอร์ลิง'] },
+      { slotId: 'st', pos: 'ST', number: 10, flag: '🇦🇷', row: 1, col: 3, playerId: 'Sergio Agüero', aliases: ['aguero', 'อเกวโร่', 'กุน'] },
+      { slotId: 'lw', pos: 'LW', number: 19, flag: '🇩🇪', row: 1, col: 1, playerId: 'Leroy Sané', aliases: ['sane', 'เลรอย ซาเน่'] }
+    ]
+  },
+  {
+    id: 'por_2016_euro',
+    title: '🇵🇹 ทีมชาติโปรตุเกส - แชมป์ยูโร 2016 สมัยแรกในประวัติศาสตร์ (ชนะฝรั่งเศส 1-0)',
+    subtitle: 'ระบบ 4-1-3-2 • กุนซือ: Fernando Santos',
+    formation: '4-1-3-2',
+    clubColor: '#B91C1C',
+    slots: [
+      { slotId: 'gk', pos: 'GK', number: 1, flag: '🇵🇹', row: 4, col: 3, playerId: 'Rui Patrício', aliases: ['rui patricio', 'รุย ปาตริซิโอ'] },
+      { slotId: 'rb', pos: 'RB', number: 21, flag: '🇵🇹', row: 3, col: 5, playerId: 'Cédric Soares', aliases: ['cedric', 'เซดริก'] },
+      { slotId: 'cb1', pos: 'CB', number: 3, flag: '🇵🇹', row: 3, col: 4, playerId: 'Pepe', aliases: ['เปเป้'] },
+      { slotId: 'cb2', pos: 'CB', number: 4, flag: '🇵🇹', row: 3, col: 2, playerId: 'José Fonte', aliases: ['jose fonte', 'โชเซ่ ฟอนเต้'] },
+      { slotId: 'lb', pos: 'LB', number: 5, flag: '🇵🇹', row: 3, col: 1, playerId: 'Raphaël Guerreiro', aliases: ['guerreiro', 'เกร์เรโร่'] },
+      { slotId: 'cdm', pos: 'CDM', number: 14, flag: '🇵🇹', row: 2, col: 3, playerId: 'William Carvalho', aliases: ['william carvalho', 'วิลเลียม คาร์วัลโญ่'] },
+      { slotId: 'rm', pos: 'RM', number: 16, flag: '🇵🇹', row: 2, col: 5, playerId: 'Renato Sanches', aliases: ['renato sanches', 'เรนาโต้ ซานเชส'] },
+      { slotId: 'cm', pos: 'CM', number: 23, flag: '🇵🇹', row: 2, col: 2, playerId: 'Adrien Silva', aliases: ['adrien silva', 'อาเดรียน ซิลวา'] },
+      { slotId: 'lm', pos: 'LM', number: 10, flag: '🇵🇹', row: 2, col: 1, playerId: 'João Mário', aliases: ['joao mario', 'เจา มาริโอ'] },
+      { slotId: 'st1', pos: 'ST', number: 17, flag: '🇵🇹', row: 1, col: 4, playerId: 'Nani', aliases: ['นานี่'] },
+      { slotId: 'st2', pos: 'ST', number: 7, flag: '🇵🇹', row: 1, col: 2, playerId: 'Cristiano Ronaldo', aliases: ['ronaldo', 'cr7', 'โรนัลโด้'] }
+    ]
+  },
+  {
+    id: 'ita_2021_euro',
+    title: '🇮🇹 ทีมชาติอิตาลี - แชมป์ยูโร 2020 ที่เวมบลีย์ (ชนะอังกฤษจุดโทษ)',
+    subtitle: 'ระบบ 4-3-3 • กุนซือ: Roberto Mancini',
+    formation: '4-3-3',
+    clubColor: '#1D4ED8',
+    slots: [
+      { slotId: 'gk', pos: 'GK', number: 21, flag: '🇮🇹', row: 4, col: 3, playerId: 'Gianluigi Donnarumma', aliases: ['donnarumma', 'ดอนนารุมม่า'] },
+      { slotId: 'rb', pos: 'RB', number: 2, flag: '🇮🇹', row: 3, col: 5, playerId: 'Giovanni Di Lorenzo', aliases: ['di lorenzo', 'ดิ ลอเรนโซ่'] },
+      { slotId: 'cb1', pos: 'CB', number: 19, flag: '🇮🇹', row: 3, col: 4, playerId: 'Leonardo Bonucci', aliases: ['bonucci', 'โบนุชชี่'] },
+      { slotId: 'cb2', pos: 'CB', number: 3, flag: '🇮🇹', row: 3, col: 2, playerId: 'Giorgio Chiellini', aliases: ['chiellini', 'คิเอลลินี่'] },
+      { slotId: 'lb', pos: 'LB', number: 13, flag: '🇮🇹', row: 3, col: 1, playerId: 'Emerson Palmieri', aliases: ['emerson', 'เอแมร์ซอน'] },
+      { slotId: 'cm1', pos: 'CM', number: 18, flag: '🇮🇹', row: 2, col: 4, playerId: 'Nicolò Barella', aliases: ['barella', 'บาเรลล่า'] },
+      { slotId: 'cdm', pos: 'CDM', number: 8, flag: '🇮🇹', row: 2, col: 3, playerId: 'Jorginho', aliases: ['จอร์จินโญ่'] },
+      { slotId: 'cm2', pos: 'CM', number: 6, flag: '🇮🇹', row: 2, col: 2, playerId: 'Marco Verratti', aliases: ['verratti', 'แวร์รัตติ'] },
+      { slotId: 'rw', pos: 'RW', number: 14, flag: '🇮🇹', row: 1, col: 5, playerId: 'Federico Chiesa', aliases: ['chiesa', 'เคียซ่า'] },
+      { slotId: 'st', pos: 'ST', number: 17, flag: '🇮🇹', row: 1, col: 3, playerId: 'Ciro Immobile', aliases: ['immobile', 'อิมโมบิเล่'] },
+      { slotId: 'lw', pos: 'LW', number: 10, flag: '🇮🇹', row: 1, col: 1, playerId: 'Lorenzo Insigne', aliases: ['insigne', 'อินซินเญ่'] }
+    ]
+  },
+  {
+    id: 'eng_2024_euro',
+    title: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 ทีมชาติอังกฤษ - ชุดนัดชิงชนะเลิศ ยูโร 2024',
+    subtitle: 'ระบบ 3-4-2-1 • กุนซือ: Gareth Southgate',
+    formation: '3-4-2-1',
+    clubColor: '#1E3A8A',
+    slots: [
+      { slotId: 'gk', pos: 'GK', number: 1, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 4, col: 3, playerId: 'Jordan Pickford', aliases: ['pickford', 'พิคฟอร์ด'] },
+      { slotId: 'cb1', pos: 'CB', number: 2, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 3, col: 5, playerId: 'Kyle Walker', aliases: ['walker', 'วอล์คเกอร์'] },
+      { slotId: 'cb2', pos: 'CB', number: 5, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 3, col: 3, playerId: 'John Stones', aliases: ['stones', 'จอห์น สโตนส์'] },
+      { slotId: 'cb3', pos: 'CB', number: 6, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 3, col: 1, playerId: 'Marc Guéhi', aliases: ['guehi', 'มาร์ค เกฮี'] },
+      { slotId: 'rwb', pos: 'RWB', number: 7, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 2, col: 5, playerId: 'Bukayo Saka', aliases: ['saka', 'ซาก้า'] },
+      { slotId: 'cm1', pos: 'CM', number: 26, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 2, col: 4, playerId: 'Kobbie Mainoo', aliases: ['mainoo', 'ไมนู'] },
+      { slotId: 'cm2', pos: 'CM', number: 4, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 2, col: 2, playerId: 'Declan Rice', aliases: ['rice', 'เดแคลน ไรซ์'] },
+      { slotId: 'lwb', pos: 'LWB', number: 3, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 2, col: 1, playerId: 'Luke Shaw', aliases: ['luke shaw', 'ลุค ชอว์'] },
+      { slotId: 'cam1', pos: 'CAM', number: 10, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 1, col: 4, playerId: 'Jude Bellingham', aliases: ['bellingham', 'เบลลิงแฮม'] },
+      { slotId: 'cam2', pos: 'CAM', number: 11, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 1, col: 2, playerId: 'Phil Foden', aliases: ['foden', 'โฟเด้น'] },
+      { slotId: 'st', pos: 'ST', number: 9, flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', row: 1, col: 3, playerId: 'Harry Kane', aliases: ['kane', 'แฮร์รี่ เคน'] }
+    ]
+  },
+  {
+    id: 'ned_2010_wc',
+    title: '🇳🇱 ทีมชาติเนเธอร์แลนด์ - ชุดเข้าชิงฟุตบอลโลก 2010 (ยุค Robben - Sneijder - Van Persie)',
+    subtitle: 'ระบบ 4-2-3-1 • กุนซือ: Bert van Marwijk',
+    formation: '4-2-3-1',
+    clubColor: '#EA580C',
+    slots: [
+      { slotId: 'gk', pos: 'GK', number: 1, flag: '🇳🇱', row: 4, col: 3, playerId: 'Maarten Stekelenburg', aliases: ['stekelenburg', 'สเตเคเลนเบิร์ก'] },
+      { slotId: 'rb', pos: 'RB', number: 2, flag: '🇳🇱', row: 3, col: 5, playerId: 'Gregory van der Wiel', aliases: ['van der wiel', 'ฟาน เดอร์ วีล'] },
+      { slotId: 'cb1', pos: 'CB', number: 3, flag: '🇳🇱', row: 3, col: 4, playerId: 'John Heitinga', aliases: ['heitinga', 'ไฮติงก้า'] },
+      { slotId: 'cb2', pos: 'CB', number: 4, flag: '🇳🇱', row: 3, col: 2, playerId: 'Joris Mathijsen', aliases: ['mathijsen', 'มาไธจ์เซ่น'] },
+      { slotId: 'lb', pos: 'LB', number: 5, flag: '🇳🇱', row: 3, col: 1, playerId: 'Giovanni van Bronckhorst', aliases: ['van bronckhorst', 'ฟาน บรองค์ฮอร์สต์'] },
+      { slotId: 'cdm1', pos: 'CDM', number: 6, flag: '🇳🇱', row: 2, col: 4, playerId: 'Mark van Bommel', aliases: ['van bommel', 'ฟาน บอมเมล'] },
+      { slotId: 'cdm2', pos: 'CDM', number: 8, flag: '🇳🇱', row: 2, col: 2, playerId: 'Nigel de Jong', aliases: ['de jong', 'ไนเจล เดอ ยอง'] },
+      { slotId: 'cam', pos: 'CAM', number: 10, flag: '🇳🇱', row: 2, col: 3, playerId: 'Wesley Sneijder', aliases: ['sneijder', 'สไนเดอร์'] },
+      { slotId: 'rw', pos: 'RW', number: 11, flag: '🇳🇱', row: 1, col: 5, playerId: 'Arjen Robben', aliases: ['robben', 'ร็อบเบน'] },
+      { slotId: 'st', pos: 'ST', number: 9, flag: '🇳🇱', row: 1, col: 3, playerId: 'Robin van Persie', aliases: ['van persie', 'rvp', 'ฟานเพอร์ซี่'] },
+      { slotId: 'lw', pos: 'LW', number: 7, flag: '🇳🇱', row: 1, col: 1, playerId: 'Dirk Kuyt', aliases: ['kuyt', 'เดิร์ก เค้าท์'] }
+    ]
+  },
+  {
+    id: 'esp_2012_euro',
+    title: '🇪🇸 ทีมชาติสเปน - แชมป์ยูโร 2012 ระบบ False 9 (นัดชิงชนะอิตาลี 4-0)',
+    subtitle: 'ระบบ 4-3-3 False 9 • กุนซือ: Vicente del Bosque',
+    formation: '4-3-3',
+    clubColor: '#DC2626',
+    slots: [
+      { slotId: 'gk', pos: 'GK', number: 1, flag: '🇪🇸', row: 4, col: 3, playerId: 'Iker Casillas', aliases: ['casillas', 'กาซียาส'] },
+      { slotId: 'rb', pos: 'RB', number: 17, flag: '🇪🇸', row: 3, col: 5, playerId: 'Álvaro Arbeloa', aliases: ['arbeloa', 'อาร์เบลัว'] },
+      { slotId: 'cb1', pos: 'CB', number: 3, flag: '🇪🇸', row: 3, col: 4, playerId: 'Gerard Piqué', aliases: ['pique', 'ปิเก้'] },
+      { slotId: 'cb2', pos: 'CB', number: 15, flag: '🇪🇸', row: 3, col: 2, playerId: 'Sergio Ramos', aliases: ['ramos', 'รามอส'] },
+      { slotId: 'lb', pos: 'LB', number: 18, flag: '🇪🇸', row: 3, col: 1, playerId: 'Jordi Alba', aliases: ['jordi alba', 'จอร์ดี้ อัลบา'] },
+      { slotId: 'cdm', pos: 'CDM', number: 16, flag: '🇪🇸', row: 2, col: 3, playerId: 'Sergio Busquets', aliases: ['busquets', 'บุสเก็ตส์'] },
+      { slotId: 'cm1', pos: 'CM', number: 14, flag: '🇪🇸', row: 2, col: 4, playerId: 'Xabi Alonso', aliases: ['xabi alonso', 'ชาบี อลอนโซ่'] },
+      { slotId: 'cm2', pos: 'CM', number: 8, flag: '🇪🇸', row: 2, col: 2, playerId: 'Xavi Hernández', aliases: ['xavi', 'ชาบี'] },
+      { slotId: 'rw', pos: 'RW', number: 21, flag: '🇪🇸', row: 1, col: 5, playerId: 'David Silva', aliases: ['david silva', 'ดาบิด ซิลบา'] },
+      { slotId: 'st', pos: 'CF', number: 10, flag: '🇪🇸', row: 1, col: 3, playerId: 'Cesc Fàbregas', aliases: ['fabregas', 'ฟาเบรกาส'] },
+      { slotId: 'lw', pos: 'LW', number: 6, flag: '🇪🇸', row: 1, col: 1, playerId: 'Andrés Iniesta', aliases: ['iniesta', 'อิเนียสต้า'] }
+    ]
+  },
+  {
+    id: 'bra_2005_confed',
+    title: '🇧🇷 ทีมชาติบราซิล - ยุคจตุรเทพ Magic Quartet (Kaká - Ronaldinho - Adriano - Robinho)',
+    subtitle: 'ระบบ 4-2-2-2 • กุนซือ: Carlos Alberto Parreira',
+    formation: '4-2-2-2',
+    clubColor: '#FACC15',
+    slots: [
+      { slotId: 'gk', pos: 'GK', number: 1, flag: '🇧🇷', row: 4, col: 3, playerId: 'Dida', aliases: ['ดิด้า'] },
+      { slotId: 'rb', pos: 'RB', number: 2, flag: '🇧🇷', row: 3, col: 5, playerId: 'Cafu', aliases: ['คาฟู'] },
+      { slotId: 'cb1', pos: 'CB', number: 3, flag: '🇧🇷', row: 3, col: 4, playerId: 'Lúcio', aliases: ['lucio', 'ลูซิโอ'] },
+      { slotId: 'cb2', pos: 'CB', number: 4, flag: '🇧🇷', row: 3, col: 2, playerId: 'Juan Silveira', aliases: ['juan', 'ฮวน'] },
+      { slotId: 'lb', pos: 'LB', number: 6, flag: '🇧🇷', row: 3, col: 1, playerId: 'Roberto Carlos', aliases: ['roberto carlos', 'โรแบร์โต้ คาร์ลอส'] },
+      { slotId: 'cdm1', pos: 'CDM', number: 5, flag: '🇧🇷', row: 2, col: 4, playerId: 'Emerson Ferreira', aliases: ['emerson', 'เอแมร์ซอน'] },
+      { slotId: 'cdm2', pos: 'CDM', number: 11, flag: '🇧🇷', row: 2, col: 2, playerId: 'Zé Roberto', aliases: ['ze roberto', 'เซ โรแบร์โต้'] },
+      { slotId: 'cam1', pos: 'CAM', number: 8, flag: '🇧🇷', row: 2, col: 5, playerId: 'Kaká', aliases: ['kaka', 'กาก้า'] },
+      { slotId: 'cam2', pos: 'CAM', number: 10, flag: '🇧🇷', row: 2, col: 1, playerId: 'Ronaldinho', aliases: ['โรนัลดินโญ่'] },
+      { slotId: 'st1', pos: 'ST', number: 9, flag: '🇧🇷', row: 1, col: 4, playerId: 'Adriano', aliases: ['อาเดรียโน่'] },
+      { slotId: 'st2', pos: 'ST', number: 7, flag: '🇧🇷', row: 1, col: 2, playerId: 'Robinho', aliases: ['โรบินโญ่'] }
+    ]
   }
 ];
 
