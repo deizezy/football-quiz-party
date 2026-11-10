@@ -42,6 +42,10 @@ const MODE_META = {
   chain_link: {
     badge: '🔗 โหมดที่ 9: ต่อโซ่นักเตะเพื่อนร่วมทีม (Chain Link)',
     prompt: '🔗 พิมพ์ชื่อนักเตะคนถัดไปที่เคยค้าแข้งสโมสรเดียวกับนักเตะคนล่าสุด (ห้ามซ้ำนักเตะ & ห้ามซ้ำสโมสรที่ใช้เชื่อมไปแล้ว):'
+  },
+  clue_buzzer: {
+    badge: '🃏 โหมดที่ 10: เปิดไพ่ 5 คุณสมบัติ ชิงตอบไว (Mystery 5 Clues • ❤️❤️ 2 ดวง)',
+    prompt: '⚡ พิมพ์ชื่อนักเตะเพื่อชิงตอบ! (ตอบถูกคนแรกได้ +5 ถึง +1 แต้มตามจำนวนไพ่ที่เปิด • ตอบผิดเสียหัวใจ 1 ดวง 💔):'
   }
 };
 
@@ -469,7 +473,8 @@ function isUntimedContinuousMode(mode) {
     mode === 'footy_grid' ||
     mode === 'connections' ||
     mode === 'who_are_ya_wordle' ||
-    mode === 'chain_link'
+    mode === 'chain_link' ||
+    mode === 'clue_buzzer'
   );
 }
 
@@ -590,6 +595,9 @@ function renderRoom() {
       } else if (gameMode === 'chain_link') {
         modeInfoTitle.textContent = '🔗 กติกาโหมดต่อโซ่นักเตะเพื่อนร่วมทีม (Chain Link)';
         modeInfoDesc.innerHTML = '• ผลัดกันตอบทีละคนตามเวลาต่อเทิร์น! พิมพ์ชื่อนักเตะที่เคยอยู่สโมสรเดียวกับคนล่าสุดในโซ่ (ห้ามซ้ำนักเตะ & ห้ามซ้ำสโมสรเชื่อม)<br>• เชื่อมสำเร็จรับ <strong>+2 แต้ม</strong> (โบนัสทุก 5 ลิงก์ +1 แต้ม)<br>• ใครตอบไม่ทันเวลาทำโซ่ขาด คนส่งไม้ต่อก่อนหน้ารับโบนัส <strong>+1 แต้ม</strong> แล้วเริ่มโซ่ใหม่แข่งสะสมแต้มต่อเนื่อง!';
+      } else if (gameMode === 'clue_buzzer') {
+        modeInfoTitle.textContent = '🃏 กติกาโหมดเปิดไพ่ 5 คุณสมบัติ ชิงตอบไว (Mystery 5 Clues)';
+        modeInfoDesc.innerHTML = '• ระบบสุ่มผู้เล่นขึ้นมาเลือกเปิดไพ่ทีละใบ (ตำแหน่งไพ่ทั้ง 5 ใบสุ่มสลับไม่ซ้ำกันทุกข้อ!)<br>• ทุกคนที่ยังมีหัวใจเหลือสามารถพิมพ์ชิงตอบได้ทันที: ตอบถูกตอนเปิด 1 ใบ = <strong>+5 แต้ม</strong> (ลดลงใบละ 1 แต้ม จนถึง 5 ใบ = +1 แต้ม)<br>• มีหัวใจคนละ <strong>❤️❤️ (2 ดวง)</strong> ต่อข้อ! ตอบผิดเสียหัวใจ 1 ดวง หากผิดครบ 2 ครั้งจะถูกตัดสิทธิ์ในข้อนั้นทันที!';
       }
     }
   }
@@ -653,7 +661,17 @@ function renderScoreboard(room) {
         statusHtml = `<div class="player-status">⏳ กำลังเลือกสโมสร...</div>`;
       }
     } else if (room.state === 'PLAYING') {
-      if (isTurnBasedPlaying) {
+      if (gameMode === 'clue_buzzer' && room.modeData) {
+        const hb = (room.modeData.heartsByPlayer || []).find((h) => h.playerId === p.id);
+        const hCount = hb ? hb.hearts : 2;
+        const hStr = hCount === 2 ? '❤️❤️' : hCount === 1 ? '❤️🖤' : '🖤🖤 (ตกรอบ)';
+        const isFlipper =
+          !room.modeData.solved &&
+          !room.modeData.revealed &&
+          room.modeData.openedCount < 5 &&
+          room.modeData.currentFlipperPlayerId === p.id;
+        statusHtml = `<div class="player-status ${isFlipper ? 'locked' : ''}">${hStr}${isFlipper ? ' • 🃏 คิวเปิดไพ่!' : ''}</div>`;
+      } else if (isTurnBasedPlaying) {
         if (isCurrentTurn) {
           statusHtml = `<div class="player-status locked">🟢 ถึงตาเล่น!</div>`;
         } else {
@@ -1643,6 +1661,179 @@ function buildModeStageHTML(room, isReveal = false) {
     `;
   }
 
+  // MODE 10: MYSTERY 5 CLUES BUZZER (2 Hearts, Random Clue Order, Rotating Flipper, Speed Buzzer)
+  if (mode === 'clue_buzzer') {
+    const solved = !!md.solved;
+    const revealed = !!md.revealed;
+    const allDone = solved || revealed;
+    const isMyFlipTurn = !allDone && md.openedCount < 5 && md.currentFlipperPlayerId === state.playerId;
+    const myHeartObj = (md.heartsByPlayer || []).find((h) => h.playerId === state.playerId);
+    const myHearts = myHeartObj ? myHeartObj.hearts : 2;
+
+    const heartsStripHtml = (md.heartsByPlayer || [])
+      .map((h) => {
+        const isMe = h.playerId === state.playerId;
+        const isFlipper = !allDone && md.openedCount < 5 && md.currentFlipperPlayerId === h.playerId;
+        const heartIcons = h.hearts === 2 ? '❤️❤️' : h.hearts === 1 ? '❤️🖤' : '🖤🖤 💀';
+        return `
+          <div class="clue-heart-pill ${isMe ? 'is-me' : ''} ${isFlipper ? 'is-flipper' : ''} ${h.hearts === 0 ? 'eliminated' : ''}">
+            <span>${h.avatar} <strong>${h.name}</strong>${isMe ? ' (คุณ)' : ''}</span>
+            <span class="clue-heart-icons">${heartIcons}</span>
+            ${isFlipper ? '<span class="clue-flipper-tag">🃏 คิวเปิดไพ่</span>' : ''}
+          </div>
+        `;
+      })
+      .join('');
+
+    const turnBannerHtml = !allDone
+      ? md.openedCount < 5
+        ? `
+          <div class="clue-turn-banner ${isMyFlipTurn ? 'my-turn' : ''}">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span style="font-size:1.35rem;">🃏</span>
+              <div>
+                <div style="font-weight:800;font-size:0.96rem;color:${isMyFlipTurn ? '#fde68a' : '#f8fafc'};">
+                  ${
+                    isMyFlipTurn
+                      ? '🟢 ถึงคิวคุณเลือกเปิดไพ่คุณสมบัติ 1 ใบ! (คลิกเลือกไพ่ใบที่คว่ำอยู่ด้านล่างได้เลย)'
+                      : `🎲 สิทธิ์เปิดไพ่ใบถัดไป: ${md.currentFlipperPlayerAvatar || '⚽'} ${md.currentFlipperPlayerName}`
+                  }
+                </div>
+                <div style="font-size:0.78rem;color:#cbd5e1;">
+                  เปิดไปแล้ว <strong>${md.openedCount}/5 ใบ</strong> • ชิงตอบถูกตอนนี้รับ <strong style="color:#fbbf24;">+${md.potentialPoints} คะแนน</strong> • หัวใจของคุณ: <strong>${myHearts === 2 ? '❤️❤️ (2 ดวง)' : myHearts === 1 ? '❤️🖤 (เหลือดวงสุดท้าย!)' : '🖤🖤 (ตกรอบข้อนี้)'}</strong>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              ${
+                isMyFlipTurn || (room.players || []).length <= 1
+                  ? `<button type="button" class="btn btn-gold btn-xs" data-clue-flip-random="1">🎲 สุ่มเปิดไพ่ให้ฉัน 1 ใบ</button>`
+                  : ''
+              }
+              <button type="button" class="btn btn-outline btn-xs" data-clue-reveal="1">👁️ ยอมแพ้ & เปิดเฉลย</button>
+              <button type="button" class="btn btn-accent btn-xs" data-clue-next="1">🔄 ข้ามไปข้อใหม่</button>
+            </div>
+          </div>
+        `
+        : `
+          <div class="clue-turn-banner all-opened">
+            <div>
+              <strong>🔥 เปิดไพ่คุณสมบัติครบทั้ง 5 ใบแล้ว! (ชิงตอบถูกคนแรกรับ +1 คะแนน)</strong>
+              <div style="font-size:0.78rem;color:#cbd5e1;">รีบพิมพ์ชื่อนักเตะด้านบนก่อนเพื่อนชิงตอบ!</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button type="button" class="btn btn-outline btn-xs" data-clue-reveal="1">👁️ เปิดเฉลย (0 แต้ม)</button>
+              <button type="button" class="btn btn-accent btn-xs" data-clue-next="1">🔄 สุ่มโจทย์คนต่อไป</button>
+            </div>
+          </div>
+        `
+      : '';
+
+    const solvedBannerHtml =
+      allDone && md.answerPlayer
+        ? `
+          <div class="clue-solved-banner ${solved ? 'solved' : 'revealed'}">
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+              ${renderPlayerPhotoHTML(md.answerPlayer.photoUrl, '⚽', 'reveal-player-photo')}
+              <div>
+                <div style="font-size:0.78rem;font-weight:700;color:${solved ? '#6ee7b7' : '#fca5a5'};">
+                  ${
+                    solved
+                      ? `🎉 ผู้ชนะข้อนี้: ${md.solvedBy} (ชิงตอบถูกตอนเปิด ${md.openedCount} ใบ รับ +${md.pointsAwarded} คะแนน!)`
+                      : `👁️ จบข้อ (${md.solvedBy || 'เปิดเฉลย'})`
+                  }
+                </div>
+                <div style="font-size:1.3rem;font-weight:800;display:flex;align-items:center;gap:8px;margin-top:2px;">
+                  ${renderFlagHTML(md.answerPlayer.flag, md.answerPlayer.flagUrl)} ${md.answerPlayer.name}
+                  <small style="font-size:0.85rem;color:#cbd5e1;font-weight:600;">(${md.answerPlayer.position})</small>
+                </div>
+                <div style="font-size:0.78rem;color:#94a3b8;margin-top:3px;">
+                  🏟️ สโมสร: ${(md.answerPlayer.clubs || []).join(' • ')}
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn btn-primary btn-lg" data-clue-next="1">
+              🃏 ไปข้อต่อไป (สุ่มไพ่ 5 คุณสมบัติคนใหม่!) ➔
+            </button>
+          </div>
+        `
+        : '';
+
+    const cardsHtml = (md.cards || [])
+      .map((c) => {
+        if (c.opened) {
+          const badgeImg = c.badgeUrl
+            ? `<img src="${c.badgeUrl}" alt="Club" style="width:28px;height:28px;object-fit:contain;flex-shrink:0;" onerror="this.style.display='none'" />`
+            : '';
+          const flagImg = c.flagUrl
+            ? `<img src="${c.flagUrl}" alt="Flag" style="width:24px;height:17px;object-fit:cover;border-radius:3px;flex-shrink:0;" onerror="this.style.display='none'" />`
+            : '';
+          return `
+            <div class="clue-card opened">
+              <div class="clue-card-top">
+                <span class="clue-card-num">ไพ่ใบที่ #${c.slotIndex + 1}</span>
+                <span class="clue-card-cat">${c.icon} ${c.categoryLabel}</span>
+              </div>
+              <div class="clue-card-body">
+                ${badgeImg}${flagImg}
+                <div class="clue-card-text">${c.text}</div>
+              </div>
+              <div class="clue-card-footer">
+                <span>เปิดโดย: ${c.openedBy || 'ระบบ'}</span>
+              </div>
+            </div>
+          `;
+        }
+
+        const canClickFlip = isMyFlipTurn || (room.players || []).length <= 1;
+        return `
+          <button type="button" class="clue-card face-down ${canClickFlip ? 'can-flip' : ''}" data-clue-flip-slot="${c.slotIndex}">
+            <div class="clue-card-back-inner">
+              <span class="clue-back-num">ไพ่ใบที่ #${c.slotIndex + 1}</span>
+              <div class="clue-back-icon">🃏</div>
+              <strong class="clue-back-title">คุณสมบัติลับ (สุ่มตำแหน่ง)</strong>
+              <small class="clue-back-sub">
+                ${canClickFlip ? '👆 คลิกเพื่อเปิดไพ่ใบนี้!' : `รอ ${md.currentFlipperPlayerName} เลือกเปิด...`}
+              </small>
+            </div>
+          </button>
+        `;
+      })
+      .join('');
+
+    const wrongGuessesHtml =
+      Array.isArray(md.wrongGuesses) && md.wrongGuesses.length > 0
+        ? `
+          <div class="clue-wrong-box">
+            <div style="font-size:0.78rem;font-weight:700;color:#fca5a5;margin-bottom:6px;">
+              💔 ประวัติการชิงตอบผิดในข้อนี้ (ห้ามตอบซ้ำ):
+            </div>
+            <div class="clue-wrong-list">
+              ${md.wrongGuesses
+                .map(
+                  (w) => `
+                    <span class="clue-wrong-chip">
+                      ${w.byPlayerAvatar} <strong>${w.byPlayerName}</strong> เดาผิด: "${w.guessedName}" (เหลือ ${w.heartsLeft === 1 ? '❤️🖤' : '🖤🖤'})
+                    </span>
+                  `
+                )
+                .join('')}
+            </div>
+          </div>
+        `
+        : '';
+
+    return `
+      <div class="clue-buzzer-stage">
+        <div class="clue-hearts-strip">${heartsStripHtml}</div>
+        ${solvedBannerHtml}
+        ${turnBannerHtml}
+        <div class="clue-cards-grid">${cardsHtml}</div>
+        ${wrongGuessesHtml}
+      </div>
+    `;
+  }
+
   return '';
 }
 
@@ -1955,6 +2146,47 @@ function bindDynamicStageEvents(container, room) {
       });
     }
   }
+
+  if (mode === 'clue_buzzer') {
+    container.querySelectorAll('[data-clue-flip-slot]').forEach((cardBtn) => {
+      cardBtn.addEventListener('click', async () => {
+        const slotIndex = parseInt(cardBtn.dataset.clueFlipSlot, 10);
+        sfx.lockIn();
+        const res = await apiAction('clue_flip_card', { slotIndex });
+        if (res && res.clueFeedback && res.clueFeedback.message) {
+          sfx.beep(260, 0.12);
+          showToast(res.clueFeedback.message);
+        }
+      });
+    });
+
+    const randFlipBtn = container.querySelector('[data-clue-flip-random]');
+    if (randFlipBtn) {
+      randFlipBtn.addEventListener('click', async () => {
+        sfx.lockIn();
+        const res = await apiAction('clue_flip_card', {});
+        if (res && res.clueFeedback && res.clueFeedback.message) {
+          sfx.beep(260, 0.12);
+          showToast(res.clueFeedback.message);
+        }
+      });
+    }
+
+    const revealBtn = container.querySelector('[data-clue-reveal]');
+    if (revealBtn) {
+      revealBtn.addEventListener('click', async () => {
+        sfx.beep(340, 0.1);
+        await apiAction('clue_reveal_answer');
+      });
+    }
+
+    container.querySelectorAll('[data-clue-next]').forEach((nextBtn) => {
+      nextBtn.addEventListener('click', async () => {
+        sfx.lockIn();
+        await apiAction('start_mode_round');
+      });
+    });
+  }
 }
 
 function renderPlayingView(room) {
@@ -2021,6 +2253,19 @@ function renderPlayingView(room) {
     if (room.modeData?.currentTurnPlayerId === state.playerId) {
       document.getElementById('answerPromptLabel').textContent = `🟢 ถึงตาของคุณแล้ว! พิมพ์ชื่อเพื่อนร่วมทีมต่อจาก "${room.modeData?.currentAnchor?.playerName || ''}" ก่อนหมดเวลา:`;
     }
+  } else if (mode === 'clue_buzzer') {
+    const flipperName = room.modeData?.currentFlipperPlayerName || 'ผู้เล่น 1';
+    const flipperAvatar = room.modeData?.currentFlipperPlayerAvatar || '⚽';
+    const openedCount = room.modeData?.openedCount || 0;
+    const potPts = room.modeData?.potentialPoints || 5;
+    banner.style.background = `linear-gradient(135deg, #e11d48, #0f172a)`;
+    document.getElementById('playingClubName').textContent =
+      room.modeData?.solved || room.modeData?.revealed
+        ? `เฉลยไพ่ 5 คุณสมบัติ: ${room.modeData?.answerPlayer?.name || ''}`
+        : openedCount < 5
+          ? `เปิดไพ่ 5 คุณสมบัติ ข้อที่ #${room.roundNumber} • คิวเปิดไพ่: ${flipperAvatar} ${flipperName}`
+          : `เปิดไพ่ครบ 5 ใบแล้ว! ข้อที่ #${room.roundNumber} • ชิงตอบด่วน!`;
+    document.getElementById('playingClubSub').innerHTML = `สุ่มคนเปิดไพ่ทีละใบ (ตำแหน่งไพ่สุ่มไม่ซ้ำ!) • ชิงตอบถูกตอนนี้ได้ <strong>+${potPts} แต้ม</strong> • ตอบผิดเสียหัวใจ 1 ดวง (มีคนละ <strong>❤️❤️ 2 ดวง</strong> ต่อข้อ)`;
   }
 
   const playingTargetBanner = document.getElementById('playingTargetReachedBanner');
@@ -2046,6 +2291,19 @@ function renderPlayingView(room) {
     (room.modeData?.cells || []).some((c) => !c) &&
     room.modeData?.currentTurnPlayerId &&
     room.modeData.currentTurnPlayerId !== state.playerId;
+  const myClueHeartObj =
+    mode === 'clue_buzzer' && room.modeData
+      ? (room.modeData.heartsByPlayer || []).find((h) => h.playerId === state.playerId)
+      : null;
+  const isEliminatedInClueBuzzer =
+    mode === 'clue_buzzer' &&
+    room.modeData &&
+    !room.modeData.solved &&
+    !room.modeData.revealed &&
+    myClueHeartObj &&
+    myClueHeartObj.hearts <= 0;
+  const isClueBuzzerFinished =
+    mode === 'clue_buzzer' && room.modeData && (room.modeData.solved || room.modeData.revealed);
 
   const inputZone = document.getElementById('answerInputZone');
   const lockedZone = document.getElementById('answerLockedZone');
@@ -2061,6 +2319,15 @@ function renderPlayingView(room) {
     stageEl.classList.remove('hidden');
     lockedZone.classList.remove('hidden');
     document.getElementById('lockedAnswerText').textContent = `⏳ ตอนนี้เป็นตาของ ${room.modeData.currentTurnPlayerAvatar || '⚽'} ${room.modeData.currentTurnPlayerName} กำลังเลือกช่องวาง XO...`;
+  } else if (isEliminatedInClueBuzzer) {
+    inputZone.classList.add('hidden');
+    stageEl.classList.remove('hidden');
+    lockedZone.classList.remove('hidden');
+    document.getElementById('lockedAnswerText').textContent = `💀 หัวใจของคุณหมดแล้วในข้อนี้ (🖤🖤)! รอลุ้นว่าเพื่อนจะทายถูกหรือไม่ หรือกดปุ่ม "🔄 ข้ามไปข้อใหม่" ได้เลย`;
+  } else if (isClueBuzzerFinished) {
+    inputZone.classList.add('hidden');
+    stageEl.classList.remove('hidden');
+    lockedZone.classList.add('hidden');
   } else if (hasSubmitted) {
     inputZone.classList.add('hidden');
     stageEl.classList.toggle('hidden', mode === 'trivia_quiz');
@@ -2347,6 +2614,11 @@ function updateAutocomplete(query) {
   } else if (curMode === 'chain_link' && md && Array.isArray(md.history)) {
     md.history.forEach((h) => {
       if (h && h.playerId) usedIds.add(h.playerId);
+    });
+  } else if (curMode === 'clue_buzzer' && md && Array.isArray(md.wrongGuesses)) {
+    md.wrongGuesses.forEach((w) => {
+      if (w && w.guessedPlayerId) usedIds.add(w.guessedPlayerId);
+      if (w && w.guessedName) usedNames.add(normalizeText(w.guessedName));
     });
   }
 

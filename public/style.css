@@ -2766,3 +2766,265 @@ body {
   font-size: 0.73rem;
   font-weight: 700;
 }
+
+/* MODE 10: MYSTERY 5 CLUES BUZZER (2 HEARTS, SHUFFLED CLUES, ROTATING FLIPPER) */
+.clue-buzzer-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.clue-hearts-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.clue-heart-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 99px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
+  font-size: 0.8rem;
+  color: #f8fafc;
+  transition: all 0.2s ease;
+}
+
+.clue-heart-pill.is-me {
+  border-color: rgba(52, 211, 153, 0.55);
+  background: rgba(16, 185, 129, 0.14);
+}
+
+.clue-heart-pill.is-flipper {
+  border-color: #fbbf24;
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.28);
+}
+
+.clue-heart-pill.eliminated {
+  opacity: 0.55;
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(30, 41, 59, 0.65);
+}
+
+.clue-heart-icons {
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+}
+
+.clue-flipper-tag {
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: rgba(245, 158, 11, 0.25);
+  color: #fde68a;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.clue-turn-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.95));
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
+}
+
+.clue-turn-banner.my-turn {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(15, 23, 42, 0.95));
+  border-color: rgba(251, 191, 36, 0.65);
+  box-shadow: 0 8px 22px rgba(245, 158, 11, 0.16);
+}
+
+.clue-turn-banner.all-opened {
+  background: linear-gradient(135deg, rgba(225, 29, 72, 0.22), rgba(15, 23, 42, 0.95));
+  border-color: rgba(244, 63, 94, 0.55);
+}
+
+.clue-solved-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(15, 23, 42, 0.95));
+  border: 2px solid #10b981;
+  box-shadow: 0 12px 28px rgba(16, 185, 129, 0.22);
+}
+
+.clue-solved-banner.revealed {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(15, 23, 42, 0.95));
+  border-color: rgba(248, 113, 113, 0.6);
+}
+
+.clue-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 1050px) {
+  .clue-cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 680px) {
+  .clue-cards-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.clue-card {
+  position: relative;
+  min-height: 150px;
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: left;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.clue-card.face-down {
+  background:
+    radial-gradient(circle at 50% 25%, rgba(245, 158, 11, 0.18), transparent 70%),
+    linear-gradient(160deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
+  border: 1.5px dashed rgba(251, 191, 36, 0.45);
+  color: #f8fafc;
+  cursor: default;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.clue-card.face-down.can-flip {
+  cursor: pointer;
+  border-style: solid;
+  border-color: rgba(251, 191, 36, 0.75);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.clue-card.face-down.can-flip:hover {
+  transform: translateY(-4px) scale(1.015);
+  border-color: #fbbf24;
+  background:
+    radial-gradient(circle at 50% 25%, rgba(251, 191, 36, 0.32), transparent 72%),
+    linear-gradient(160deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 1));
+  box-shadow: 0 12px 26px rgba(245, 158, 11, 0.28);
+}
+
+.clue-card-back-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.clue-back-num {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.2);
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+
+.clue-back-icon {
+  font-size: 2rem;
+  line-height: 1.1;
+  margin: 2px 0;
+}
+
+.clue-back-title {
+  font-size: 0.82rem;
+  color: #f8fafc;
+}
+
+.clue-back-sub {
+  font-size: 0.72rem;
+  color: #cbd5e1;
+}
+
+.clue-card.opened {
+  background: linear-gradient(160deg, rgba(16, 185, 129, 0.16), rgba(15, 23, 42, 0.96));
+  border: 1.5px solid rgba(52, 211, 153, 0.55);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);
+}
+
+.clue-card-top {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 6px;
+}
+
+.clue-card-num {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.clue-card-cat {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #6ee7b7;
+}
+
+.clue-card-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  flex: 1;
+}
+
+.clue-card-text {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.35;
+}
+
+.clue-card-footer {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 5px;
+}
+
+.clue-wrong-box {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+}
+
+.clue-wrong-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.clue-wrong-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  font-size: 0.76rem;
+  color: #fecaca;
+}

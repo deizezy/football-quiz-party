@@ -669,6 +669,65 @@ function serializeModeDataForClients(room) {
     };
   }
 
+  // MODE 10: MYSTERY 5 CLUES BUZZER (2 Hearts, Random Clue Order, Rotating Flipper, Speed Buzzer)
+  if (mode === 'clue_buzzer') {
+    if (!room.clueBuzzerRound) {
+      room.clueBuzzerRound = generateClueBuzzerRound(room);
+    }
+    const cb = room.clueBuzzerRound;
+    if (!cb) return null;
+    const solved = !!cb.solved;
+    const revealed = !!cb.revealed;
+    const allDone = solved || revealed;
+    const openedCount = cb.cards.filter((c) => c.opened).length;
+    const potentialPoints = allDone ? 0 : Math.max(1, 6 - Math.max(1, openedCount));
+
+    const flipper = getActiveClueFlipperPlayer(room);
+    const activePlayers = room.players || [];
+
+    return {
+      roundId: cb.id,
+      roundNumber: room.roundNumber,
+      solved,
+      revealed,
+      solvedBy: cb.solvedBy || null,
+      pointsAwarded: cb.pointsAwarded || 0,
+      openedCount,
+      potentialPoints,
+      currentFlipperPlayerId: flipper ? flipper.id : null,
+      currentFlipperPlayerName: flipper ? flipper.name : 'ผู้เล่น 1',
+      currentFlipperPlayerAvatar: flipper ? flipper.avatar : '⚽',
+      heartsByPlayer: activePlayers.map((p) => ({
+        playerId: p.id,
+        name: p.name,
+        avatar: p.avatar,
+        hearts: cb.hearts && cb.hearts[p.id] !== undefined ? cb.hearts[p.id] : 2
+      })),
+      cards: cb.cards.map((c, idx) => ({
+        slotIndex: idx,
+        opened: !!(c.opened || allDone),
+        openedBy: c.openedBy || (allDone && !c.opened ? '👁️ เฉลย' : null),
+        icon: c.opened || allDone ? c.icon : '🃏',
+        categoryLabel: c.opened || allDone ? c.categoryLabel : `การ์ดคุณสมบัติใบที่ #${idx + 1}`,
+        text: c.opened || allDone ? c.text : 'คลิกเพื่อพลิกเปิดดูคุณสมบัติลับใบนี้!',
+        badgeUrl: c.opened || allDone ? c.badgeUrl || null : null,
+        flagUrl: c.opened || allDone ? c.flagUrl || null : null
+      })),
+      wrongGuesses: cb.wrongGuesses || [],
+      answerPlayer: allDone
+        ? {
+            id: cb.target.id,
+            name: cb.target.name,
+            flag: cb.target.flag,
+            flagUrl: cb.target.flagUrl || getFlagUrlFromEmoji(cb.target.flag),
+            photoUrl: cb.target.photoUrl || null,
+            position: cb.target.position,
+            clubs: (cb.target.clubs || []).map((cid) => CLUBS.find((cl) => cl.id === cid)?.name || cid)
+          }
+        : null
+    };
+  }
+
   return null;
 }
 
@@ -789,6 +848,10 @@ function clearRoomTimers(room) {
     clearTimeout(room.gridBotTimeout);
     room.gridBotTimeout = null;
   }
+  if (room.clueFlipBotTimeout) {
+    clearTimeout(room.clueFlipBotTimeout);
+    room.clueFlipBotTimeout = null;
+  }
   if (room.botTimeouts) {
     room.botTimeouts.forEach((t) => clearTimeout(t));
     room.botTimeouts = [];
@@ -898,7 +961,8 @@ function scheduleBotActions(room) {
     mode === 'footy_grid' ||
     mode === 'connections' ||
     mode === 'who_are_ya_wordle' ||
-    mode === 'chain_link';
+    mode === 'chain_link' ||
+    mode === 'clue_buzzer';
 
   if (isUntimedMode) {
     room.untimedBotInterval = setInterval(() => {
@@ -983,6 +1047,27 @@ function scheduleBotActions(room) {
             (p) => p.id !== target.id && !guessedIds.has(p.id) && p.clubs.some((c) => target.clubs.includes(c))
           );
           const pool = teammates.length > 0 ? teammates : PLAYERS.filter((p) => !guessedIds.has(p.id));
+          if (pool.length > 0) {
+            const pick = pool[Math.floor(Math.random() * pool.length)];
+            handlePlayerSubmission(room, bot.id, pick.name, pick.id);
+          }
+        }
+      } else if (curMode === 'clue_buzzer') {
+        if (!room.clueBuzzerRound || room.clueBuzzerRound.solved || room.clueBuzzerRound.revealed) return;
+        const cb = room.clueBuzzerRound;
+        const botHearts = cb.hearts && cb.hearts[bot.id] !== undefined ? cb.hearts[bot.id] : 2;
+        if (botHearts <= 0) return;
+        const openedCount = cb.cards.filter((c) => c.opened).length;
+        if (openedCount === 0) return;
+        const wrongIds = new Set((cb.wrongGuesses || []).map((w) => w.guessedPlayerId).filter(Boolean));
+        const solveChance = openedCount >= 4 ? 0.65 : openedCount >= 3 ? 0.42 : openedCount >= 2 ? 0.22 : 0.08;
+        if (Math.random() < solveChance) {
+          handlePlayerSubmission(room, bot.id, cb.target.name, cb.target.id);
+        } else if (Math.random() < 0.45) {
+          const samePos = PLAYERS.filter(
+            (p) => p.id !== cb.target.id && !wrongIds.has(p.id) && p.position === cb.target.position
+          );
+          const pool = samePos.length > 0 ? samePos : PLAYERS.filter((p) => p.id !== cb.target.id && !wrongIds.has(p.id));
           if (pool.length > 0) {
             const pick = pool[Math.floor(Math.random() * pool.length)];
             handlePlayerSubmission(room, bot.id, pick.name, pick.id);
@@ -1206,6 +1291,73 @@ function handleChainTurnTimeout(room) {
   scheduleChainBotTurn(room);
 }
 
+function getActiveClueFlipperPlayer(room) {
+  const activePlayers = room.players || [];
+  if (activePlayers.length === 0) return null;
+  const cb = room.clueBuzzerRound;
+  const hearts = cb && cb.hearts ? cb.hearts : {};
+  const alivePlayers = activePlayers.filter((p) => (hearts[p.id] !== undefined ? hearts[p.id] : 2) > 0);
+  const pool = alivePlayers.length > 0 ? alivePlayers : activePlayers;
+  const startIdx = ((room.clueFlipTurnIndex || 0) % activePlayers.length + activePlayers.length) % activePlayers.length;
+  for (let offset = 0; offset < activePlayers.length; offset++) {
+    const candidate = activePlayers[(startIdx + offset) % activePlayers.length];
+    if (pool.some((p) => p.id === candidate.id)) {
+      room.clueFlipTurnIndex = (startIdx + offset) % activePlayers.length;
+      return candidate;
+    }
+  }
+  return pool[0];
+}
+
+function advanceClueFlipperTurn(room) {
+  const activePlayers = room.players || [];
+  if (activePlayers.length === 0) return null;
+  room.clueFlipTurnIndex = ((room.clueFlipTurnIndex || 0) + 1) % activePlayers.length;
+  return getActiveClueFlipperPlayer(room);
+}
+
+function scheduleClueFlipperBotTurn(room) {
+  if (room.clueFlipBotTimeout) {
+    clearTimeout(room.clueFlipBotTimeout);
+    room.clueFlipBotTimeout = null;
+  }
+  if (room.state !== 'PLAYING' || room.settings.gameMode !== 'clue_buzzer') return;
+  const cb = room.clueBuzzerRound;
+  if (!cb || cb.solved || cb.revealed) return;
+  const unflippedIndices = cb.cards.map((c, idx) => (!c.opened ? idx : -1)).filter((idx) => idx >= 0);
+  if (unflippedIndices.length === 0) return;
+
+  const flipper = getActiveClueFlipperPlayer(room);
+  if (!flipper || !flipper.isBot) return;
+
+  const openedCount = cb.cards.filter((c) => c.opened).length;
+  const delayMs = openedCount === 0 ? 1800 : 3200 + Math.floor(Math.random() * 1400);
+  room.clueFlipBotTimeout = setTimeout(() => {
+    if (room.state !== 'PLAYING' || room.settings.gameMode !== 'clue_buzzer') return;
+    const curCb = room.clueBuzzerRound;
+    if (!curCb || curCb.solved || curCb.revealed) return;
+    const curFlipper = getActiveClueFlipperPlayer(room);
+    if (!curFlipper || curFlipper.id !== flipper.id) return;
+
+    const avail = curCb.cards.map((c, idx) => (!c.opened ? idx : -1)).filter((idx) => idx >= 0);
+    if (avail.length === 0) return;
+    const pickIdx = avail[Math.floor(Math.random() * avail.length)];
+    curCb.cards[pickIdx].opened = true;
+    curCb.cards[pickIdx].openedBy = `${flipper.avatar} ${flipper.name}`;
+    const nextFlipper = advanceClueFlipperTurn(room);
+    const nextOpenedCount = curCb.cards.filter((c) => c.opened).length;
+    const nextPts = Math.max(1, 6 - nextOpenedCount);
+
+    broadcastRoom(room.code, 'top10_updated', {
+      toastMessage: `🃏 ${flipper.name} พลิกเปิดการ์ดใบที่ #${pickIdx + 1}: "${curCb.cards[pickIdx].categoryLabel}" (ชิงตอบตอนนี้ +${nextPts} แต้ม!)${nextFlipper && nextOpenedCount < 5 ? ` ➔ คิวเปิดใบต่อไป: ${nextFlipper.avatar} ${nextFlipper.name}` : ''}`
+    });
+
+    if (nextOpenedCount < 5) {
+      scheduleClueFlipperBotTurn(room);
+    }
+  }, delayMs);
+}
+
 function startWave(room) {
   clearRoomTimers(room);
   room.state = 'PLAYING';
@@ -1218,7 +1370,8 @@ function startWave(room) {
     mode === 'lineup_quiz' ||
     mode === 'footy_grid' ||
     mode === 'connections' ||
-    mode === 'who_are_ya_wordle';
+    mode === 'who_are_ya_wordle' ||
+    mode === 'clue_buzzer';
   room.timeLeft = isUntimedMode ? 0 : room.settings.timeLimit;
   room.totalWavesPlayed = (room.totalWavesPlayed || 0) + 1;
 
@@ -1227,6 +1380,9 @@ function startWave(room) {
     scheduleChainBotTurn(room);
   } else if (mode === 'footy_grid') {
     scheduleGridBotTurn(room);
+  } else if (mode === 'clue_buzzer') {
+    scheduleClueFlipperBotTurn(room);
+    scheduleBotActions(room);
   } else {
     scheduleBotActions(room);
   }
@@ -1824,7 +1980,7 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
 
     const bonusTxt = milestoneBonus > 0 ? ' (🔥 โบนัสโซ่ยาวครบ 5 ข้อ +1 แต้ม!)' : '';
     const nextTurnTxt = nextTurnPlayer ? ` ➔ 🟢 ตาต่อไป: ${nextTurnPlayer.avatar} ${nextTurnPlayer.name}!` : '';
-    broadcastRoom(room.code, 'top10_updated', {
+    broadcastRoom( room.code, 'top10_updated', {
       toastMessage: `🔗 ${player ? player.name : 'ผู้เล่น'} เชื่อม ${anchorPlayer.name} ➔ [${bridgeClubObj?.name || chosenBridgeClubId}] ➔ ${guessedPlayer.name} (+${pts} แต้ม${bonusTxt})${autoPivotMsg}${nextTurnTxt}`
     });
 
@@ -1835,6 +1991,172 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
       top10Feedback: {
         correct: true,
         message: `✅ เชื่อมสำเร็จผ่าน [${bridgeClubObj?.name || chosenBridgeClubId}] ➔ ${guessedPlayer.name} (+${pts} คะแนน${bonusTxt})${nextTurnTxt}`
+      }
+    };
+  }
+
+  // MODE 10: MYSTERY 5 CLUES BUZZER (2 Hearts, Random Clue Order, Rotating Flipper, Speed Buzzer)
+  if (mode === 'clue_buzzer') {
+    if (!cleanInput) {
+      return {
+        ok: false,
+        top10Feedback: { correct: false, message: 'กรุณาพิมพ์ชื่อนักเตะก่อนกดส่ง' }
+      };
+    }
+    if (!room.clueBuzzerRound) {
+      room.clueBuzzerRound = generateClueBuzzerRound(room);
+    }
+    const cb = room.clueBuzzerRound;
+    if (cb.solved || cb.revealed) {
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `⚠️ ข้อนี้จบไปแล้ว (${cb.target.name}) กดปุ่ม "🔄 สุ่มโจทย์ 5 คุณสมบัติคนต่อไป" ได้เลย!`
+        }
+      };
+    }
+
+    if (!cb.hearts) cb.hearts = {};
+    const myHearts = cb.hearts[playerId] !== undefined ? cb.hearts[playerId] : 2;
+    if (myHearts <= 0) {
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `💀 คุณเสียหัวใจครบ 2 ดวงในข้อนี้แล้ว! ต้องรอลุ้นข้อต่อไป`
+        }
+      };
+    }
+
+    const openedCount = cb.cards.filter((c) => c.opened).length;
+    if (openedCount === 0) {
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `🃏 กรุณารอเปิดการ์ดคุณสมบัติอย่างน้อย 1 ใบก่อนชิงตอบ!`
+        }
+      };
+    }
+
+    const guessedPlayer = findPlayerByInput(cleanInput, selectedPlayerId);
+    const isCorrect =
+      (guessedPlayer && guessedPlayer.id === cb.target.id) ||
+      matchesNameOrAlias(cleanInput, cb.target.name, cb.target.aliases);
+
+    if (isCorrect) {
+      const pts = Math.max(1, 6 - Math.max(1, openedCount));
+      cb.solved = true;
+      cb.solvedBy = player ? `${player.avatar} ${player.name}` : 'ผู้เล่น';
+      cb.pointsAwarded = pts;
+      cb.cards.forEach((c) => {
+        if (!c.opened) {
+          c.opened = true;
+          c.openedBy = '🎉 เฉลยหลังมีผู้ตอบถูก';
+        }
+      });
+      if (room.clueFlipBotTimeout) {
+        clearTimeout(room.clueFlipBotTimeout);
+        room.clueFlipBotTimeout = null;
+      }
+      if (player) {
+        player.score += pts;
+        recordPlayerResultStats(player, true, null, cb.target.name);
+      }
+
+      broadcastRoom(room.code, 'top10_updated', {
+        toastMessage: `🎉 ${player ? player.name : 'ผู้เล่น'} ชิงตอบถูกคนแรกจากคุณสมบัติ ${openedCount} ใบ! เขาคือ ${cb.target.flag} ${cb.target.name} (+${pts} คะแนน!)`
+      });
+
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: true,
+          message: `🎉 ถูกต้อง! นักเตะปริศนาคือ ${cb.target.name} (เปิดไป ${openedCount} ใบ รับ +${pts} คะแนน!)`
+        }
+      };
+    }
+
+    // Wrong Answer -> Deduct 1 Heart!
+    const guessedLabel = guessedPlayer ? guessedPlayer.name : cleanInput;
+    if (
+      (cb.wrongGuesses || []).some(
+        (w) => normalizeText(w.guessedName) === normalizeText(guessedLabel)
+      )
+    ) {
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `⚠️ "${guessedLabel}" มีคนเดาผิดไปแล้วในข้อนี้! ลองชื่ออื่น (ไม่เสียหัวใจซ้ำ)`
+        }
+      };
+    }
+
+    const remainingHearts = Math.max(0, myHearts - 1);
+    cb.hearts[playerId] = remainingHearts;
+    if (player) {
+      recordPlayerResultStats(player, false, null, null);
+    }
+
+    if (!Array.isArray(cb.wrongGuesses)) cb.wrongGuesses = [];
+    cb.wrongGuesses.unshift({
+      byPlayerId: playerId,
+      byPlayerName: player ? player.name : 'ผู้เล่น',
+      byPlayerAvatar: player ? player.avatar : '⚽',
+      guessedPlayerId: guessedPlayer ? guessedPlayer.id : null,
+      guessedName: guessedLabel,
+      guessedFlag: guessedPlayer ? guessedPlayer.flag : '❌',
+      heartsLeft: remainingHearts
+    });
+
+    // Check if ALL players in the room have 0 hearts left
+    const allEliminated = (room.players || []).every(
+      (p) => (cb.hearts[p.id] !== undefined ? cb.hearts[p.id] : 2) <= 0
+    );
+
+    if (allEliminated) {
+      cb.revealed = true;
+      cb.solvedBy = '💀 ทุกคนหัวใจหมด! (ไม่มีผู้ชนะ)';
+      cb.cards.forEach((c) => {
+        if (!c.opened) {
+          c.opened = true;
+          c.openedBy = '👁️ เฉลยอัตโนมัติ';
+        }
+      });
+      if (room.clueFlipBotTimeout) {
+        clearTimeout(room.clueFlipBotTimeout);
+        room.clueFlipBotTimeout = null;
+      }
+      broadcastRoom(room.code, 'top10_updated', {
+        toastMessage: `💀 ผู้เล่นทุกคนเสียหัวใจครบ 2 ดวงแล้ว! เฉลยคือ ${cb.target.flag} ${cb.target.name}`
+      });
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `💀 หัวใจหมดทั้งห้องแล้ว! คำตอบที่แท้จริงคือ ${cb.target.name}`
+        }
+      };
+    }
+
+    // If the eliminated player was the active card flipper, advance flipper turn to an alive player
+    const curFlipper = getActiveClueFlipperPlayer(room);
+    if (curFlipper && curFlipper.isBot) {
+      scheduleClueFlipperBotTurn(room);
+    }
+
+    const heartIcons = remainingHearts === 1 ? '❤️🖤 (เหลือโอกาสสุดท้าย!)' : '🖤🖤 (หัวใจหมด ตกรอบข้อนี้!)';
+    broadcastRoom(room.code, 'top10_updated', {
+      toastMessage: `💔 ${player ? player.name : 'ผู้เล่น'} ชิงตอบ "${guessedLabel}" ผิด! เสียหัวใจ 1 ดวง ➔ ${heartIcons}`
+    });
+
+    return {
+      ok: true,
+      top10Feedback: {
+        correct: false,
+        message: `💔 "${guessedLabel}" ยังไม่ใช่! คุณเสียหัวใจ 1 ดวง ➔ ${heartIcons}`
       }
     };
   }
@@ -3030,6 +3352,279 @@ function pickChainStarterPlayer(room = null) {
   }
   return chosen;
 }
+
+// MODE 10: Generate a 5-Clue Mystery Buzzer Round with Diverse Randomized Clues & Shuffled Card Positions
+const globalUsedClueBuzzerIds = new Set();
+
+const FLAG_COUNTRY_TH = {
+  '🇫🇷': 'ฝรั่งเศส (ยุโรป)',
+  '🇧🇷': 'บราซิล (อเมริกาใต้)',
+  '🇪🇸': 'สเปน (ยุโรป)',
+  '🏴󠁧󠁢󠁥󠁮󠁧󠁿': 'อังกฤษ (ยุโรป)',
+  '🇦🇷': 'อาร์เจนตินา (อเมริกาใต้)',
+  '🇵🇹': 'โปรตุเกส (ยุโรป)',
+  '🇩🇪': 'เยอรมนี (ยุโรป)',
+  '🇮🇹': 'อิตาลี (ยุโรป)',
+  '🇳🇱': 'เนเธอร์แลนด์ (ยุโรป)',
+  '🇧🇪': 'เบลเยียม (ยุโรป)',
+  '🇺🇾': 'อุรุกวัย (อเมริกาใต้)',
+  '🇭🇷': 'โครเอเชีย (ยุโรป)',
+  '🇪🇬': 'อียิปต์ (แอฟริกา)',
+  '🇳🇴': 'นอร์เวย์ (ยุโรป)',
+  '🇰🇷': 'เกาหลีใต้ (เอเชีย)',
+  '🇯🇵': 'ญี่ปุ่น (เอเชีย)',
+  '🇸🇳': 'เซเนกัล (แอฟริกา)',
+  '🇲🇦': 'โมร็อกโก (แอฟริกา)',
+  '🇨🇴': 'โคลอมเบีย (อเมริกาใต้)',
+  '🇨🇱': 'ชิลี (อเมริกาใต้)',
+  '🇵🇱': 'โปแลนด์ (ยุโรป)',
+  '🇸🇪': 'สวีเดน (ยุโรป)',
+  '🇩🇰': 'เดนมาร์ก (ยุโรป)',
+  '🇨🇭': 'สวิตเซอร์แลนด์ (ยุโรป)',
+  '🇷🇸': 'เซอร์เบีย (ยุโรป)',
+  '🏴󠁧󠁢󠁷󠁬󠁳󠁿': 'เวลส์ (ยุโรป)',
+  '🏴󠁧󠁢󠁳󠁣󠁴󠁿': 'สกอตแลนด์ (ยุโรป)',
+  '🇨🇮': 'ไอวอรีโคสต์ (แอฟริกา)',
+  '🇳🇬': 'ไนจีเรีย (แอฟริกา)',
+  '🇬🇭': 'กานา (แอฟริกา)',
+  '🇨🇲': 'แคเมอรูน (แอฟริกา)',
+  '🇩🇿': 'แอลจีเรีย (แอฟริกา)',
+  '🇲🇽': 'เม็กซิโก (อเมริกาเหนือ)',
+  '🇺🇸': 'สหรัฐอเมริกา (อเมริกาเหนือ)',
+  '🇨🇦': 'แคนาดา (อเมริกาเหนือ)'
+};
+
+const POS_FULL_TH = {
+  FW: 'กองหน้า / แนวรุกจบสกอร์ (Forward - FW)',
+  MF: 'กองกลาง / มิดฟิลด์ตัวขับเคลื่อนเกม (Midfielder - MF)',
+  DF: 'กองหลัง / แนวรับ (Defender - DF)',
+  GK: 'ผู้รักษาประตู (Goalkeeper - GK)'
+};
+
+function generateClueBuzzerRound(room = null) {
+  const starCandidates = PLAYERS.filter((p) => Array.isArray(p.clubs) && p.clubs.length >= 2);
+  const basePool = starCandidates.length >= 20 ? starCandidates : PLAYERS;
+
+  if (room && !Array.isArray(room.usedClueBuzzerIds)) {
+    room.usedClueBuzzerIds = [];
+  }
+  const usedRoomSet = new Set(room ? room.usedClueBuzzerIds : []);
+
+  let pool = basePool.filter((p) => !usedRoomSet.has(p.id) && !globalUsedClueBuzzerIds.has(p.id));
+  if (pool.length === 0) {
+    globalUsedClueBuzzerIds.clear();
+    pool = basePool.filter((p) => !usedRoomSet.has(p.id));
+  }
+  if (pool.length === 0) {
+    const lastId = room && room.usedClueBuzzerIds.length > 0 ? room.usedClueBuzzerIds[room.usedClueBuzzerIds.length - 1] : null;
+    if (room) room.usedClueBuzzerIds = lastId ? [lastId] : [];
+    pool = basePool.filter((p) => p.id !== lastId);
+  }
+
+  const shuffledPlayers = shuffleArray(pool.length > 0 ? pool : basePool);
+  const target = shuffledPlayers[0] || basePool[0] || PLAYERS[0];
+
+  if (room && target && !room.usedClueBuzzerIds.includes(target.id)) {
+    room.usedClueBuzzerIds.push(target.id);
+  }
+  if (target) {
+    globalUsedClueBuzzerIds.add(target.id);
+  }
+
+  // Build a rich pool of distinct candidate clues for this player, then sample 5 and shuffle their positions!
+  const matchedCareer = CAREER_PATHS.find((c) => normalizeText(c.answerName) === normalizeText(target.name));
+  const matchedTop10 = [];
+  for (const list of TOP10_LISTS) {
+    const item = (list.items || []).find((it) => normalizeText(it.name) === normalizeText(target.name));
+    if (item) {
+      matchedTop10.push({ listTitle: list.title, rank: item.rank, stat: item.stat });
+    }
+  }
+  const matchedLineups = [];
+  for (const lu of LINEUPS) {
+    const slot = (lu.slots || []).find((s) => normalizeText(s.playerId) === normalizeText(target.name));
+    if (slot) {
+      matchedLineups.push({ title: lu.title, pos: slot.pos, number: slot.number });
+    }
+  }
+
+  const clubObjs = (target.clubs || []).map((cid) => CLUBS.find((c) => c.id === cid)).filter(Boolean);
+  const leagueIds = [...new Set(clubObjs.map((c) => c.league).filter(Boolean))];
+  const leagueNames = leagueIds
+    .map((lid) => LEAGUES.find((l) => l.id === lid)?.name || lid)
+    .filter(Boolean);
+
+  const words = (target.name || '').trim().split(/\s+/);
+  const initialsHint = words
+    .map((w) => w.charAt(0).toUpperCase() + '_'.repeat(Math.max(2, w.length - 1)))
+    .join(' ');
+  const totalLetters = words.reduce((acc, w) => acc + w.length, 0);
+
+  const candidateClues = [];
+
+  // 1. Nationality Clue
+  const countryDesc = FLAG_COUNTRY_TH[target.flag] || `สัญชาติ ${target.flag || '⚽'}`;
+  candidateClues.push({
+    type: 'nationality',
+    icon: '🏳️',
+    categoryLabel: 'สัญชาติ & ทีมชาติ',
+    text: `นักเตะทีมชาติ ${target.flag || ''} ${countryDesc}`,
+    flagUrl: target.flagUrl || getFlagUrlFromEmoji(target.flag)
+  });
+
+  // 2. Position & Tactical Role Clue
+  candidateClues.push({
+    type: 'position',
+    icon: '🏃‍♂️',
+    categoryLabel: 'ตำแหน่งการเล่น',
+    text: POS_FULL_TH[target.position] || `ตำแหน่ง: ${target.position}`
+  });
+
+  // 3. Leagues & Multi-Club Footprint Clue
+  if (leagueNames.length > 0) {
+    candidateClues.push({
+      type: 'leagues',
+      icon: '🌍',
+      categoryLabel: 'ลีกที่เคยค้าแข้ง',
+      text:
+        leagueNames.length >= 2
+          ? `เคยผ่านการค้าแข้งใน ${leagueNames.join(' และ ')} (รวม ${clubObjs.length} สโมสรใหญ่)`
+          : `ค้าแข้งอยู่ในศึก ${leagueNames[0]} (${clubObjs.length} สโมสรในฐานข้อมูล)`
+    });
+  }
+
+  // 4. Individual Club Clues (each club in a separate category slot so max 2 clubs can be picked)
+  const shuffledClubs = shuffleArray([...clubObjs]);
+  if (shuffledClubs[0]) {
+    candidateClues.push({
+      type: 'club_primary',
+      icon: '🏟️',
+      categoryLabel: 'สโมสรที่เคยค้าแข้ง',
+      text: `เคยลงเล่นให้กับสโมสร "${shuffledClubs[0].name}" (${shuffledClubs[0].nameTh || shuffledClubs[0].short})`,
+      badgeUrl: shuffledClubs[0].badgeUrl || null
+    });
+  }
+  if (shuffledClubs[1]) {
+    candidateClues.push({
+      type: 'club_secondary',
+      icon: '🛡️',
+      categoryLabel: 'สโมสรร่วมเส้นทางค้าแข้ง',
+      text: `เคยค้าแข้งกับสโมสร "${shuffledClubs[1].name}" (${shuffledClubs[1].nameTh || shuffledClubs[1].short})`,
+      badgeUrl: shuffledClubs[1].badgeUrl || null
+    });
+  }
+
+  // 5. Career Highlight / Trivia / Trophy / Lineup Clue
+  if (matchedCareer && matchedCareer.hint) {
+    candidateClues.push({
+      type: 'career_highlight',
+      icon: '🏆',
+      categoryLabel: 'เกียรติประวัติ & จุดเด่น',
+      text: matchedCareer.hint
+    });
+  } else if (matchedTop10.length > 0) {
+    const t10 = matchedTop10[0];
+    candidateClues.push({
+      type: 'top10_record',
+      icon: '📊',
+      categoryLabel: 'สถิติระดับท็อป 10',
+      text: `ติดอันดับ #${t10.rank} ในทำเนียบ "${t10.listTitle}" (${t10.stat})`
+    });
+  } else if (matchedLineups.length > 0) {
+    const lu = matchedLineups[0];
+    candidateClues.push({
+      type: 'lineup_history',
+      icon: '📋',
+      categoryLabel: 'แมตช์ประวัติศาสตร์ & เบอร์เสื้อ',
+      text: `ลงสนามเป็น 11 ตัวจริงในชุด "${lu.title}" (สวมเสื้อเบอร์ #${lu.number})`
+    });
+  }
+
+  // 6. Career Timeline Step Clue (if in CAREER_PATHS)
+  if (matchedCareer && Array.isArray(matchedCareer.steps) && matchedCareer.steps.length > 0) {
+    const firstStep = matchedCareer.steps[0];
+    const lastStep = matchedCareer.steps[matchedCareer.steps.length - 1];
+    candidateClues.push({
+      type: 'career_timeline',
+      icon: '📅',
+      categoryLabel: 'เส้นทางอาชีพค้าแข้ง',
+      text:
+        matchedCareer.steps.length >= 2
+          ? `เริ่มต้นกับ ${firstStep.club} (${firstStep.years}) และมีเส้นทางถึง ${lastStep.club} (${lastStep.years})`
+          : `ค้าแข้งกับ ${firstStep.club} ในช่วงปี ${firstStep.years} (${firstStep.apps} นัด)`
+    });
+  }
+
+  // 7. Famous Teammate Clue
+  const teammates = PLAYERS.filter(
+    (p) => p.id !== target.id && p.clubs.some((cid) => (target.clubs || []).includes(cid))
+  );
+  if (teammates.length > 0) {
+    const pickedMates = shuffleArray(teammates).slice(0, 2);
+    candidateClues.push({
+      type: 'teammates',
+      icon: '🤝',
+      categoryLabel: 'เพื่อนร่วมสโมสรเดียวกัน',
+      text: `เคยอยู่สโมสรเดียวกับ ${pickedMates.map((m) => m.name).join(' และ ')}`
+    });
+  }
+
+  // 8. Name Structure & Initials Clue
+  candidateClues.push({
+    type: 'name_initials',
+    icon: '🔤',
+    categoryLabel: 'โครงสร้างชื่อ & อักษรย่อ',
+    text: `ชื่อมี ${words.length} พยางค์ (รวม ${totalLetters} ตัวอักษร) • อักษรย่อ: ${initialsHint}`
+  });
+
+  // Randomly pick 5 distinct clues and shuffle their positions (Slots #1 to #5 are completely non-deterministic!)
+  const picked5 = shuffleArray(candidateClues).slice(0, 5);
+  const shuffled5Cards = shuffleArray(picked5).map((cl, idx) => ({
+    slotIndex: idx,
+    type: cl.type,
+    icon: cl.icon,
+    categoryLabel: cl.categoryLabel,
+    text: cl.text,
+    badgeUrl: cl.badgeUrl || null,
+    flagUrl: cl.flagUrl || null,
+    opened: false,
+    openedBy: null
+  }));
+
+  const hearts = {};
+  if (room && Array.isArray(room.players)) {
+    room.players.forEach((p) => {
+      hearts[p.id] = 2;
+    });
+  }
+
+  // Randomly pick the starting player to flip the first card!
+  if (room && Array.isArray(room.players) && room.players.length > 0) {
+    room.clueFlipTurnIndex = Math.floor(Math.random() * room.players.length);
+  }
+
+  if (!target.photoUrl) {
+    getPlayerPhotoByName(target.name).then((photo) => {
+      if (photo && room && room.clueBuzzerRound && room.clueBuzzerRound.target.id === target.id) {
+        room.clueBuzzerRound.target.photoUrl = photo;
+        target.photoUrl = photo;
+        broadcastRoom(room.code, 'top10_updated');
+      }
+    });
+  }
+
+  return {
+    id: 'clue5_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+    target,
+    cards: shuffled5Cards,
+    hearts,
+    wrongGuesses: [],
+    solved: false,
+    revealed: false,
+    solvedBy: null,
+    pointsAwarded: 0
+  };
+}
 function generateRandomValidFootyGrid(roundNum) {
   const clubOverlapWeight = new Map();
   for (const p of PLAYERS) {
@@ -3303,6 +3898,11 @@ function startModeRound(room, options = {}) {
       });
     }
     startWave(room);
+  } else if (mode === 'clue_buzzer') {
+    room.roundNumber += 1;
+    room.waveNumber = 1;
+    room.clueBuzzerRound = generateClueBuzzerRound(room);
+    startWave(room);
   } else {
     // club_battle: Multi-Club Pool!
     room.pickedClubs = [];
@@ -3419,6 +4019,9 @@ function handleApiAction(req, res, body) {
         isBot: false,
         connected: true
       });
+      if (room.clueBuzzerRound && room.clueBuzzerRound.hearts) {
+        room.clueBuzzerRound.hearts[pId] = 2;
+      }
     }
 
     broadcastRoom(code, 'player_joined');
@@ -3496,11 +4099,16 @@ function handleApiAction(req, res, body) {
     if (room.state === 'SELECTING_CLUB') {
       scheduleBotClubPicks(room);
     } else if (room.state === 'PLAYING') {
+      if (room.settings.gameMode === 'clue_buzzer' && room.clueBuzzerRound && room.clueBuzzerRound.hearts) {
+        room.clueBuzzerRound.hearts[botId] = 2;
+      }
       scheduleBotActions(room);
       if (room.settings.gameMode === 'chain_link') {
         scheduleChainBotTurn(room);
       } else if (room.settings.gameMode === 'footy_grid') {
         scheduleGridBotTurn(room);
+      } else if (room.settings.gameMode === 'clue_buzzer') {
+        scheduleClueFlipperBotTurn(room);
       }
     }
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -3514,15 +4122,19 @@ function handleApiAction(req, res, body) {
     if (room.players.length > 0) {
       room.gridTurnIndex = (room.gridTurnIndex || 0) % room.players.length;
       room.chainTurnIndex = (room.chainTurnIndex || 0) % room.players.length;
+      room.clueFlipTurnIndex = (room.clueFlipTurnIndex || 0) % room.players.length;
     } else {
       room.gridTurnIndex = 0;
       room.chainTurnIndex = 0;
+      room.clueFlipTurnIndex = 0;
     }
     if (room.state === 'PLAYING') {
       if (room.settings.gameMode === 'chain_link') {
         scheduleChainBotTurn(room);
       } else if (room.settings.gameMode === 'footy_grid') {
         scheduleGridBotTurn(room);
+      } else if (room.settings.gameMode === 'clue_buzzer') {
+        scheduleClueFlipperBotTurn(room);
       }
     }
     broadcastRoom(code, 'player_removed');
@@ -4071,6 +4683,90 @@ function handleApiAction(req, res, body) {
     return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
   }
 
+  // MODE 10 ACTIONS: MYSTERY 5 CLUES BUZZER (Flip Card & Reveal Answer)
+  if (action === 'clue_flip_card') {
+    if (!room.clueBuzzerRound) {
+      room.clueBuzzerRound = generateClueBuzzerRound(room);
+    }
+    const cb = room.clueBuzzerRound;
+    if (cb.solved || cb.revealed) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+    }
+
+    const flipper = getActiveClueFlipperPlayer(room);
+    const requester = room.players.find((p) => p.id === playerId);
+    if ((room.players || []).length > 1 && flipper && requester && flipper.id !== requester.id) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(
+        JSON.stringify({
+          ok: true,
+          clueFeedback: {
+            ok: false,
+            message: `⏳ รอบเปิดการ์ดนี้เป็นสิทธิ์ของ ${flipper.avatar} ${flipper.name}!`
+          },
+          room: serializeRoomForClients(room)
+        })
+      );
+    }
+
+    const availIndices = cb.cards.map((c, idx) => (!c.opened ? idx : -1)).filter((idx) => idx >= 0);
+    if (availIndices.length === 0) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+    }
+
+    let slotIdx =
+      body.slotIndex !== undefined && body.slotIndex !== null
+        ? parseInt(body.slotIndex, 10)
+        : availIndices[Math.floor(Math.random() * availIndices.length)];
+    if (isNaN(slotIdx) || slotIdx < 0 || slotIdx >= cb.cards.length || cb.cards[slotIdx].opened) {
+      slotIdx = availIndices[Math.floor(Math.random() * availIndices.length)];
+    }
+
+    cb.cards[slotIdx].opened = true;
+    cb.cards[slotIdx].openedBy = requester ? `${requester.avatar} ${requester.name}` : 'ผู้เล่น';
+
+    const nextFlipper = advanceClueFlipperTurn(room);
+    const openedNow = cb.cards.filter((c) => c.opened).length;
+    const ptsNow = Math.max(1, 6 - openedNow);
+
+    broadcastRoom(code, 'top10_updated', {
+      toastMessage: `🃏 ${requester ? requester.name : 'ผู้เล่น'} เปิดการ์ดใบที่ #${slotIdx + 1}: "${cb.cards[slotIdx].categoryLabel}" (ชิงตอบตอนนี้ +${ptsNow} แต้ม!)${nextFlipper && openedNow < 5 ? ` ➔ สิทธิ์เปิดใบต่อไป: ${nextFlipper.avatar} ${nextFlipper.name}` : ''}`
+    });
+
+    if (openedNow < 5) {
+      scheduleClueFlipperBotTurn(room);
+    }
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+  }
+
+  if (action === 'clue_reveal_answer') {
+    if (!room.clueBuzzerRound) {
+      room.clueBuzzerRound = generateClueBuzzerRound(room);
+    }
+    const cb = room.clueBuzzerRound;
+    cb.revealed = true;
+    cb.solvedBy = '👁️ เปิดเฉลย (0 แต้ม)';
+    cb.cards.forEach((c) => {
+      if (!c.opened) {
+        c.opened = true;
+        c.openedBy = '👁️ เปิดเฉลย';
+      }
+    });
+    if (room.clueFlipBotTimeout) {
+      clearTimeout(room.clueFlipBotTimeout);
+      room.clueFlipBotTimeout = null;
+    }
+    broadcastRoom(code, 'top10_updated', {
+      toastMessage: `👁️ เปิดเฉลย! นักเตะปริศนาคือ ${cb.target.flag} ${cb.target.name}`
+    });
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+  }
+
   if (action === 'submit_answer') {
     const result = handlePlayerSubmission(room, playerId, body.playerInput, body.selectedPlayerId, {
       choiceIndex: body.choiceIndex,
@@ -4134,6 +4830,8 @@ function handleApiAction(req, res, body) {
     room.chainHintText = null;
     room.chainTurnIndex = 0;
     room.lastChainMoverId = null;
+    room.clueBuzzerRound = null;
+    room.clueFlipTurnIndex = 0;
     room.lastWaveResults = [];
     room.state = 'LOBBY';
     broadcastRoom(code, 'scores_reset');
