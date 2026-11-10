@@ -226,21 +226,17 @@ function renderHomeClubCrests() {
     'mancity',
     'realmadrid',
     'barcelona',
-    'bayern',
-    'acmilan',
-    'juventus',
-    'inter',
-    'psg'
+    'bayern'
   ];
   const featuredClubs = featuredIds
     .map((id) => state.clubs.find((c) => c.id === id))
     .filter(Boolean);
-  const list = featuredClubs.length > 0 ? featuredClubs : state.clubs.slice(0, 10);
+  const list = featuredClubs.length > 0 ? featuredClubs : state.clubs.slice(0, 8);
   strip.innerHTML = list
     .map(
       (c) => `
         <span class="home-club-crest-item">
-          ${renderClubCrestHTML(c, 22)}
+          ${renderClubCrestHTML(c, 26)}
           <span>${c.name}</span>
         </span>
       `

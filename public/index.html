@@ -18,123 +18,70 @@
   <!-- SCREEN 1: HOME / FOOTBALL MATCHDAY ARENA -->
   <main id="homeScreen" class="screen active">
     <div class="home-arena-shell">
-      <!-- LEFT PANEL: STADIUM SHOWCASE, LIVE STATS & 9 FOOTBALL MODES PREVIEW -->
+      <!-- LEFT PANEL: CLEAN FOOTBALL PITCH SHOWCASE -->
       <section class="home-showcase-panel">
-        <div class="home-pitch-decor">
-          <div class="pitch-line-top"></div>
-          <div class="pitch-center-circle">⚽</div>
+        <div>
+          <div class="badge-top">🏆 MATCHDAY ARENA • 9-IN-1 FOOTBALL QUIZ</div>
+          <h1 class="game-title">FOOTBALL QUIZ <span>PARTY</span></h1>
+          <p class="game-subtitle">
+            สังเวียนดวลความรู้ลูกหนังออนไลน์แบบเรียลไทม์ ท้าดวลกับเพื่อนครบ 5 ลีกใหญ่ยุโรป & ตำนานระดับโลก!
+          </p>
         </div>
 
-        <div class="badge-top">🏆 MATCHDAY ARENA • 9-IN-1 FOOTBALL QUIZ PARTY</div>
-        <h1 class="game-title">FOOTBALL QUIZ <span>PARTY</span></h1>
-        <p class="game-subtitle">
-          สังเวียนดวลความรู้ลูกหนังออนไลน์แบบเรียลไทม์! ท้าดวลกับแก๊งเพื่อนครบ <strong>5 ลีกใหญ่ยุโรป & ตำนานระดับโลก</strong> สะสมแต้มชิงถ้วยแชมป์ในห้องเดียว
-        </p>
+        <!-- Centerpiece: Visual Football Pitch with 5 Leagues & Iconic Club Badges -->
+        <div class="home-pitch-stage">
+          <div class="home-pitch-markings">
+            <div class="home-pitch-halfline"></div>
+            <div class="home-pitch-circle"></div>
+          </div>
 
-        <!-- Live Football Database Highlights -->
-        <div class="home-stats-strip">
-          <div class="home-stat-card">
-            <span class="stat-icon">🏃‍♂️</span>
-            <div>
-              <strong>662+ คน</strong>
-              <small>นักเตะตำนาน & สตาร์ดัง</small>
-            </div>
+          <div class="home-league-flags">
+            <span class="league-flag-pill"><img src="https://flagcdn.com/w40/gb-eng.png" alt="ENG" /> Premier League</span>
+            <span class="league-flag-pill"><img src="https://flagcdn.com/w40/es.png" alt="ESP" /> La Liga</span>
+            <span class="league-flag-pill"><img src="https://flagcdn.com/w40/it.png" alt="ITA" /> Serie A</span>
+            <span class="league-flag-pill"><img src="https://flagcdn.com/w40/de.png" alt="GER" /> Bundesliga</span>
+            <span class="league-flag-pill"><img src="https://flagcdn.com/w40/fr.png" alt="FRA" /> Ligue 1</span>
           </div>
-          <div class="home-stat-card">
-            <span class="stat-icon">🏟️</span>
-            <div>
-              <strong>32 สโมสร</strong>
-              <small>ครบ 5 ลีกใหญ่ยุโรป</small>
-            </div>
-          </div>
-          <div class="home-stat-card">
-            <span class="stat-icon">🥇</span>
-            <div>
-              <strong>9 โหมดเกม</strong>
-              <small>สุ่มโจทย์ไม่ซ้ำทุกรอบ</small>
-            </div>
-          </div>
+
+          <div id="homeClubCrestsStrip" class="home-club-crests-grid"></div>
         </div>
 
-        <!-- 5 European Leagues & Club Badges Showcase -->
-        <div class="home-leagues-box">
-          <div class="home-leagues-header">
-            <span>🌍 5 ลีกใหญ่ยุโรป & สโมสรชั้นนำในเกม</span>
-            <div class="home-league-flags">
-              <span class="league-flag-pill"><img src="https://flagcdn.com/w40/gb-eng.png" alt="ENG" /> Premier League</span>
-              <span class="league-flag-pill"><img src="https://flagcdn.com/w40/es.png" alt="ESP" /> La Liga</span>
-              <span class="league-flag-pill"><img src="https://flagcdn.com/w40/it.png" alt="ITA" /> Serie A</span>
-              <span class="league-flag-pill"><img src="https://flagcdn.com/w40/de.png" alt="GER" /> Bundesliga</span>
-              <span class="league-flag-pill"><img src="https://flagcdn.com/w40/fr.png" alt="FRA" /> Ligue 1</span>
+        <!-- Bottom: 3 Key Stats + Clean Mode Pills -->
+        <div>
+          <div class="home-stats-strip">
+            <div class="home-stat-card">
+              <span class="stat-icon">🏃‍♂️</span>
+              <div>
+                <strong>662+ คน</strong>
+                <small>ตำนาน & สตาร์ดัง</small>
+              </div>
+            </div>
+            <div class="home-stat-card">
+              <span class="stat-icon">🏟️</span>
+              <div>
+                <strong>32 สโมสร</strong>
+                <small>5 ลีกใหญ่ยุโรป</small>
+              </div>
+            </div>
+            <div class="home-stat-card">
+              <span class="stat-icon">🥇</span>
+              <div>
+                <strong>9 โหมดเกม</strong>
+                <small>โจทย์ไม่ซ้ำทุกรอบ</small>
+              </div>
             </div>
           </div>
-          <div id="homeClubCrestsStrip" class="home-club-crests-strip"></div>
-        </div>
 
-        <!-- 9 Football Modes Tactical Board Preview -->
-        <div class="home-modes-preview-grid">
-          <div class="home-mode-mini">
-            <span>🌟</span>
-            <div>
-              <strong>ล่าแต้มคูณ 3 สโมสร</strong>
-              <small>ตอบ 1 ชื่อ คูณแต้มตามสโมสร</small>
-            </div>
-          </div>
-          <div class="home-mode-mini">
-            <span>📋</span>
-            <div>
-              <strong>ผัง 11 ตัวจริงตำนาน</strong>
-              <small>40 นัดชิง & ชุดแชมป์ประวัติศาสตร์</small>
-            </div>
-          </div>
-          <div class="home-mode-mini">
-            <span>📊</span>
-            <div>
-              <strong>ท็อป 10 สถิติลูกหนัง</strong>
-              <small>32 หัวข้อ All-Time & 2026/27</small>
-            </div>
-          </div>
-          <div class="home-mode-mini">
-            <span>🕵️‍♂️</span>
-            <div>
-              <strong>เส้นทางค้าแข้งปริศนา</strong>
-              <small>65 สตาร์ดัง ทายจากประวัติย้ายทีม</small>
-            </div>
-          </div>
-          <div class="home-mode-mini">
-            <span>⚡</span>
-            <div>
-              <strong>ควิซแฟนพันธุ์แท้ 4 ช้อยส์</strong>
-              <small>165 คำถาม ง่าย / กลาง / ยาก</small>
-            </div>
-          </div>
-          <div class="home-mode-mini">
-            <span>🔢</span>
-            <div>
-              <strong>ตาราง XO ฟุตบอล 3x3</strong>
-              <small>ผลัดกันวาง XO เรียง 3 ช่อง BINGO</small>
-            </div>
-          </div>
-          <div class="home-mode-mini">
-            <span>🧩</span>
-            <div>
-              <strong>จับกลุ่ม 16 นักเตะ</strong>
-              <small>ไขความลับ 4 หมวดหมู่ฟุตบอล</small>
-            </div>
-          </div>
-          <div class="home-mode-mini">
-            <span>🖼️</span>
-            <div>
-              <strong>ทายภาพเบลอ Wordle</strong>
-              <small>เทียบสีใบ้ สัญชาติ / ลีก / สโมสร</small>
-            </div>
-          </div>
-          <div class="home-mode-mini">
-            <span>🔗</span>
-            <div>
-              <strong>ต่อโซ่เพื่อนร่วมทีม</strong>
-              <small>ผลัดกันเชื่อมนักเตะที่เคยร่วมทีม</small>
-            </div>
+          <div class="home-mode-pills">
+            <span>🌟 ล่าแต้มคูณ</span>
+            <span>📋 11 ตัวจริง</span>
+            <span>📊 ท็อป 10 สถิติ</span>
+            <span>🕵️‍♂️ เส้นทางค้าแข้ง</span>
+            <span>⚡ ควิซ 4 ช้อยส์</span>
+            <span>🔢 ตาราง XO 3x3</span>
+            <span>🧩 จับกลุ่ม 16 คน</span>
+            <span>🖼️ รูปเบลอ Wordle</span>
+            <span>🔗 ต่อโซ่นักเตะ</span>
           </div>
         </div>
       </section>
