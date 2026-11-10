@@ -3955,6 +3955,13 @@ server.listen(PORT, '0.0.0.0', () => {
       for (const [roomCode] of rooms.entries()) {
         broadcastRoom(roomCode, 'database_updated');
       }
+      // Refresh cache again once background photo pre-warming completes
+      setTimeout(() => {
+        cachedApiDataJson = buildApiDataPayloadJson();
+        for (const [roomCode] of rooms.entries()) {
+          broadcastRoom(roomCode, 'database_updated');
+        }
+      }, 12000);
     })
     .catch(() => {});
 });
