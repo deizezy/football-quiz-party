@@ -89,14 +89,15 @@
       <!-- RIGHT PANEL: LOCKER ROOM PLAYER CHECK-IN & CREATE/JOIN MATCH -->
       <div class="hero-card">
         <div class="locker-header">
+          <div class="locker-emblem">⚽</div>
           <div class="locker-badge">🎽 PLAYER CHECK-IN • ลงทะเบียนเข้าสนาม</div>
           <h2>พร้อมลงสนามดวลหรือยัง?</h2>
-          <p>ตั้งชื่อกัปตันทีมของคุณเพื่อสร้างห้องหรือเข้าร่วมกับเพื่อน</p>
+          <p>กรอกชื่อของคุณเพื่อเปิดสนามใหม่ หรือใส่รหัสห้องเพื่อจอยกับเพื่อน</p>
         </div>
 
         <div class="profile-setup">
-          <label class="field-label">👕 ชื่อผู้เล่น / ชื่อโค้ชของคุณ</label>
-          <input type="text" id="playerNameInput" class="text-input" placeholder="เช่น โค้ชเตี้ย, เทพเมสซี่, ป๋าเฟอร์กี้..." maxlength="20" />
+          <label class="field-label" for="playerNameInput">👕 ชื่อผู้เล่น / ชื่อโค้ชของคุณ</label>
+          <input type="text" id="playerNameInput" class="text-input name-hero-input" placeholder="เช่น โค้ชเตี้ย, เทพเมสซี่, ป๋าเฟอร์กี้..." maxlength="20" />
         </div>
 
         <div class="home-actions">
@@ -108,7 +109,7 @@
 
           <div class="join-row">
             <input type="text" id="joinCodeInput" class="text-input code-input" placeholder="รหัสห้อง 5 ตัว" maxlength="6" />
-            <button id="joinRoomBtn" class="btn btn-accent">เข้าสนาม 🚀</button>
+            <button id="joinRoomBtn" class="btn btn-accent join-hero-btn">เข้าสนาม 🚀</button>
           </div>
         </div>
       </div>
