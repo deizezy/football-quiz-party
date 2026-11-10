@@ -504,7 +504,7 @@ function renderRoom() {
   });
 
   // Show/hide Lobby settings dynamically based on selected gameMode
-  const isUntimed = isUntimedContinuousMode(gameMode);
+  const isUntimed = isUntimedContinuousMode(gameMode) && gameMode !== 'chain_link';
   const isClubMode = gameMode === 'multi_club_pool' || gameMode === 'club_battle';
   const isMultiClub = gameMode === 'multi_club_pool';
   const isTrivia = gameMode === 'trivia_quiz';
@@ -529,25 +529,25 @@ function renderRoom() {
     if (showModeInfo && modeInfoTitle && modeInfoDesc) {
       if (gameMode === 'lineup_quiz') {
         modeInfoTitle.textContent = '📋 กติกาโหมดทายผัง 11 ตัวจริง (Missing 11)';
-        modeInfoDesc.innerHTML = '• เลือกแมตช์ที่ต้องการทายได้บนกระดาน<br>• ทายถูกโดยไม่เปิดคำใบ้ได้ <strong>+2 แต้ม</strong> / กดดูอักษรย่อ (💡) ได้ <strong>+1 แต้ม</strong><br>• คนที่เปิดตำแหน่งสุดท้าย (คนที่ 11) สำเร็จ รับโบนัสปิดผัง <strong>+1 แต้ม</strong>!';
+        modeInfoDesc.innerHTML = '• เลือกแมตช์ที่ต้องการทายได้บนกระดาน (40 แมตช์ระดับตำนาน สุ่มไม่ซ้ำ!)<br>• ทายสดโดยไม่เปิดคำใบ้ได้ <strong>+3 แต้ม</strong> / กดใบ้ทีละขั้น: สัญชาติ <strong>+2 แต้ม</strong> • เบอร์เสื้อ & ชื่อย่อ <strong>+1 แต้ม</strong><br>• คนที่เปิดตำแหน่งสุดท้าย (คนที่ 11) สำเร็จ รับโบนัสปิดผัง <strong>+1 แต้ม</strong>!';
       } else if (gameMode === 'top10_stats') {
         modeInfoTitle.textContent = '📊 กติกาโหมดทายท็อป 10 สถิติลูกหนัง';
-        modeInfoDesc.innerHTML = '• เลือกเปลี่ยนหัวข้อสถิติบนกระดานได้ตลอดเวลา<br>• อันดับ <strong>#1–#3 ได้ +1 แต้ม</strong> • <strong>#4–#7 ได้ +2 แต้ม</strong> • <strong>#8–#10 ได้ +3 แต้ม</strong><br>• หากกดดูคำใบ้ (💡) ข้อนั้นจะได้ <strong>+1 แต้ม</strong>';
+        modeInfoDesc.innerHTML = '• เลือกเปลี่ยนหัวข้อสถิติบนกระดานได้ตลอดเวลา (32 หัวข้อ All-Time & 2026-27 สุ่มไม่ซ้ำ!)<br>• อันดับ <strong>#1–#3 ได้ +1 แต้ม</strong> • <strong>#4–#7 ได้ +2 แต้ม</strong> • <strong>#8–#10 ได้ +3 แต้ม</strong><br>• หากกดดูคำใบ้ (💡) ข้อนั้นจะได้ <strong>+1 แต้ม</strong>';
       } else if (gameMode === 'career_path') {
         modeInfoTitle.textContent = '🕵️‍♂️ กติกาโหมดเส้นทางค้าแข้ง (ฉันคือใคร?)';
-        modeInfoDesc.innerHTML = '• เริ่มต้นจะเห็นเฉพาะตารางสโมสรที่เคยย้ายทีม จำนวนนัด และประตู<br>• ทายถูกโดยไม่เปิดคำใบ้ได้ <strong>+3 แต้ม</strong> / กดเปิดคำใบ้ (💡) ได้ <strong>+1 แต้ม</strong><br>• คนที่ตอบถูกเป็นคนแรกสุดของข้อ รับโบนัสความไว <strong>+1 แต้ม</strong>!';
+        modeInfoDesc.innerHTML = '• ทายชื่อนักเตะจากตารางสโมสรที่เคยย้ายทีม จำนวนนัด และประตู (65 ตำนาน & สตาร์ดัง สุ่มไม่ซ้ำ!)<br>• ทายถูกโดยไม่เปิดคำใบ้ได้ <strong>+3 แต้ม</strong> / กดเปิดคำใบ้ (💡) ได้ <strong>+1 แต้ม</strong><br>• คนที่ตอบถูกเป็นคนแรกสุดของข้อ รับโบนัสความไว <strong>+1 แต้ม</strong>!';
       } else if (gameMode === 'footy_grid') {
         modeInfoTitle.textContent = '🔢 กติกาโหมดตาราง XO ฟุตบอล 3x3';
-        modeInfoDesc.innerHTML = '• คลิกเลือกช่องแล้วพิมพ์ชื่อนักเตะที่ตรงทั้งแนวนอนและแนวตั้ง (ห้ามใช้ชื่อซ้ำในตารางเดียวกัน)<br>• ช่องทั่วไป <strong>+2 แต้ม</strong> • 💎ช่องหายาก (มีคำตอบ ≤5 คน) <strong>+3 แต้ม</strong> • ใช้คำใบ้ <strong>+1 แต้ม</strong><br>• 🔥 เรียงครบ 3 ช่อง (BINGO) รับโบนัสเพิ่ม <strong>+3 แต้ม</strong>!';
+        modeInfoDesc.innerHTML = '• ผลัดกันลงทีละเทิร์น (Turn-Based XO) คลิกเลือกช่องแล้วพิมพ์ชื่อนักเตะที่ตรงทั้งแนวนอนและแนวตั้ง<br>• ช่องทั่วไป <strong>+2 แต้ม</strong> • 💎ช่องหายาก (มีคำตอบ ≤5 คน) <strong>+3 แต้ม</strong> • ใช้คำใบ้ <strong>+1 แต้ม</strong><br>• 🏆 เรียงครบ 3 ช่องแนวใดก็ได้ (BINGO) รับโบนัสเส้นละ <strong>+3 แต้ม</strong>!';
       } else if (gameMode === 'connections') {
         modeInfoTitle.textContent = '🧩 กติกาโหมดจับกลุ่ม 16 นักเตะ 4 ความลับ (Connections)';
-        modeInfoDesc.innerHTML = '• คลิกเลือกนักเตะบนกระดานทีละ 4 คนที่มีความเชื่อมโยงลับเดียวกัน<br>• 🟢 หมวดง่าย <strong>+1 แต้ม</strong> • 🟡 หมวดกลาง <strong>+2 แต้ม</strong> • 🔵 หมวดยาก <strong>+3 แต้ม</strong> • 🟣 หมวดแฟนพันธุ์แท้ (2 สโมสร) <strong>+4 แต้ม</strong>!';
+        modeInfoDesc.innerHTML = '• คลิกเลือกนักเตะบนกระดานทีละ 4 คนที่มีความเชื่อมโยงลับเดียวกัน (สุ่มหมวดไม่ซ้ำ!)<br>• 🟢 หมวดง่าย <strong>+1 แต้ม</strong> • 🟡 หมวดกลาง <strong>+2 แต้ม</strong> • 🔵 หมวดยาก <strong>+3 แต้ม</strong> • 🟣 หมวดแฟนพันธุ์แท้ (2 สโมสร) <strong>+4 แต้ม</strong><br>• เมื่อเปิดครบ 3 หมวด ระบบจะเฉลยหมวดที่ 4 ให้อัตโนมัติ!';
       } else if (gameMode === 'who_are_ya_wordle') {
         modeInfoTitle.textContent = '🖼️ กติกาโหมดทายนักเตะจากรูปเบลอ + Wordle (Who Are Ya?)';
-        modeInfoDesc.innerHTML = '• ทายชื่อนักเตะจากรูปเบลอ! ทุกครั้งที่ทายผิดจะแสดงตารางเทียบสี (🟢ตรง / 🟡เคยอยู่สโมสรเดียวกัน) และรูปจะชัดขึ้น<br>• ทายถูกตั้งแต่เบลอจัดได้ <strong>+4 แต้ม</strong> และลดหลั่นลงมาตามจำนวนคำใบ้ (+3 / +2 / +1 แต้ม)!';
+        modeInfoDesc.innerHTML = '• ทายชื่อนักเตะปริศนาจากรูปเบลอ! ทุกครั้งที่ทายจะแสดงแถบสีใบ้ (🟢ตรงเป๊ะ / 🟡เคยอยู่ร่วมสโมสรหรือลีกเดียวกัน) และรูปจะชัดขึ้นเรื่อยๆ<br>• ทายถูกตั้งแต่เบลอจัดได้ <strong>+4 แต้ม</strong> และลดหลั่นลงมาตามจำนวนคำใบ้ (+3 / +2 / +1 แต้ม)!';
       } else if (gameMode === 'chain_link') {
         modeInfoTitle.textContent = '🔗 กติกาโหมดต่อโซ่นักเตะเพื่อนร่วมทีม (Chain Link)';
-        modeInfoDesc.innerHTML = '• พิมพ์ชื่อนักเตะที่เคยอยู่สโมสรเดียวกับนักเตะคนล่าสุดในโซ่ (ห้ามซ้ำนักเตะ และห้ามใช้สโมสรเชื่อมซ้ำ!)<br>• เชื่อมสำเร็จรับ <strong>+2 แต้ม</strong> ต่อคน • โบนัสทุกๆ โซ่ครบ 5 คน รับเพิ่มอีก <strong>+1 แต้ม</strong>!';
+        modeInfoDesc.innerHTML = '• ผลัดกันตอบทีละคนตามเวลาต่อเทิร์น! พิมพ์ชื่อนักเตะที่เคยอยู่สโมสรเดียวกับคนล่าสุดในโซ่ (ห้ามซ้ำนักเตะ & ห้ามซ้ำสโมสรเชื่อม)<br>• เชื่อมสำเร็จรับ <strong>+2 แต้ม</strong> (โบนัสทุก 5 ลิงก์ +1 แต้ม)<br>• ใครหมดเวลาเสีย <strong>❤️ 1 ชีวิต</strong> (มีคนละ 3 ชีวิต) และคนส่งไม้ต่อก่อนหน้ารับโบนัส <strong>+1 แต้ม</strong>!';
       }
     }
   }

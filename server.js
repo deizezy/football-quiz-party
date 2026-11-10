@@ -3491,6 +3491,11 @@ function handleApiAction(req, res, body) {
       scheduleBotClubPicks(room);
     } else if (room.state === 'PLAYING') {
       scheduleBotActions(room);
+      if (room.settings.gameMode === 'chain_link') {
+        scheduleChainBotTurn(room);
+      } else if (room.settings.gameMode === 'footy_grid') {
+        scheduleGridBotTurn(room);
+      }
     }
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
@@ -3500,6 +3505,20 @@ function handleApiAction(req, res, body) {
     const targetId = body.targetPlayerId;
     room.players = room.players.filter((p) => p.id !== targetId);
     room.pickedClubs = (room.pickedClubs || []).filter((pc) => pc.playerId !== targetId);
+    if (room.players.length > 0) {
+      room.gridTurnIndex = (room.gridTurnIndex || 0) % room.players.length;
+      room.chainTurnIndex = (room.chainTurnIndex || 0) % room.players.length;
+    } else {
+      room.gridTurnIndex = 0;
+      room.chainTurnIndex = 0;
+    }
+    if (room.state === 'PLAYING') {
+      if (room.settings.gameMode === 'chain_link') {
+        scheduleChainBotTurn(room);
+      } else if (room.settings.gameMode === 'footy_grid') {
+        scheduleGridBotTurn(room);
+      }
+    }
     broadcastRoom(code, 'player_removed');
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
