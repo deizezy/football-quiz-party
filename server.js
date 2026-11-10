@@ -3454,12 +3454,6 @@ function generateClueBuzzerRound(room = null) {
     .map((lid) => LEAGUES.find((l) => l.id === lid)?.name || lid)
     .filter(Boolean);
 
-  const words = (target.name || '').trim().split(/\s+/);
-  const initialsHint = words
-    .map((w) => w.charAt(0).toUpperCase() + '_'.repeat(Math.max(2, w.length - 1)))
-    .join(' ');
-  const totalLetters = words.reduce((acc, w) => acc + w.length, 0);
-
   const candidateClues = [];
 
   // 1. Nationality Clue
@@ -3493,7 +3487,7 @@ function generateClueBuzzerRound(room = null) {
     });
   }
 
-  // 4. Individual Club Clues (each club in a separate category slot so max 2 clubs can be picked)
+  // 4. Individual Club Clues
   const shuffledClubs = shuffleArray([...clubObjs]);
   if (shuffledClubs[0]) {
     candidateClues.push({
@@ -3522,7 +3516,8 @@ function generateClueBuzzerRound(room = null) {
       categoryLabel: 'เกียรติประวัติ & จุดเด่น',
       text: matchedCareer.hint
     });
-  } else if (matchedTop10.length > 0) {
+  }
+  if (matchedTop10.length > 0) {
     const t10 = matchedTop10[0];
     candidateClues.push({
       type: 'top10_record',
@@ -3530,7 +3525,8 @@ function generateClueBuzzerRound(room = null) {
       categoryLabel: 'สถิติระดับท็อป 10',
       text: `ติดอันดับ #${t10.rank} ในทำเนียบ "${t10.listTitle}" (${t10.stat})`
     });
-  } else if (matchedLineups.length > 0) {
+  }
+  if (matchedLineups.length > 0) {
     const lu = matchedLineups[0];
     candidateClues.push({
       type: 'lineup_history',
@@ -3555,7 +3551,7 @@ function generateClueBuzzerRound(room = null) {
     });
   }
 
-  // 7. Famous Teammate Clue
+  // 7. Famous Teammates Clue (Club Teammates)
   const teammates = PLAYERS.filter(
     (p) => p.id !== target.id && p.clubs.some((cid) => (target.clubs || []).includes(cid))
   );
@@ -3569,13 +3565,33 @@ function generateClueBuzzerRound(room = null) {
     });
   }
 
-  // 8. Name Structure & Initials Clue
-  candidateClues.push({
-    type: 'name_initials',
-    icon: '🔤',
-    categoryLabel: 'โครงสร้างชื่อ & อักษรย่อ',
-    text: `ชื่อมี ${words.length} พยางค์ (รวม ${totalLetters} ตัวอักษร) • อักษรย่อ: ${initialsHint}`
-  });
+  // 8. Negative Club Clue (Rival Top Clubs Never Played For)
+  const topRivalClubs = CLUBS.filter(
+    (c) => !(target.clubs || []).includes(c.id) && (leagueIds.includes(c.league) || ['realmadrid', 'barcelona', 'manutd', 'liverpool', 'bayern', 'juventus'].includes(c.id))
+  );
+  if (topRivalClubs.length >= 2) {
+    const pickedNever = shuffleArray(topRivalClubs).slice(0, 2);
+    candidateClues.push({
+      type: 'never_played_clubs',
+      icon: '🚫',
+      categoryLabel: 'สโมสรที่ไม่เคยค้าแข้ง',
+      text: `ไม่เคยค้าแข้งให้กับสโมสร ${pickedNever[0].name} และ ${pickedNever[1].name}`
+    });
+  }
+
+  // 9. Compatriot / National Team Peers Clue
+  const compatriots = PLAYERS.filter(
+    (p) => p.id !== target.id && p.flag && p.flag === target.flag
+  );
+  if (compatriots.length >= 2) {
+    const pickedCompatriots = shuffleArray(compatriots).slice(0, 2);
+    candidateClues.push({
+      type: 'compatriots',
+      icon: '🌐',
+      categoryLabel: 'เพื่อนร่วมสัญชาติเดียวกัน',
+      text: `เป็นนักเตะสัญชาติเดียวกับ ${pickedCompatriots[0].name} และ ${pickedCompatriots[1].name}`
+    });
+  }
 
   // Randomly pick 5 distinct clues and shuffle their positions (Slots #1 to #5 are completely non-deterministic!)
   const picked5 = shuffleArray(candidateClues).slice(0, 5);
