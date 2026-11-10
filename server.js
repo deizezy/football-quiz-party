@@ -275,25 +275,31 @@ function serializeModeDataForClients(room) {
       availableLineups: LINEUPS.map((l) => ({ id: l.id, title: l.title, subtitle: l.subtitle })),
       slots: lineup.slots.map((s) => {
         const u = unlockedMap[s.slotId];
-        const isHinted = !!hintedMap[s.slotId];
+        const rawHintVal = hintedMap[s.slotId];
+        const hintLevel = typeof rawHintVal === 'number' ? rawHintVal : rawHintVal ? 3 : 0;
         const words = (s.playerId || '').trim().split(/\s+/);
         const initialsHint = words
           .map((w) => w.charAt(0).toUpperCase() + '_'.repeat(Math.max(2, w.length - 1)))
           .join(' ');
+        const showFlag = !!u || hintLevel >= 1;
+        const showNumber = !!u || hintLevel >= 2;
+        const showInitials = !u && hintLevel >= 3;
+        const slotPoints = hintLevel === 0 ? 3 : hintLevel === 1 ? 2 : 1;
         return {
           slotId: s.slotId,
           pos: s.pos,
-          number: s.number,
-          flag: s.flag,
-          flagUrl: s.flagUrl || getFlagUrlFromEmoji(s.flag),
+          number: showNumber ? s.number : null,
+          flag: showFlag ? s.flag : null,
+          flagUrl: showFlag ? s.flagUrl || getFlagUrlFromEmoji(s.flag) : null,
           row: s.row,
           col: s.col,
-          points: isHinted ? 1 : 2,
+          points: slotPoints,
           pointsEarned: u ? u.pointsEarned || 0 : 0,
           unlocked: !!u,
           revealed: u ? !!u.revealed : false,
-          hinted: isHinted,
-          hintText: isHinted ? initialsHint : null,
+          hintLevel,
+          hinted: hintLevel > 0,
+          hintText: showInitials ? initialsHint : null,
           playerName: u ? s.playerId : null,
           photoUrl: u ? u.photoUrl || s.photoUrl || null : null,
           answeredBy: u ? u.answeredBy : null
@@ -1043,10 +1049,12 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
 
     const knownPlayer = findPlayerByInput(unrevealedSlot.playerId, selectedPlayerId);
     const slotPhoto = unrevealedSlot.photoUrl || knownPlayer?.photoUrl || null;
-    const isHinted = !!(room.hintedLineupSlots && room.hintedLineupSlots[unrevealedSlot.slotId]);
+    const rawHintVal = room.hintedLineupSlots && room.hintedLineupSlots[unrevealedSlot.slotId];
+    const hintLevel = typeof rawHintVal === 'number' ? rawHintVal : rawHintVal ? 3 : 0;
+    const basePts = hintLevel === 0 ? 3 : hintLevel === 1 ? 2 : 1;
     const totalUnlockedAfter = Object.keys(room.unlockedLineupSlots).length + 1;
     const finalSlotBonus = totalUnlockedAfter === lineup.slots.length ? 1 : 0;
-    const pts = (isHinted ? 1 : 2) + finalSlotBonus;
+    const pts = basePts + finalSlotBonus;
 
     room.unlockedLineupSlots[unrevealedSlot.slotId] = {
       answeredBy: player ? player.name : 'ผู้เล่น',
@@ -3190,7 +3198,9 @@ function handleApiAction(req, res, body) {
     const slotId = body.slotId;
     if (!room.hintedLineupSlots) room.hintedLineupSlots = {};
     if (slotId) {
-      room.hintedLineupSlots[slotId] = true;
+      const cur = room.hintedLineupSlots[slotId];
+      const curLevel = typeof cur === 'number' ? cur : cur ? 3 : 0;
+      room.hintedLineupSlots[slotId] = Math.min(3, curLevel + 1);
       broadcastRoom(code, 'top10_updated');
     }
     res.writeHead(200, { 'Content-Type': 'application/json' });

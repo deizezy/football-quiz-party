@@ -13,7 +13,7 @@ const MODE_META = {
   },
   lineup_quiz: {
     badge: '📋 โหมดที่ 2: ทายผัง 11 ตัวจริงในตำนาน',
-    prompt: '👕 พิมพ์ชื่อนักฟุตบอลในผัง 11 ตัวจริง (ทายสด +2 แต้ม • ใช้คำใบ้ 💡 +1 แต้ม • ปิดผังคนที่ 11 โบนัส +1 แต้ม):'
+    prompt: '👕 พิมพ์ชื่อนักฟุตบอลในผัง 11 ตัวจริง (ทายสด +3 แต้ม • ใบ้สัญชาติ +2 • ใบ้เบอร์เสื้อ/ชื่อย่อ +1 • ปิดผังคนที่ 11 โบนัส +1 แต้ม):'
   },
   top10_stats: {
     badge: '📊 โหมดที่ 3: ทายท็อป 10 สถิติลูกหนัง',
@@ -801,6 +801,7 @@ function buildModeStageHTML(room, isReveal = false) {
 
     const slotsHtml = slots
       .map((s) => {
+        const hintLevel = Number(s.hintLevel || 0);
         const photoHtml =
           s.unlocked && s.photoUrl
             ? `<img src="${s.photoUrl}" alt="${s.playerName}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #fbbf24;margin:4px auto;display:block;" onerror="this.style.display='none'" />`
@@ -808,15 +809,18 @@ function buildModeStageHTML(room, isReveal = false) {
 
         const hintOrName = s.unlocked
           ? s.playerName
-          : s.hinted && s.hintText
+          : hintLevel >= 3 && s.hintText
           ? `💡 ${s.hintText}`
           : '❓ ???';
+
+        const nextHintLabel =
+          hintLevel === 0 ? '💡 ใบ้ชาติ' : hintLevel === 1 ? '💡 ใบ้เบอร์' : '💡 ใบ้ชื่อย่อ';
 
         const miniActions =
           !s.unlocked && !isReveal
             ? `
               <div style="display:flex;justify-content:center;gap:6px;margin-top:6px;">
-                ${!s.hinted ? `<button type="button" class="btn-mini-action hint-btn" style="padding:5px 10px;font-size:0.78rem;border-radius:8px;" data-lineup-hint="${s.slotId}" title="ดูอักษรย่อ">💡 ใบ้</button>` : ''}
+                ${hintLevel < 3 ? `<button type="button" class="btn-mini-action hint-btn" style="padding:5px 10px;font-size:0.78rem;border-radius:8px;" data-lineup-hint="${s.slotId}" title="เปิดคำใบ้ทีละขั้น (${hintLevel}/3)">${nextHintLabel}</button>` : ''}
                 <button type="button" class="btn-mini-action reveal-btn" style="padding:5px 10px;font-size:0.78rem;border-radius:8px;" data-lineup-reveal="${s.slotId}" title="เปิดเฉลยตำแหน่งนี้">👁️ เฉลย</button>
               </div>
             `
@@ -825,15 +829,25 @@ function buildModeStageHTML(room, isReveal = false) {
         const byLabel = s.unlocked
           ? s.revealed
             ? `<div class="slot-by" style="color:#fbbf24;">👁️ เฉลยแล้ว (0 แต้ม)</div>`
-            : `<div class="slot-by">✅ ${s.answeredBy} (+${s.pointsEarned || 2} แต้ม)</div>`
-          : `<div class="slot-by" style="color:#94a3b8;">🎯 +${s.points || 2} แต้ม</div>`;
+            : `<div class="slot-by">✅ ${s.answeredBy} (+${s.pointsEarned || 3} แต้ม)</div>`
+          : `<div class="slot-by" style="color:#94a3b8;">🎯 +${s.points || 3} แต้ม</div>`;
+
+        const flagDisplay =
+          (s.unlocked || hintLevel >= 1) && s.flag
+            ? renderFlagHTML(s.flag, s.flagUrl)
+            : `<span style="opacity:0.45;" title="กดใบ้เพื่อดูสัญชาติ">🏳️</span>`;
+
+        const numberDisplay =
+          (s.unlocked || hintLevel >= 2) && s.number !== null && s.number !== undefined
+            ? `<span>#${s.number}</span>`
+            : `<span style="opacity:0.45;" title="กดใบ้เพื่อดูเบอร์เสื้อ">#?</span>`;
 
         return `
           <div class="pitch-slot ${s.unlocked ? 'unlocked' : ''}" style="grid-row:${s.row}; grid-column:${s.col};">
             <div class="slot-top">
-              ${renderFlagHTML(s.flag, s.flagUrl)}
+              ${flagDisplay}
               <span>${s.pos}</span>
-              <span>#${s.number}</span>
+              ${numberDisplay}
             </div>
             ${photoHtml}
             <div class="slot-name">${hintOrName}</div>
