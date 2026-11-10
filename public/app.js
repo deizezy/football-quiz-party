@@ -196,18 +196,85 @@ async function apiAction(action, payload = {}) {
   return data;
 }
 
-async function loadDatabase(isRetry = false) {
-  const res = await fetch('/api/data');
-  const data = await res.json();
-  state.leagues = data.leagues || [];
-  state.clubs = data.clubs || [];
-  state.players = data.players || [];
-  renderLeagueTabs();
-  renderClubsGrid();
+const DB_CACHE_KEY = 'fcq_db_cache_v3';
+let isDatabaseLoading = false;
 
-  // If server is still syncing all 96 live clubs on cold start, re-fetch once after 4s
-  if (!isRetry && state.clubs.length <= 35) {
-    setTimeout(() => loadDatabase(true), 4000);
+function preparePlayerSearchIndex(players) {
+  for (let i = 0; i < players.length; i++) {
+    const p = players[i];
+    const normName = normalizeText(p.name);
+    const nameParts = normName.split(/\s+/).filter(Boolean);
+    const normAliases = Array.isArray(p.aliases)
+      ? p.aliases.map((a) => normalizeText(a)).filter(Boolean)
+      : [];
+    p._normName = normName;
+    p._nameParts = nameParts;
+    p._normAliases = normAliases;
+    p._clubCount = Array.isArray(p.clubs) ? p.clubs.length : 0;
+    p._searchBlob = [normName, ...normAliases].join(' ');
+  }
+}
+
+function hydrateDatabaseFromLocalCache() {
+  if (state.players.length > 0) return;
+  try {
+    const raw = localStorage.getItem(DB_CACHE_KEY);
+    if (!raw) return;
+    const cached = JSON.parse(raw);
+    if (cached && Array.isArray(cached.players) && cached.players.length > 0) {
+      state.leagues = cached.leagues || state.leagues;
+      state.clubs = cached.clubs || state.clubs;
+      state.players = cached.players;
+      preparePlayerSearchIndex(state.players);
+      renderLeagueTabs();
+      renderClubsGrid();
+    }
+  } catch (e) {}
+}
+
+async function loadDatabase(isRetry = false) {
+  hydrateDatabaseFromLocalCache();
+  if (isDatabaseLoading && !isRetry) return;
+  isDatabaseLoading = true;
+  try {
+    const res = await fetch('/api/data');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    state.leagues = data.leagues || [];
+    state.clubs = data.clubs || [];
+    state.players = data.players || [];
+    preparePlayerSearchIndex(state.players);
+    renderLeagueTabs();
+    renderClubsGrid();
+
+    try {
+      localStorage.setItem(
+        DB_CACHE_KEY,
+        JSON.stringify({
+          leagues: state.leagues,
+          clubs: state.clubs,
+          players: state.players
+        })
+      );
+    } catch (e) {}
+
+    // If user already typed into guess box while database was loading, immediately refresh dropdown!
+    const guessInput = document.getElementById('playerGuessInput');
+    if (guessInput && document.activeElement === guessInput && guessInput.value.trim().length > 0) {
+      updateAutocomplete(guessInput.value);
+    }
+
+    // Re-fetch once after 5s on initial load to pick up background-synced player headshots
+    const hasPhotos = state.players.some((p) => !!p.photoUrl);
+    if (!isRetry && !hasPhotos) {
+      setTimeout(() => loadDatabase(true), 5000);
+    }
+  } catch (err) {
+    if (!isRetry) {
+      setTimeout(() => loadDatabase(true), 2000);
+    }
+  } finally {
+    isDatabaseLoading = false;
   }
 }
 
@@ -350,6 +417,10 @@ function connectStream(roomCode) {
 
         if (payload.type === 'reaction' && payload.reaction) {
           spawnFloatingReaction(payload.reaction.emoji, payload.reaction.playerName);
+        }
+
+        if (payload.type === 'database_updated') {
+          loadDatabase(true);
         }
 
         renderRoom();
@@ -2089,6 +2160,20 @@ function updateAutocomplete(query) {
     return;
   }
 
+  // If database has not loaded yet, trigger load immediately & show status row
+  if (!state.players || state.players.length === 0) {
+    loadDatabase();
+    dropdown.innerHTML = `
+      <div class="autocomplete-item" style="pointer-events:none;opacity:0.85;">
+        <div class="ac-left">
+          <span>⏳ กำลังโหลดฐานข้อมูลนักเตะ... กรุณารอสักครู่</span>
+        </div>
+      </div>
+    `;
+    dropdown.classList.remove('hidden');
+    return;
+  }
+
   const usedIds = new Set((state.room?.usedPlayers || []).map((u) => u.id));
   const usedNames = new Set();
   const curMode = state.room?.settings?.gameMode;
@@ -2108,22 +2193,29 @@ function updateAutocomplete(query) {
   }
 
   const matches = [];
-  for (const p of state.players) {
-    const pNameNorm = normalizeText(p.name);
-    const nameParts = pNameNorm.split(/\s+/);
+  const playersList = state.players;
+  for (let i = 0; i < playersList.length; i++) {
+    const p = playersList[i];
+    // Fast-path filter using pre-indexed searchBlob (0ms per keystroke!)
+    if (p._searchBlob && !p._searchBlob.includes(norm)) continue;
+
+    const pNameNorm = p._normName || normalizeText(p.name);
+    const nameParts = p._nameParts || pNameNorm.split(/\s+/);
+    const normAliases = p._normAliases || (p.aliases || []).map((a) => normalizeText(a));
+
     const exactMatch =
       pNameNorm === norm ||
       nameParts.some((part) => part === norm) ||
-      (p.aliases && p.aliases.some((a) => normalizeText(a) === norm));
+      normAliases.some((a) => a === norm);
     const startsWith = pNameNorm.startsWith(norm) || nameParts.some((part) => part.startsWith(norm));
-    const aliasMatch = p.aliases && p.aliases.some((a) => normalizeText(a).includes(norm));
+    const aliasMatch = normAliases.some((a) => a.includes(norm));
     const includesMatch = pNameNorm.includes(norm);
 
     if (exactMatch || startsWith || aliasMatch || includesMatch) {
       matches.push({
         player: p,
         alreadyUsed: usedIds.has(p.id) || usedNames.has(pNameNorm),
-        clubCount: Array.isArray(p.clubs) ? p.clubs.length : 0,
+        clubCount: p._clubCount !== undefined ? p._clubCount : Array.isArray(p.clubs) ? p.clubs.length : 0,
         priority: exactMatch ? 0 : startsWith ? 1 : aliasMatch ? 2 : 3
       });
     }
@@ -2393,6 +2485,14 @@ function bindRoomEvents() {
   });
 
   const guessInput = document.getElementById('playerGuessInput');
+  guessInput.addEventListener('focus', () => {
+    if (!state.players || state.players.length === 0) {
+      loadDatabase();
+    } else if (guessInput.value.trim().length > 0) {
+      updateAutocomplete(guessInput.value);
+    }
+  });
+
   guessInput.addEventListener('input', (e) => {
     state.selectedAutocompletePlayerId = null;
     updateAutocomplete(e.target.value);

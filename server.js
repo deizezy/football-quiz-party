@@ -1606,16 +1606,24 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
   if (room.submissions[playerId]) return false;
 
   const timeTakenMs = Math.max(100, Date.now() - room.waveStartTime);
+  let resolvedPlayerId = selectedPlayerId || null;
   let enrichPromise = Promise.resolve(null);
   if (mode !== 'trivia_quiz') {
     const initialMatch = findPlayerByInput(cleanInput, selectedPlayerId);
-    enrichPromise = enrichPlayerClubHistory(initialMatch, cleanInput);
+    if (initialMatch) {
+      resolvedPlayerId = initialMatch.id;
+    } else if (cleanInput && cleanInput.length >= 3) {
+      enrichPromise = Promise.race([
+        enrichPlayerClubHistory(null, cleanInput),
+        new Promise((resolve) => setTimeout(() => resolve(null), 1200))
+      ]);
+    }
   }
 
   room.submissions[playerId] = {
     playerId,
     rawInput: cleanInput,
-    selectedPlayerId: selectedPlayerId || null,
+    selectedPlayerId: resolvedPlayerId,
     choiceIndex: extra.choiceIndex !== undefined ? Number(extra.choiceIndex) : null,
     cellIndex: extra.cellIndex !== undefined ? Number(extra.cellIndex) : 0,
     timeTakenMs,
@@ -3723,6 +3731,77 @@ const MIME_TYPES = {
   '.ico': 'image/x-icon'
 };
 
+function buildApiDataPayloadJson() {
+  const playerMap = new Map();
+  for (const p of PLAYERS) {
+    playerMap.set(normalizeText(p.name), {
+      id: p.id,
+      name: p.name,
+      flag: p.flag,
+      flagUrl: p.flagUrl || getFlagUrlFromEmoji(p.flag),
+      photoUrl: p.photoUrl || null,
+      position: p.position,
+      clubs: p.clubs || [],
+      aliases: Array.isArray(p.aliases) ? [...p.aliases] : [],
+      fromLiveApi: Boolean(p.fromLiveApi)
+    });
+  }
+  for (const lineup of LINEUPS) {
+    for (const s of lineup.slots || []) {
+      const key = normalizeText(s.playerId);
+      const existing = playerMap.get(key);
+      if (existing) {
+        for (const al of s.aliases || []) {
+          if (!existing.aliases.includes(al)) existing.aliases.push(al);
+        }
+      } else {
+        playerMap.set(key, {
+          id: 'lu_' + key.replace(/\s+/g, '_'),
+          name: s.playerId,
+          flag: s.flag || '⚽',
+          flagUrl: getFlagUrlFromEmoji(s.flag),
+          photoUrl: s.photoUrl || null,
+          position: s.pos || 'FW',
+          clubs: [],
+          aliases: Array.isArray(s.aliases) ? [...s.aliases] : [],
+          fromLiveApi: false
+        });
+      }
+    }
+  }
+  for (const list of TOP10_LISTS) {
+    for (const it of list.items || []) {
+      const key = normalizeText(it.name);
+      const existing = playerMap.get(key);
+      if (existing) {
+        for (const al of it.aliases || []) {
+          if (!existing.aliases.includes(al)) existing.aliases.push(al);
+        }
+      } else {
+        playerMap.set(key, {
+          id: 't10_' + key.replace(/\s+/g, '_'),
+          name: it.name,
+          flag: it.flag || '⚽',
+          flagUrl: getFlagUrlFromEmoji(it.flag),
+          photoUrl: null,
+          position: 'Legend',
+          clubs: [],
+          aliases: Array.isArray(it.aliases) ? [...it.aliases] : [],
+          fromLiveApi: false
+        });
+      }
+    }
+  }
+
+  return JSON.stringify({
+    leagues: LEAGUES,
+    clubs: CLUBS,
+    players: Array.from(playerMap.values())
+  });
+}
+
+let cachedApiDataJson = buildApiDataPayloadJson();
+
 const server = http.createServer((req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = parsedUrl.pathname;
@@ -3742,75 +3821,14 @@ const server = http.createServer((req, res) => {
   }
 
   if (pathname === '/api/data' && req.method === 'GET') {
-    const playerMap = new Map();
-    for (const p of PLAYERS) {
-      playerMap.set(normalizeText(p.name), {
-        id: p.id,
-        name: p.name,
-        flag: p.flag,
-        flagUrl: p.flagUrl || getFlagUrlFromEmoji(p.flag),
-        photoUrl: p.photoUrl || null,
-        position: p.position,
-        clubs: p.clubs || [],
-        aliases: Array.isArray(p.aliases) ? [...p.aliases] : [],
-        fromLiveApi: Boolean(p.fromLiveApi)
-      });
+    if (!cachedApiDataJson) {
+      cachedApiDataJson = buildApiDataPayloadJson();
     }
-    for (const lineup of LINEUPS) {
-      for (const s of lineup.slots || []) {
-        const key = normalizeText(s.playerId);
-        const existing = playerMap.get(key);
-        if (existing) {
-          for (const al of s.aliases || []) {
-            if (!existing.aliases.includes(al)) existing.aliases.push(al);
-          }
-        } else {
-          playerMap.set(key, {
-            id: 'lu_' + key.replace(/\s+/g, '_'),
-            name: s.playerId,
-            flag: s.flag || '⚽',
-            flagUrl: getFlagUrlFromEmoji(s.flag),
-            photoUrl: s.photoUrl || null,
-            position: s.pos || 'FW',
-            clubs: [],
-            aliases: Array.isArray(s.aliases) ? [...s.aliases] : [],
-            fromLiveApi: false
-          });
-        }
-      }
-    }
-    for (const list of TOP10_LISTS) {
-      for (const it of list.items || []) {
-        const key = normalizeText(it.name);
-        const existing = playerMap.get(key);
-        if (existing) {
-          for (const al of it.aliases || []) {
-            if (!existing.aliases.includes(al)) existing.aliases.push(al);
-          }
-        } else {
-          playerMap.set(key, {
-            id: 't10_' + key.replace(/\s+/g, '_'),
-            name: it.name,
-            flag: it.flag || '⚽',
-            flagUrl: getFlagUrlFromEmoji(it.flag),
-            photoUrl: null,
-            position: 'Legend',
-            clubs: [],
-            aliases: Array.isArray(it.aliases) ? [...it.aliases] : [],
-            fromLiveApi: false
-          });
-        }
-      }
-    }
-
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    return res.end(
-      JSON.stringify({
-        leagues: LEAGUES,
-        clubs: CLUBS,
-        players: Array.from(playerMap.values())
-      })
-    );
+    res.writeHead(200, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'public, max-age=30'
+    });
+    return res.end(cachedApiDataJson);
   }
 
   if (pathname === '/api/live-search' && req.method === 'GET') {
@@ -3931,5 +3949,12 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`⚽ Football Club Quiz Server running at http://localhost:${PORT}`);
-  initializeFootballApiData().catch(() => {});
+  initializeFootballApiData()
+    .then(() => {
+      cachedApiDataJson = buildApiDataPayloadJson();
+      for (const [roomCode] of rooms.entries()) {
+        broadcastRoom(roomCode, 'database_updated');
+      }
+    })
+    .catch(() => {});
 });
