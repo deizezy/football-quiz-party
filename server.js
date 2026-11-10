@@ -23,6 +23,16 @@ const PORT = process.env.PORT || 3000;
 
 const rooms = new Map();
 const roomStreams = new Map();
+const globalUsedTriviaIds = new Set();
+
+function shuffleArray(arr) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
 
 const AVATARS = ['⚽', '🦁', '🔥', '⚡', '👑', '🦊', '🐯', '🦅', '🐉', '🌟', '🎯', '🛡️'];
 const BOT_NAMES = ['โค้ชเป๊ป (Bot)', 'ป๋าเฟอร์กี้ (Bot)', 'คล็อปป์ (Bot)', 'มูรินโญ่ (Bot)', 'อันเช่ (Bot)'];
@@ -388,11 +398,20 @@ function serializeModeDataForClients(room) {
     const isRevealed = room.state === 'REVEAL';
     const diff = tr.difficulty || 'medium';
     const basePoints = diff === 'hard' ? 3 : diff === 'medium' ? 2 : 1;
+    const selDiff = room.settings.triviaDifficulty || 'all';
+    const totalPool =
+      selDiff === 'all'
+        ? TRIVIA_QUESTIONS.length
+        : TRIVIA_QUESTIONS.filter((q) => (q.difficulty || 'medium') === selDiff).length;
+    const usedInRoom = Array.isArray(room.usedTriviaIds) ? room.usedTriviaIds.length : 1;
     return {
       triviaId: tr.id,
       difficulty: diff,
       basePoints,
-      selectedDifficulty: room.settings.triviaDifficulty || 'all',
+      selectedDifficulty: selDiff,
+      totalPoolCount: TRIVIA_QUESTIONS.length,
+      filteredPoolCount: totalPool,
+      usedInRoomCount: usedInRoom,
       question: tr.question,
       options: tr.options,
       correctIndex: isRevealed ? tr.correctIndex : null,
@@ -2800,19 +2819,37 @@ function startModeRound(room, options = {}) {
     const usedIdSet = new Set(room.usedTriviaIds);
     const usedTextSet = new Set(room.usedTriviaTexts);
 
+    // 1. Prefer questions never used in this room AND never used globally across recent rooms
     let pool = basePool.filter(
-      (q) => !usedIdSet.has(q.id) && !usedTextSet.has(normalizeText(q.question))
+      (q) =>
+        !usedIdSet.has(q.id) &&
+        !usedTextSet.has(normalizeText(q.question)) &&
+        !globalUsedTriviaIds.has(q.id)
     );
+
+    // 2. If global pool for this difficulty is exhausted, fall back to questions never used in this room
+    if (pool.length === 0) {
+      basePool.forEach((q) => globalUsedTriviaIds.delete(q.id));
+      if (room.currentTriviaId) globalUsedTriviaIds.add(room.currentTriviaId);
+      pool = basePool.filter(
+        (q) => !usedIdSet.has(q.id) && !usedTextSet.has(normalizeText(q.question))
+      );
+    }
+
+    // 3. Only if all questions in this difficulty have been played in this room, reset room cycle
     if (pool.length === 0) {
       room.usedTriviaIds = room.currentTriviaId ? [room.currentTriviaId] : [];
       const prevTr = basePool.find((q) => q.id === room.currentTriviaId);
       room.usedTriviaTexts = prevTr ? [normalizeText(prevTr.question)] : [];
       pool = basePool.filter((q) => q.id !== room.currentTriviaId);
     }
-    const nextTr = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : basePool[0];
+
+    const shuffled = shuffleArray(pool);
+    const nextTr = shuffled.length > 0 ? shuffled[0] : basePool[0];
     room.currentTriviaId = nextTr.id;
     room.usedTriviaIds.push(nextTr.id);
     room.usedTriviaTexts.push(normalizeText(nextTr.question));
+    globalUsedTriviaIds.add(nextTr.id);
     startWave(room);
   } else if (mode === 'footy_grid') {
     room.roundNumber += 1;

@@ -1057,15 +1057,17 @@ function buildModeStageHTML(room, isReveal = false) {
     const qDiff = diffLabels[md.difficulty] || diffLabels.medium;
     const selDiff = md.selectedDifficulty || room.settings?.triviaDifficulty || 'all';
 
+    const totalPoolCount = md.totalPoolCount || 165;
     const diffFilterBar = !isReveal
       ? `
         <div class="trivia-diff-bar">
-          <span>🎚️ ความยากคำถาม:</span>
+          <span>🎚️ ความยากคำถาม (${totalPoolCount} ข้อไม่ซ้ำ):</span>
           <div class="trivia-diff-pills">
             <button type="button" class="diff-pill ${selDiff === 'all' ? 'active' : ''}" data-trivia-diff="all">🎲 รวมทุกระดับ</button>
             <button type="button" class="diff-pill ${selDiff === 'easy' ? 'active' : ''}" data-trivia-diff="easy">🟢 ง่าย (+1)</button>
             <button type="button" class="diff-pill ${selDiff === 'medium' ? 'active' : ''}" data-trivia-diff="medium">🟡 ปานกลาง (+2)</button>
             <button type="button" class="diff-pill ${selDiff === 'hard' ? 'active' : ''}" data-trivia-diff="hard">🔴 ยาก (+3)</button>
+            <button type="button" class="diff-pill" data-trivia-diff="${selDiff}" title="สุ่มคำถามใหม่ที่ไม่ซ้ำทันที">🔄 เปลี่ยนข้อใหม่</button>
           </div>
         </div>
       `

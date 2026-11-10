@@ -1713,6 +1713,947 @@ const TRIVIA_QUESTIONS = [
     options: ['Rivaldo', 'Ronaldinho', 'Ronaldo Nazário', 'Roberto Carlos'],
     correctIndex: 2,
     explanation: 'Ronaldo Nazário (R9) เหมาทั้ง 2 ประตูในนัดชิงชนะเลิศ และคว้ารางวัลดาวซัลโวฟุตบอลโลก 2002 ที่ 8 ประตู'
+  },
+  // ================= MEGA EXPANSION: EASY (tr_easy_17 - tr_easy_54) =================
+  {
+    id: 'tr_easy_17',
+    difficulty: 'easy',
+    question: 'ฉายา "ปืนใหญ่" (The Gunners) เป็นฉายาประจำสโมสรใดในพรีเมียร์ลีก อังกฤษ?',
+    options: ['Chelsea', 'Arsenal', 'Tottenham Hotspur', 'West Ham United'],
+    correctIndex: 1,
+    explanation: 'Arsenal มีฉายาว่า "ปืนใหญ่" (The Gunners) ตามสัญลักษณ์รูปปืนใหญ่บนตราสโมสร'
+  },
+  {
+    id: 'tr_easy_18',
+    difficulty: 'easy',
+    question: 'คริสเตียโน่ โรนัลโด้ (Cristiano Ronaldo) เป็นนักเตะทีมชาติใด?',
+    options: ['สเปน', 'บราซิล', 'โปรตุเกส', 'อิตาลี'],
+    correctIndex: 2,
+    explanation: 'Cristiano Ronaldo คือกัปตันและดาวยิงสูงสุดตลอดกาลของทีมชาติโปรตุเกส'
+  },
+  {
+    id: 'tr_easy_19',
+    difficulty: 'easy',
+    question: 'สโมสรใดมีสนามเหย้าชื่อว่า "โอลด์ แทรฟฟอร์ด" (Old Trafford) หรือโรงละครแห่งความฝัน?',
+    options: ['Manchester City', 'Manchester United', 'Liverpool', 'Newcastle United'],
+    correctIndex: 1,
+    explanation: 'Old Trafford คือสนามเหย้าของสโมสร Manchester United'
+  },
+  {
+    id: 'tr_easy_20',
+    difficulty: 'easy',
+    question: 'โมฮาเหม็ด ซาลาห์ (Mohamed Salah) ดาวยิงตัวเก่งของลิเวอร์พูล เป็นชาวประเทศใด?',
+    options: ['โมร็อกโก', 'แอลจีเรีย', 'อียิปต์', 'เซเนกัล'],
+    correctIndex: 2,
+    explanation: 'Mohamed Salah เป็นนักเตะทีมชาติอียิปต์ (ฉายา Egyptian King)'
+  },
+  {
+    id: 'tr_easy_21',
+    difficulty: 'easy',
+    question: 'ทีมชาติใดคว้าแชมป์ฟุตบอลโลก 2018 ที่จัดขึ้นที่ประเทศรัสเซีย?',
+    options: ['โครเอเชีย', 'ฝรั่งเศส', 'เบลเยียม', 'บราซิล'],
+    correctIndex: 1,
+    explanation: 'ทีมชาติฝรั่งเศส เอาชนะ โครเอเชีย 4-2 ในรอบชิงชนะเลิศ คว้าแชมป์โลก 2018'
+  },
+  {
+    id: 'tr_easy_22',
+    difficulty: 'easy',
+    question: 'ศึก "แดงเดือด" (North West Derby) ในฟุตบอลอังกฤษ คือการพบกันระหว่างสองสโมสรใด?',
+    options: ['Arsenal พบ Chelsea', 'Liverpool พบ Everton', 'Manchester United พบ Liverpool', 'Manchester United พบ Manchester City'],
+    correctIndex: 2,
+    explanation: 'ศึกแดงเดือด คือการปะทะกันระหว่างสองสโมสรที่ประสบความสำเร็จสูงสุดของอังกฤษอย่าง Manchester United และ Liverpool'
+  },
+  {
+    id: 'tr_easy_23',
+    difficulty: 'easy',
+    question: 'ฉายา "สิงโตน้ำเงินคราม" (The Blues) เป็นฉายาของสโมสรใดในกรุงลอนดอน?',
+    options: ['Everton', 'Chelsea', 'Leicester City', 'Brighton'],
+    correctIndex: 1,
+    explanation: 'Chelsea มีฉายาในไทยว่า "สิงโตน้ำเงินคราม" จากสีเสื้อน้ำเงินและรูปสิงโตบนตราสโมสร'
+  },
+  {
+    id: 'tr_easy_24',
+    difficulty: 'easy',
+    question: 'กุนซือคนใดพา แมนเชสเตอร์ ซิตี้ คว้า "ทริปเปิลแชมป์" (พรีเมียร์ลีก + เอฟเอคัพ + UCL) ในฤดูกาล 2022/23?',
+    options: ['Jürgen Klopp', 'Roberto Mancini', 'Pep Guardiola', 'Manuel Pellegrini'],
+    correctIndex: 2,
+    explanation: 'Pep Guardiola พา Manchester City คว้าทริปเปิลแชมป์ประวัติศาสตร์ในฤดูกาล 2022/23'
+  },
+  {
+    id: 'tr_easy_25',
+    difficulty: 'easy',
+    question: 'ลูก้า โมดริช (Luka Modrić) จอมทัพเรอัล มาดริด เป็นกัปตันทีมชาติใด?',
+    options: ['เซอร์เบีย', 'โครเอเชีย', 'สโลวีเนีย', 'โปแลนด์'],
+    correctIndex: 1,
+    explanation: 'Luka Modrić คือกัปตันทีมชาติโครเอเชียชุดรองแชมป์โลก 2018 และอันดับ 3 ฟุตบอลโลก 2022'
+  },
+  {
+    id: 'tr_easy_26',
+    difficulty: 'easy',
+    question: 'สโมสร ปารีส แซงต์-แชร์กแมง (PSG) ลงแข่งขันอยู่ในลีกสูงสุดของประเทศใด?',
+    options: ['อิตาลี', 'สเปน', 'ฝรั่งเศส', 'เยอรมนี'],
+    correctIndex: 2,
+    explanation: 'PSG เป็นสโมสรยักษ์ใหญ่ประจำศึก ลีกเอิง (Ligue 1) ประเทศฝรั่งเศส'
+  },
+  {
+    id: 'tr_easy_27',
+    difficulty: 'easy',
+    question: 'เควิน เดอ บรอยน์ (Kevin De Bruyne) เพลย์เมกเกอร์ระดับโลกเป็นนักเตะทีมชาติใด?',
+    options: ['เนเธอร์แลนด์', 'เบลเยียม', 'เดนมาร์ก', 'ออสเตรีย'],
+    correctIndex: 1,
+    explanation: 'Kevin De Bruyne เป็นจอมทัพทีมชาติเบลเยียม'
+  },
+  {
+    id: 'tr_easy_28',
+    difficulty: 'easy',
+    question: 'สนาม "คัมป์ นู" (Camp Nou) เป็นสนามเหย้าของสโมสรใดในสเปน?',
+    options: ['Real Madrid', 'Atlético Madrid', 'Barcelona', 'Valencia'],
+    correctIndex: 2,
+    explanation: 'Camp Nou คือสนามเหย้าของสโมสร FC Barcelona'
+  },
+  {
+    id: 'tr_easy_29',
+    difficulty: 'easy',
+    question: 'แฮร์รี่ เคน (Harry Kane) ย้ายจาก ท็อตแน่ม ฮ็อตสเปอร์ ไปค้าแข้งกับสโมสรยักษ์ใหญ่ทีมใดในปี 2023?',
+    options: ['Real Madrid', 'Manchester United', 'Bayern Munich', 'Paris Saint-Germain'],
+    correctIndex: 2,
+    explanation: 'Harry Kane ย้ายจากสเปอร์สไปร่วมทัพ Bayern Munich ในศึกบุนเดสลีกาเมื่อซัมเมอร์ปี 2023'
+  },
+  {
+    id: 'tr_easy_30',
+    difficulty: 'easy',
+    question: 'ฉายา "ม้าลาย" (La Vecchia Signora / The Bianconeri) คือฉายาของสโมสรใดในอิตาลี?',
+    options: ['AC Milan', 'Inter Milan', 'Juventus', 'Napoli'],
+    correctIndex: 2,
+    explanation: 'Juventus มีฉายาในไทยว่า "ม้าลาย" จากชุดแข่งสีขาว-ดำอันเป็นเอกลักษณ์'
+  },
+  {
+    id: 'tr_easy_31',
+    difficulty: 'easy',
+    question: 'จู๊ด เบลลิงแฮม (Jude Bellingham) สตาร์ทีมชาติอังกฤษ ย้ายจาก โบรุสเซีย ดอร์ทมุนด์ ไปร่วมทีมใดในปี 2023?',
+    options: ['Liverpool', 'Manchester City', 'Real Madrid', 'Chelsea'],
+    correctIndex: 2,
+    explanation: 'Jude Bellingham ย้ายจาก Dortmund ไปสวมเสื้อเบอร์ 5 ให้กับ Real Madrid ในปี 2023'
+  },
+  {
+    id: 'tr_easy_32',
+    difficulty: 'easy',
+    question: 'หมายเลขเสื้อประจำตัวที่เป็นสัญลักษณ์ของ คริสเตียโน่ โรนัลโด้ จนกลายเป็นแบรนด์ประจำตัวคือหมายเลขใด?',
+    options: ['เบอร์ 9', 'เบอร์ 10', 'เบอร์ 7', 'เบอร์ 11'],
+    correctIndex: 2,
+    explanation: 'หมายเลข 7 คือเบอร์เสื้อคู่บุญของโรนัลโด้ จนเป็นที่มาของฉายา CR7'
+  },
+  {
+    id: 'tr_easy_33',
+    difficulty: 'easy',
+    question: 'สนามเหย้า "สแตมฟอร์ด บริดจ์" (Stamford Bridge) เป็นสนามของสโมสรใด?',
+    options: ['Arsenal', 'Tottenham Hotspur', 'Chelsea', 'Fulham'],
+    correctIndex: 2,
+    explanation: 'Stamford Bridge คือสนามเหย้าของสโมสร Chelsea ในกรุงลอนดอน'
+  },
+  {
+    id: 'tr_easy_34',
+    difficulty: 'easy',
+    question: 'หลังจากอำลา ยูโรป ลิโอเนล เมสซี่ ย้ายไปค้าแข้งกับสโมสรใดในศึก เมเจอร์ลีก ซอกเกอร์ (MLS) สหรัฐอเมริกา?',
+    options: ['LA Galaxy', 'Inter Miami', 'New York City FC', 'LAFC'],
+    correctIndex: 1,
+    explanation: 'Lionel Messi ย้ายไปร่วมทีม Inter Miami ที่มี David Beckham เป็นเจ้าของร่วมในปี 2023'
+  },
+  {
+    id: 'tr_easy_35',
+    difficulty: 'easy',
+    question: 'ฉายา "ไก่เดือยทอง" เป็นฉายาของสโมสรใดในศึกพรีเมียร์ลีก อังกฤษ?',
+    options: ['Wolverhampton', 'Crystal Palace', 'Tottenham Hotspur', 'Brighton'],
+    correctIndex: 2,
+    explanation: 'Tottenham Hotspur มีสัญลักษณ์เป็นรูปไก่ชนเหยียบลูกฟุตบอล จึงได้ฉายาว่า "ไก่เดือยทอง"'
+  },
+  {
+    id: 'tr_easy_36',
+    difficulty: 'easy',
+    question: 'คีลิยัน เอ็มบัปเป้ (Kylian Mbappé) ย้ายจาก ปารีส แซงต์-แชร์กแมง ไปร่วมทีมใดแบบไร้ค่าตัวในปี 2024?',
+    options: ['Barcelona', 'Liverpool', 'Real Madrid', 'Manchester City'],
+    correctIndex: 2,
+    explanation: 'Kylian Mbappé ย้ายจาก PSG มาร่วมทัพ Real Madrid ในช่วงซัมเมอร์ปี 2024'
+  },
+  {
+    id: 'tr_easy_37',
+    difficulty: 'easy',
+    question: 'โรเบิร์ต เลวานดอฟสกี้ (Robert Lewandowski) ยอดกองหน้าจอมถล่มประตู เป็นนักเตะทีมชาติใด?',
+    options: ['เยอรมนี', 'เช็กเกีย', 'โปแลนด์', 'ออสเตรีย'],
+    correctIndex: 2,
+    explanation: 'Robert Lewandowski เป็นกัปตันและดาวยิงสูงสุดตลอดกาลของทีมชาติโปแลนด์'
+  },
+  {
+    id: 'tr_easy_38',
+    difficulty: 'easy',
+    question: 'สโมสรใดเป็นเจ้าของสถิติคว้าแชมป์ ยูฟ่า แชมเปียนส์ลีก (รวมยูโรเปียนคัพ) มากที่สุดในโลก (15 สมัย)?',
+    options: ['AC Milan', 'Bayern Munich', 'Barcelona', 'Real Madrid'],
+    correctIndex: 3,
+    explanation: 'Real Madrid คือราชาแห่งถ้วยยุโรป ด้วยสถิติคว้าแชมป์ UCL สูงสุดถึง 15 สมัย'
+  },
+  {
+    id: 'tr_easy_39',
+    difficulty: 'easy',
+    question: 'เฟอร์จิล ฟาน ไดจ์ค (Virgil van Dijk) กองหลังกัปตันทีมลิเวอร์พูล เป็นนักเตะทีมชาติใด?',
+    options: ['เบลเยียม', 'เยอรมนี', 'เนเธอร์แลนด์', 'เดนมาร์ก'],
+    correctIndex: 2,
+    explanation: 'Virgil van Dijk เป็นปราการหลังกัปตันทีมชาติเนเธอร์แลนด์ (อัศวินสีส้ม)'
+  },
+  {
+    id: 'tr_easy_40',
+    difficulty: 'easy',
+    question: 'ฉายา "เสือเหลือง" เป็นฉายาของสโมสรใดในศึกบุนเดสลีกา เยอรมนี?',
+    options: ['Bayern Munich', 'Borussia Dortmund', 'Bayer Leverkusen', 'RB Leipzig'],
+    correctIndex: 1,
+    explanation: 'Borussia Dortmund มีสีประจำสโมสรคือเหลือง-ดำ และมีฉายาในไทยว่า "เสือเหลือง"'
+  },
+  {
+    id: 'tr_easy_41',
+    difficulty: 'easy',
+    question: 'เปเล่ (Pelé) ตำนานราชาลูกหนังผู้คว้าแชมป์ฟุตบอลโลก 3 สมัย เป็นนักเตะทีมชาติใด?',
+    options: ['อาร์เจนตินา', 'โปรตุเกส', 'บราซิล', 'ฝรั่งเศส'],
+    correctIndex: 2,
+    explanation: 'Pelé คือตำนานทีมชาติบราซิล ผู้คว้าแชมป์ฟุตบอลโลกในปี 1958, 1962 และ 1970'
+  },
+  {
+    id: 'tr_easy_42',
+    difficulty: 'easy',
+    question: 'ฉายา "เรือใบสีฟ้า" (The Citizens) เป็นฉายาของสโมสรใดในพรีเมียร์ลีก อังกฤษ?',
+    options: ['Everton', 'Chelsea', 'Manchester City', 'Leicester City'],
+    correctIndex: 2,
+    explanation: 'Manchester City มีรูปเรือใบอยู่บนตราสโมสร จึงมีฉายาในไทยว่า "เรือใบสีฟ้า"'
+  },
+  {
+    id: 'tr_easy_43',
+    difficulty: 'easy',
+    question: 'วินิซิอุส จูเนียร์ (Vinícius Júnior) ปีกตัวจี๊ดของเรอัล มาดริด เป็นนักเตะทีมชาติใด?',
+    options: ['โปรตุเกส', 'บราซิล', 'โคลอมเบีย', 'อุรุกวัย'],
+    correctIndex: 1,
+    explanation: 'Vinícius Júnior เป็นนักเตะทีมชาติบราซิล'
+  },
+  {
+    id: 'tr_easy_44',
+    difficulty: 'easy',
+    question: 'สโมสรใดคว้าแชมป์ พรีเมียร์ลีก อังกฤษ ติดต่อกัน 4 สมัยซ้อนเป็นทีมแรกในประวัติศาสตร์ (2020/21 - 2023/24)?',
+    options: ['Manchester United', 'Liverpool', 'Manchester City', 'Chelsea'],
+    correctIndex: 2,
+    explanation: 'Manchester City ของ Pep Guardiola สร้างประวัติศาสตร์คว้าแชมป์พรีเมียร์ลีก 4 สมัยติดต่อกันเป็นทีมแรก'
+  },
+  {
+    id: 'tr_easy_45',
+    difficulty: 'easy',
+    question: 'บูกาโย่ ซาก้า (Bukayo Saka) ปีกตัวเก่งทีมชาติอังกฤษ เติบโตมาจากอะคาเดมีและค้าแข้งอยู่กับสโมสรใด?',
+    options: ['Chelsea', 'Arsenal', 'Tottenham Hotspur', 'Manchester City'],
+    correctIndex: 1,
+    explanation: 'Bukayo Saka เป็นผลผลิตจากอะคาเดมี Hale End ของสโมสร Arsenal'
+  },
+  {
+    id: 'tr_easy_46',
+    difficulty: 'easy',
+    question: 'ฉายา "ทัพฟ้าขาว" (La Albiceleste) คือฉายาของฟุตบอลทีมชาติใด?',
+    options: ['อุรุกวัย', 'อิตาลี', 'อาร์เจนตินา', 'กรีซ'],
+    correctIndex: 2,
+    explanation: 'ทีมชาติอาร์เจนตินา มีชุดแข่งลายทางสีฟ้า-ขาว จึงมีฉายาว่า "ทัพฟ้าขาว"'
+  },
+  {
+    id: 'tr_easy_47',
+    difficulty: 'easy',
+    question: 'กุนซือชาวเยอรมันคนใดที่พา ลิเวอร์พูล คว้าแชมป์พรีเมียร์ลีกสมัยแรกในรอบ 30 ปี (ฤดูกาล 2019/20)?',
+    options: ['Thomas Tuchel', 'Jürgen Klopp', 'Hansi Flick', 'Julian Nagelsmann'],
+    correctIndex: 1,
+    explanation: 'Jürgen Klopp พาหงส์แดงคว้าทั้งแชมป์ UCL 2019 และแชมป์พรีเมียร์ลีก 2019/20'
+  },
+  {
+    id: 'tr_easy_48',
+    difficulty: 'easy',
+    question: 'ลามีน ยามาล (Lamine Yamal) ดาวรุ่งพุ่งแรงเจ้าของแชมป์ยูโร 2024 เล่นให้กับทีมชาติใด?',
+    options: ['ฝรั่งเศส', 'โปรตุเกส', 'สเปน', 'โมร็อกโก'],
+    correctIndex: 2,
+    explanation: 'Lamine Yamal ลงเล่นให้ทีมชาติสเปนและทำลายสถิตินักเตะอายุน้อยที่สุดในประวัติศาสตร์ศึกยูโร'
+  },
+  {
+    id: 'tr_easy_49',
+    difficulty: 'easy',
+    question: 'ฉายา "สิงโตคำราม" (The Three Lions) คือฉายาของฟุตบอลทีมชาติใด?',
+    options: ['เนเธอร์แลนด์', 'อังกฤษ', 'เบลเยียม', 'เดนมาร์ก'],
+    correctIndex: 1,
+    explanation: 'ทีมชาติอังกฤษ มีตราสัญลักษณ์เป็นสิงโต 3 ตัว จึงมีฉายาว่า "สิงโตคำราม" (Three Lions)'
+  },
+  {
+    id: 'tr_easy_50',
+    difficulty: 'easy',
+    question: 'เนย์มาร์ (Neymar Jr) แจ้งเกิดในทวีปยุโรปครั้งแรกด้วยการย้ายจาก ซานโตส มาร่วมสโมสรใดในปี 2013?',
+    options: ['Real Madrid', 'Paris Saint-Germain', 'Barcelona', 'AC Milan'],
+    correctIndex: 2,
+    explanation: 'Neymar ย้ายจาก Santos มาร่วมทัพ Barcelona ในปี 2013 ผนึกกำลังสามประสาน MSN'
+  },
+  {
+    id: 'tr_easy_51',
+    difficulty: 'easy',
+    question: 'ฉายา "อินทรีเหล็ก" (Die Mannschaft) คือฉายาของฟุตบอลทีมชาติใด?',
+    options: ['ออสเตรีย', 'โปแลนด์', 'เยอรมนี', 'รัสเซีย'],
+    correctIndex: 2,
+    explanation: 'ทีมชาติเยอรมนี มีสัญลักษณ์นกอินทรีบนอกเสื้อ จึงมีฉายาในไทยว่า "อินทรีเหล็ก"'
+  },
+  {
+    id: 'tr_easy_52',
+    difficulty: 'easy',
+    question: 'อลิสซอน เบ็คเกอร์ (Alisson Becker) ผู้รักษาประตูมือหนึ่งของลิเวอร์พูล เป็นชาวประเทศใด?',
+    options: ['อาร์เจนตินา', 'สเปน', 'บราซิล', 'โปรตุเกส'],
+    correctIndex: 2,
+    explanation: 'Alisson Becker เป็นผู้รักษาประตูทีมชาติบราซิล'
+  },
+  {
+    id: 'tr_easy_53',
+    difficulty: 'easy',
+    question: 'สนาม "เอติฮัด สเตเดี้ยม" (Etihad Stadium) เป็นสนามเหย้าของสโมสรใด?',
+    options: ['Arsenal', 'Manchester City', 'Chelsea', 'Newcastle United'],
+    correctIndex: 1,
+    explanation: 'Etihad Stadium คือรังเหย้าของสโมสร Manchester City'
+  },
+  {
+    id: 'tr_easy_54',
+    difficulty: 'easy',
+    question: 'โคล พาลเมอร์ (Cole Palmer) จอมทัพเจ้าของท่าดีใจหนาวสั่น (Cold Palmer) ปัจจุบันค้าแข้งกับสโมสรใด?',
+    options: ['Manchester United', 'Arsenal', 'Chelsea', 'Liverpool'],
+    correctIndex: 2,
+    explanation: 'Cole Palmer ย้ายจาก Manchester City มาระเบิดฟอร์มเก่งกับ Chelsea ในปี 2023'
+  },
+
+  // ================= MEGA EXPANSION: MEDIUM (tr_med_17 - tr_med_55) =================
+  {
+    id: 'tr_med_17',
+    difficulty: 'medium',
+    question: 'ใครคือนักเตะที่คว้ารางวัล บัลลงดอร์ (Ballon d\'Or) ประจำปี 2024 มาครองได้สำเร็จ?',
+    options: ['Vinícius Júnior', 'Jude Bellingham', 'Rodri', 'Erling Haaland'],
+    correctIndex: 2,
+    explanation: 'Rodri กองกลางทีมชาติสเปนและแมนฯ ซิตี้ คว้ารางวัล Ballon d\'Or 2024 หลังพาทีมคว้าแชมป์พรีเมียร์ลีกและยูโร 2024'
+  },
+  {
+    id: 'tr_med_18',
+    difficulty: 'medium',
+    question: 'สามประสานแนวรุกในตำนาน "MSN" ของบาร์เซโลน่า ยุคคว้าทริปเปิลแชมป์ปี 2015 ประกอบด้วย Messi, Neymar และใคร?',
+    options: ['Alexis Sánchez', 'David Villa', 'Luis Suárez', 'Pedro Rodríguez'],
+    correctIndex: 2,
+    explanation: 'MSN ย่อมาจาก Messi, Suárez (หลุยส์ ซัวเรซ) และ Neymar ที่ยิงรวมกันถึง 122 ประตูในฤดูกาล 2014/15'
+  },
+  {
+    id: 'tr_med_19',
+    difficulty: 'medium',
+    question: 'สามประสาน "BBC" ของเรอัล มาดริด ยุคคว้าแชมป์ UCL 3 สมัยซ้อน ประกอบด้วย Bale, Cristiano Ronaldo และใคร?',
+    options: ['Karim Benzema', 'Gonzalo Higuaín', 'Álvaro Morata', 'Jude Bellingham'],
+    correctIndex: 0,
+    explanation: 'BBC ย่อมาจาก Gareth Bale, Karim Benzema และ Cristiano Ronaldo'
+  },
+  {
+    id: 'tr_med_20',
+    difficulty: 'medium',
+    question: 'ศึกดาร์บี้แมตช์แห่งเมืองมิลาน ระหว่าง เอซี มิลาน และ อินเตอร์ มิลาน มีชื่อเรียกอย่างเป็นทางการว่าอะไร?',
+    options: ['Derby d\'Italia', 'Derby della Madonnina', 'Derby della Capitale', 'El Derbi'],
+    correctIndex: 1,
+    explanation: 'Derby della Madonnina คือศึกมิลานดาร์บี้ ตั้งชื่อตามรูปปั้นพระแม่มารีบนยอดมหาวิหารดูโอโม่แห่งเมืองมิลาน'
+  },
+  {
+    id: 'tr_med_21',
+    difficulty: 'medium',
+    question: 'สนาม ซาน ซิโร่ (San Siro) หรือ จูเซปเป้ เมอัซซ่า เป็นสนามเหย้าที่ใช้ร่วมกันของสองสโมสรใด?',
+    options: ['Juventus และ Torino', 'AS Roma และ Lazio', 'AC Milan และ Inter Milan', 'Genoa และ Sampdoria'],
+    correctIndex: 2,
+    explanation: 'AC Milan และ Inter Milan ใช้สนาม San Siro / Giuseppe Meazza ร่วมกันในเมืองมิลาน'
+  },
+  {
+    id: 'tr_med_22',
+    difficulty: 'medium',
+    question: 'ในนัดชิงชนะเลิศ ยูฟ่า แชมเปียนส์ลีก ปี 2002 ซีเนดีน ซีดาน ยิงลูกวอลเลย์ด้วยซ้ายสุดสวยพา เรอัล มาดริด เอาชนะสโมสรใด?',
+    options: ['Bayern Munich', 'Valencia', 'Bayer Leverkusen', 'Juventus'],
+    correctIndex: 2,
+    explanation: 'Zinedine Zidane วอลเลย์ประตูชัยพา Real Madrid ชนะ Bayer Leverkusen 2-1 ที่สนามแฮมป์เดน พาร์ค'
+  },
+  {
+    id: 'tr_med_23',
+    difficulty: 'medium',
+    question: 'ก่อนย้ายมาโด่งดังกับ ลิเวอร์พูล โมฮาเหม็ด ซาลาห์ เคยค้าแข้งกับสองสโมสรใดในศึก กัลโช่ เซเรียอา อิตาลี?',
+    options: ['AC Milan และ Inter Milan', 'Fiorentina และ AS Roma', 'Napoli และ Lazio', 'Juventus และ Atalanta'],
+    correctIndex: 1,
+    explanation: 'Salah ย้ายจาก Chelsea ไปแจ้งเกิดเต็มตัวกับ Fiorentina และ AS Roma ก่อนย้ายมาร่วมทีม Liverpool ในปี 2017'
+  },
+  {
+    id: 'tr_med_24',
+    difficulty: 'medium',
+    question: 'ก่อนย้ายไป โวล์ฟสบวร์ก และกลับมาเป็นตำนานของ แมนเชสเตอร์ ซิตี้ เควิน เดอ บรอยน์ เคยเป็นนักเตะของสโมสรใดในพรีเมียร์ลีก?',
+    options: ['Arsenal', 'Tottenham Hotspur', 'Chelsea', 'Everton'],
+    correctIndex: 2,
+    explanation: 'Kevin De Bruyne เคยอยู่กับ Chelsea ช่วงปี 2012-2014 ก่อนย้ายไปแจ้งเกิดกับ Wolfsburg'
+  },
+  {
+    id: 'tr_med_25',
+    difficulty: 'medium',
+    question: 'ใครคือผู้โหม่งประตูตีเสมอ 1-1 ในนาทีที่ 88 และยิงจุดโทษลูกตัดสินพา เชลซี คว้าแชมป์ UCL สมัยแรกปี 2012 ที่มิวนิค?',
+    options: ['Frank Lampard', 'Fernando Torres', 'Didier Drogba', 'Juan Mata'],
+    correctIndex: 2,
+    explanation: 'Didier Drogba โหม่งตีเสมอ บาเยิร์น มิวนิค นาที 88 และเป็นคนยิงจุดโทษลูกสุดท้ายพาเชลซีคว้าแชมป์ยุโรปสมัยแรก'
+  },
+  {
+    id: 'tr_med_26',
+    difficulty: 'medium',
+    question: 'นักเตะคนใดเป็นเจ้าของสถิติดาวซัลโวสูงสุดตลอดกาลของสโมสร แมนเชสเตอร์ ยูไนเต็ด (253 ประตู)?',
+    options: ['Cristiano Ronaldo', 'Sir Bobby Charlton', 'Wayne Rooney', 'Denis Law'],
+    correctIndex: 2,
+    explanation: 'Wayne Rooney ยิงไป 253 ประตูให้แมนฯ ยูไนเต็ด ทำลายสถิติเดิมของ Sir Bobby Charlton (249 ประตู)'
+  },
+  {
+    id: 'tr_med_27',
+    difficulty: 'medium',
+    question: 'ใครคือเจ้าของสถิติดาวซัลโวสูงสุดตลอดกาลของสโมสร อาร์เซนอล (228 ประตู)?',
+    options: ['Ian Wright', 'Dennis Bergkamp', 'Thierry Henry', 'Robin van Persie'],
+    correctIndex: 2,
+    explanation: 'Thierry Henry คือตำนานดาวยิงสูงสุดตลอดกาลของทัพปืนใหญ่ด้วยผลงาน 228 ประตู'
+  },
+  {
+    id: 'tr_med_28',
+    difficulty: 'medium',
+    question: 'ใครคือเจ้าของสถิติดาวซัลโวสูงสุดตลอดกาลของสโมสร เชลซี (211 ประตู) ทั้งที่เล่นในตำแหน่งกองกลาง?',
+    options: ['Didier Drogba', 'Eden Hazard', 'Frank Lampard', 'Gianfranco Zola'],
+    correctIndex: 2,
+    explanation: 'Frank Lampard มิดฟิลด์จอมสอดมายิง ทำสถิติยิงให้เชลซีสูงสุดตลอดกาลถึง 211 ประตู'
+  },
+  {
+    id: 'tr_med_29',
+    difficulty: 'medium',
+    question: 'ใครคือเจ้าของสถิติดาวซัลโวสูงสุดตลอดกาลของสโมสร แมนเชสเตอร์ ซิตี้ (260 ประตู)?',
+    options: ['Erling Haaland', 'Sergio Agüero', 'Raheem Sterling', 'Kevin De Bruyne'],
+    correctIndex: 1,
+    explanation: 'Sergio "Kun" Agüero เป็นดาวยิงสูงสุดตลอดกาลของแมนฯ ซิตี้ ด้วยผลงาน 260 ประตู'
+  },
+  {
+    id: 'tr_med_30',
+    difficulty: 'medium',
+    question: 'ในศึกฟุตบอลโลก 2006 รอบชิงชนะเลิศ (อิตาลี ชนะ ฝรั่งเศส จุดโทษ) ซีเนดีน ซีดาน โดนใบแดงไล่ออกจากสนามเพราะเอาศีรษะโขกหน้าอกใคร?',
+    options: ['Fabio Cannavaro', 'Gennaro Gattuso', 'Marco Materazzi', 'Gianluca Zambrotta'],
+    correctIndex: 2,
+    explanation: 'Zidane เฮดบัตต์ใส่หน้าอกของ Marco Materazzi กองหลังทีมชาติอิตาลีในช่วงต่อเวลาพิเศษ'
+  },
+  {
+    id: 'tr_med_31',
+    difficulty: 'medium',
+    question: 'เออร์ลิง ฮาแลนด์ ทำลายสถิติยิงประตูสูงสุดต่อ 1 ฤดูกาลในพรีเมียร์ลีก (38 นัด) เมื่อฤดูกาล 2022/23 ด้วยจำนวนกี่ประตู?',
+    options: ['32 ประตู', '34 ประตู', '36 ประตู', '38 ประตู'],
+    correctIndex: 2,
+    explanation: 'Erling Haaland ยิงไปถึง 36 ประตูในพรีเมียร์ลีกฤดูกาลแรกของเขา ทำลายสถิติเดิม 34 ประตูของ Alan Shearer และ Andy Cole'
+  },
+  {
+    id: 'tr_med_32',
+    difficulty: 'medium',
+    question: 'สโมสร นาโปลี เปลี่ยนชื่อสนามเหย้าจาก Stadio San Paolo เพื่อเป็นเกียรติแก่ตำนานผู้ล่วงลับคนใดในปี 2020?',
+    options: ['Paolo Rossi', 'Diego Armando Maradona', 'Careca', 'Gianluca Vialli'],
+    correctIndex: 1,
+    explanation: 'สนามเหย้าของ Napoli ปัจจุบันมีชื่อว่า Stadio Diego Armando Maradona เพื่อรำลึกถึงเสือเตี้ยผู้พาทีมคว้าแชมป์กัลโช่ 2 สมัยแรก'
+  },
+  {
+    id: 'tr_med_33',
+    difficulty: 'medium',
+    question: 'คริสเตียโน่ โรนัลโด้ เริ่มต้นอาชีพนักฟุตบอลชุดใหญ่กับสโมสรใดในบ้านเกิด ก่อนย้ายมา แมนเชสเตอร์ ยูไนเต็ด ในปี 2003?',
+    options: ['FC Porto', 'SL Benfica', 'Sporting CP', 'SC Braga'],
+    correctIndex: 2,
+    explanation: 'Cristiano Ronaldo เติบโตจากอะคาเดมีและลงเล่นชุดใหญ่ให้ Sporting CP (สปอร์ติ้ง ลิสบอน)'
+  },
+  {
+    id: 'tr_med_34',
+    difficulty: 'medium',
+    question: 'เอ็งโกโล่ ก็องเต้ (N\'Golo Kanté) สร้างปรากฏการณ์คว้าแชมป์พรีเมียร์ลีก อังกฤษ 2 ฤดูกาลติดต่อกัน (2015/16 และ 2016/17) กับสองสโมสรใด?',
+    options: ['Arsenal และ Chelsea', 'Leicester City และ Chelsea', 'Leicester City และ Man City', 'Southampton และ Liverpool'],
+    correctIndex: 1,
+    explanation: 'Kanté คว้าแชมป์พรีเมียร์ลีกกับ Leicester City (2015/16) แล้วได้รับการโหวตและคว้าแชมป์ต่อทันทีกับ Chelsea (2016/17)'
+  },
+  {
+    id: 'tr_med_35',
+    difficulty: 'medium',
+    question: 'ใครคือผู้ยิงประตูชัยในนัดชิงชนะเลิศ ยูฟ่า แชมเปียนส์ลีก 2023 พา แมนเชสเตอร์ ซิตี้ เอาชนะ อินเตอร์ มิลาน 1-0?',
+    options: ['Erling Haaland', 'İlkay Gündoğan', 'Rodri', 'Bernardo Silva'],
+    correctIndex: 2,
+    explanation: 'Rodri วิ่งมายิงประตูชัยสุดคมในนาทีที่ 68 พาเรือใบสีฟ้าคว้าแชมป์ UCL สมัยแรกในประวัติศาสตร์'
+  },
+  {
+    id: 'tr_med_36',
+    difficulty: 'medium',
+    question: 'ใครคือผู้ยิงประตูชัยในนัดชิงชนะเลิศ ยูฟ่า แชมเปียนส์ลีก 2021 พา เชลซี เอาชนะ แมนเชสเตอร์ ซิตี้ 1-0 ที่เมืองปอร์โต้?',
+    options: ['Mason Mount', 'Kai Havertz', 'Timo Werner', 'Christian Pulisic'],
+    correctIndex: 1,
+    explanation: 'Kai Havertz แตะหลบ Ederson เข้าไปยิงประตูโทนพา Chelsea คว้าแชมป์ UCL สมัยที่ 2'
+  },
+  {
+    id: 'tr_med_37',
+    difficulty: 'medium',
+    question: 'การแข่งขันฟุตบอลชิงแชมป์สโมสรยุโรป "แดร์ คลาสสิเคอร์" (Der Klassiker) ในเยอรมนี คือการพบกันระหว่างสองทีมใด?',
+    options: ['Bayern Munich พบ Bayer Leverkusen', 'Bayern Munich พบ Borussia Dortmund', 'Borussia Dortmund พบ Schalke 04', 'Bayern Munich พบ RB Leipzig'],
+    correctIndex: 1,
+    explanation: 'Der Klassiker คือศึกบิ๊กแมตช์แห่งวงการลูกหนังเยอรมนีระหว่าง Bayern Munich และ Borussia Dortmund'
+  },
+  {
+    id: 'tr_med_38',
+    difficulty: 'medium',
+    question: 'นักเตะกองหลังคนสุดท้ายที่สามารถคว้ารางวัล บัลลงดอร์ (Ballon d\'Or) มาครองได้สำเร็จคือใคร (ในปี 2006)?',
+    options: ['Paolo Maldini', 'Roberto Carlos', 'Fabio Cannavaro', 'Alessandro Nesta'],
+    correctIndex: 2,
+    explanation: 'Fabio Cannavaro กัปตันทีมชาติอิตาลีชุดแชมป์ฟุตบอลโลก 2006 คว้ารางวัล Ballon d\'Or ไปครอง'
+  },
+  {
+    id: 'tr_med_39',
+    difficulty: 'medium',
+    question: 'แกเร็ธ เบล (Gareth Bale) เริ่มต้นอาชีพค้าแข้งกับสโมสรใด ก่อนจะย้ายไป ท็อตแน่ม ฮ็อตสเปอร์ และ เรอัล มาดริด?',
+    options: ['Cardiff City', 'Swansea City', 'Southampton', 'West Ham United'],
+    correctIndex: 2,
+    explanation: 'Gareth Bale เป็นผลผลิตจากอะคาเดมีของ Southampton ในตำแหน่งแบ็กซ้ายจอมปั่นฟรีคิก'
+  },
+  {
+    id: 'tr_med_40',
+    difficulty: 'medium',
+    question: 'ในเกมรอบรองชนะเลิศ UCL 2019 นัดสองที่แอนฟิลด์ (ลิเวอร์พูล คัมแบ็กชนะ บาร์เซโลน่า 4-0) ใครคือคนเตะมุมเร็วให้ ดิว็อก โอริกี้ ยิงประตูที่ 4?',
+    options: ['Andrew Robertson', 'James Milner', 'Trent Alexander-Arnold', 'Xherdan Shaqiri'],
+    correctIndex: 2,
+    explanation: 'Trent Alexander-Arnold แกล้งเดินหนีแล้วหันมาเปิดลูกเตะมุมเร็วระดับตำนาน ("Corner taken quickly... ORIGI!")'
+  },
+  {
+    id: 'tr_med_41',
+    difficulty: 'medium',
+    question: 'โรนัลดินโญ่ (Ronaldinho) ย้ายจากสโมสรใดในยุโรปมาร่วมทีม บาร์เซโลน่า ในปี 2003?',
+    options: ['AC Milan', 'Paris Saint-Germain', 'PSV Eindhoven', 'Porto'],
+    correctIndex: 1,
+    explanation: 'Ronaldinho ค้าแข้งกับ Paris Saint-Germain (2001-2003) ก่อนย้ายมาสร้างความมหัศจรรย์ที่ Barcelona'
+  },
+  {
+    id: 'tr_med_42',
+    difficulty: 'medium',
+    question: 'หลุยส์ ซัวเรซ (Luis Suárez) ค้าแข้งกับสโมสรใดในลีกเนเธอร์แลนด์ ก่อนที่ ลิเวอร์พูล จะคว้าตัวมาร่วมทีมในเดือนมกราคม 2011?',
+    options: ['PSV Eindhoven', 'Feyenoord', 'Ajax Amsterdam', 'AZ Alkmaar'],
+    correctIndex: 2,
+    explanation: 'Luis Suárez เป็นกัปตันและดาวซัลโวของ Ajax Amsterdam ก่อนย้ายมาสวมเสื้อเบอร์ 7 ที่ Liverpool'
+  },
+  {
+    id: 'tr_med_43',
+    difficulty: 'medium',
+    question: 'ใครคือผู้จัดการทีมที่พา เชลซี คว้าแชมป์พรีเมียร์ลีก อังกฤษ สมัยแรกในประวัติศาสตร์สโมสรเมื่อฤดูกาล 2004/05?',
+    options: ['Claudio Ranieri', 'Carlo Ancelotti', 'José Mourinho', 'Antonio Conte'],
+    correctIndex: 2,
+    explanation: 'José Mourinho ("The Special One") พาเชลซีคว้าแชมป์ลีกสูงสุดในรอบ 50 ปีเมื่อฤดูกาล 2004/05'
+  },
+  {
+    id: 'tr_med_44',
+    difficulty: 'medium',
+    question: 'คาริม เบนเซม่า (Karim Benzema) เติบโตและคว้าแชมป์ลีกเอิง 4 สมัยกับสโมสรใด ก่อนย้ายมา เรอัล มาดริด ในปี 2009?',
+    options: ['Olympique Marseille', 'Olympique Lyonnais (Lyon)', 'AS Monaco', 'Lille OSC'],
+    correctIndex: 1,
+    explanation: 'Karim Benzema เป็นผลผลิตจากอะคาเดมีและดาวยิงตัวเก่งของ Olympique Lyonnais (ลียง)'
+  },
+  {
+    id: 'tr_med_45',
+    difficulty: 'medium',
+    question: 'สโมสรใดคว้าแชมป์ ยูฟ่า ยูโรปาลีก (รวมยูฟ่าคัพ) มากที่สุดในประวัติศาสตร์ถึง 7 สมัย จนได้รับฉายา "ราชันแห่งยูโรปาลีก"?',
+    options: ['Atlético Madrid', 'Liverpool', 'Sevilla', 'Inter Milan'],
+    correctIndex: 2,
+    explanation: 'Sevilla ครองสถิติคว้าแชมป์ยูโรปาลีกสูงสุดตลอดกาลถึง 7 สมัย (และไม่เคยแพ้ในนัดชิงเลย)'
+  },
+  {
+    id: 'tr_med_46',
+    difficulty: 'medium',
+    question: 'อ็องตวน กรีซมันน์ (Antoine Griezmann) สร้างชื่อในลาลีกา สเปน กับสโมสรใดก่อนย้ายมาร่วมทีม แอตเลติโก มาดริด ในปี 2014?',
+    options: ['Valencia', 'Real Sociedad', 'Athletic Bilbao', 'Villarreal'],
+    correctIndex: 1,
+    explanation: 'Antoine Griezmann เติบโตและแจ้งเกิดกับสโมสร Real Sociedad ในแคว้นบาสก์'
+  },
+  {
+    id: 'tr_med_47',
+    difficulty: 'medium',
+    question: 'ในฟุตบอลโลก 2014 รอบรองชนะเลิศ เยอรมนี สร้างผลการแข่งขันสุดช็อกโลกด้วยการถล่มเจ้าภาพ บราซิล ไปด้วยสกอร์เท่าไหร่?',
+    options: ['5-0', '6-1', '7-1', '8-2'],
+    correctIndex: 2,
+    explanation: 'เยอรมนี ถล่ม บราซิล คาบ้าน 7-1 ที่สนามมิไนเรา ในแมตช์ที่ถูกขนานนามว่า Mineirazo'
+  },
+  {
+    id: 'tr_med_48',
+    difficulty: 'medium',
+    question: 'ซน ฮึง-มิน (Son Heung-min) ย้ายจากสโมสรใดในศึกบุนเดสลีกา เยอรมนี มาร่วมทัพ ท็อตแน่ม ฮ็อตสเปอร์ ในปี 2015?',
+    options: ['Borussia Dortmund', 'Schalke 04', 'Bayer Leverkusen', 'VfB Stuttgart'],
+    correctIndex: 2,
+    explanation: 'Son Heung-min ค้าแข้งกับ Hamburger SV และ Bayer Leverkusen ก่อนย้ายมาอยู่กับ Spurs ในปี 2015'
+  },
+  {
+    id: 'tr_med_49',
+    difficulty: 'medium',
+    question: 'บรูโน่ แฟร์นันด์ส (Bruno Fernandes) กัปตันทีมแมนเชสเตอร์ ยูไนเต็ด ย้ายมาจากสโมสรใดในโปรตุเกสเมื่อเดือนมกราคม 2020?',
+    options: ['FC Porto', 'SL Benfica', 'Sporting CP', 'Boavista'],
+    correctIndex: 2,
+    explanation: 'Bruno Fernandes ย้ายจาก Sporting CP (สปอร์ติ้ง ลิสบอน) มาร่วมทีมปีศาจแดง'
+  },
+  {
+    id: 'tr_med_50',
+    difficulty: 'medium',
+    question: 'ศึก "นอร์ท ลอนดอน ดาร์บี้" (North London Derby) คือการปะทะกันระหว่างสองสโมสรคู่ปรับร่วมเมืองคู่ใด?',
+    options: ['Chelsea พบ Arsenal', 'Arsenal พบ Tottenham Hotspur', 'Chelsea พบ Fulham', 'Tottenham Hotspur พบ West Ham'],
+    correctIndex: 1,
+    explanation: 'North London Derby คือศึกแห่งศักดิ์ศรีทางตอนเหนือของกรุงลอนดอนระหว่าง Arsenal และ Tottenham Hotspur'
+  },
+  {
+    id: 'tr_med_51',
+    difficulty: 'medium',
+    question: 'กาก้า (Kaká) ตำนานเพลย์เมกเกอร์ทีมชาติบราซิล คว้ารางวัล บัลลงดอร์ ปี 2007 ขณะค้าแข้งอยู่กับสโมสรใด?',
+    options: ['Real Madrid', 'AC Milan', 'São Paulo', 'Inter Milan'],
+    correctIndex: 1,
+    explanation: 'Kaká พา AC Milan คว้าแชมป์ UCL ปี 2007 พร้อมตำแหน่งดาวซัลโว จนคว้ารางวัล Ballon d\'Or ไปครอง'
+  },
+  {
+    id: 'tr_med_52',
+    difficulty: 'medium',
+    question: 'เอแด็น อาซาร์ (Eden Hazard) คว้าแชมป์ลีกเอิง ฝรั่งเศส ร่วมกับสโมสรใดในฤดูกาล 2010/11 ก่อนย้ายมา เชลซี?',
+    options: ['AS Monaco', 'Olympique Lyonnais', 'Lille OSC', 'Paris Saint-Germain'],
+    correctIndex: 2,
+    explanation: 'Eden Hazard แจ้งเกิดและพา Lille OSC คว้าดับเบิลแชมป์ฝรั่งเศสก่อนย้ายมาร่วมทีม Chelsea ในปี 2012'
+  },
+  {
+    id: 'tr_med_53',
+    difficulty: 'medium',
+    question: 'ทีมชาติใดเป็นแชมป์ฟุตบอลชิงแชมป์แห่งชาติอเมริกาใต้ (Copa América) 2 สมัยล่าสุดติดต่อกัน (2021 และ 2024)?',
+    options: ['บราซิล', 'อุรุกวัย', 'อาร์เจนตินา', 'โคลอมเบีย'],
+    correctIndex: 2,
+    explanation: 'ทีมชาติอาร์เจนตินา ของ Lionel Scaloni คว้าแชมป์ Copa América 2021, World Cup 2022 และ Copa América 2024'
+  },
+  {
+    id: 'tr_med_54',
+    difficulty: 'medium',
+    question: 'สโมสรใดคว้าแชมป์ พรีเมียร์ลีก อังกฤษ ในฤดูกาลแรกสุดที่ก่อตั้งลีกเมื่อฤดูกาล 1992/93?',
+    options: ['Arsenal', 'Blackburn Rovers', 'Manchester United', 'Liverpool'],
+    correctIndex: 2,
+    explanation: 'Manchester United ของ Sir Alex Ferguson คว้าแชมป์พรีเมียร์ลีกฤดูกาลแรก (1992/93) ได้สำเร็จ'
+  },
+  {
+    id: 'tr_med_55',
+    difficulty: 'medium',
+    question: 'ในนัดชิงชนะเลิศ ยูโร 2024 ที่เบอร์ลิน (สเปน ชนะ อังกฤษ 2-1) ใครคือผู้ยิงประตูชัยให้ทีมชาติสเปนในนาทีที่ 86?',
+    options: ['Nico Williams', 'Dani Olmo', 'Mikel Oyarzabal', 'Fabián Ruiz'],
+    correctIndex: 2,
+    explanation: 'Mikel Oyarzabal ชาร์จลูกเปิดของ Marc Cucurella ในนาทีที่ 86 พาสเปนคว้าแชมป์ยูโร 2024'
+  },
+
+  // ================= MEGA EXPANSION: HARD (tr_hard_17 - tr_hard_56) =================
+  {
+    id: 'tr_hard_17',
+    difficulty: 'hard',
+    question: 'นักเตะคนเดียวในประวัติศาสตร์ที่ยิงแฮตทริกในนัดชิงชนะเลิศฟุตบอลโลก ปี 1966 พาทีมชาติอังกฤษคว้าแชมป์โลกคือใคร?',
+    options: ['Bobby Charlton', 'Geoff Hurst', 'Jimmy Greaves', 'Gary Lineker'],
+    correctIndex: 1,
+    explanation: 'Sir Geoff Hurst ยิงแฮตทริกพาอังกฤษชนะเยอรมนีตะวันตก 4-2 ในนัดชิงฟุตบอลโลก 1966 (ก่อนที่ Mbappé จะเป็นคนที่ 2 ในปี 2022)'
+  },
+  {
+    id: 'tr_hard_18',
+    difficulty: 'hard',
+    question: 'ใครคือเจ้าของสถิติยิงประตูในศึกฟุตบอลโลก รอบสุดท้าย "ครั้งเดียว" ได้มากที่สุดตลอดกาลถึง 13 ประตู (ในฟุตบอลโลก 1958)?',
+    options: ['Pelé', 'Gerd Müller', 'Just Fontaine', 'Eusébio'],
+    correctIndex: 2,
+    explanation: 'Just Fontaine ดาวยิงทีมชาติฝรั่งเศส ยิงไปถึง 13 ประตูจาก 6 นัดในฟุตบอลโลก 1958 ซึ่งเป็นสถิติที่ยังไม่มีใครทำลายได้'
+  },
+  {
+    id: 'tr_hard_19',
+    difficulty: 'hard',
+    question: 'กุนซือระดับตำนานคนใดพา น็อตติ้งแฮม ฟอเรสต์ เลื่อนชั้นขึ้นมาคว้าแชมป์ลีกสูงสุด และคว้าแชมป์ ยูโรเปียนคัพ (UCL) 2 สมัยซ้อนในปี 1979 และ 1980?',
+    options: ['Bob Paisley', 'Brian Clough', 'Bill Shankly', 'Alex Ferguson'],
+    correctIndex: 1,
+    explanation: 'Brian Clough สร้างปาฏิหาริย์พา Nottingham Forest คว้าแชมป์ยูโรเปียนคัพ 2 สมัยติดต่อกัน (1979, 1980)'
+  },
+  {
+    id: 'tr_hard_20',
+    difficulty: 'hard',
+    question: 'ทีมชาติเดนมาร์ก สร้างเทพนิยายคว้าแชมป์ ยูโร 1992 ทั้งที่ไม่ได้ผ่านรอบคัดเลือก แต่ถูกเรียกตัวมาแทนชาติใดที่ถูกแบนจากภาวะสงคราม?',
+    options: ['สหภาพโซเวียต', 'ยูโกสลาเวีย', 'เชโกสโลวาเกีย', 'เยอรมนีตะวันออก'],
+    correctIndex: 1,
+    explanation: 'เดนมาร์ก ถูกเรียกตัวมาแทน ยูโกสลาเวีย เพียงไม่กี่วันก่อนทัวร์นาเมนต์เริ่ม และหักปากกาเซียนคว้าแชมป์ Euro 1992'
+  },
+  {
+    id: 'tr_hard_21',
+    difficulty: 'hard',
+    question: 'ในนัดชิงชนะเลิศ ยูโร 2016 (โปรตุเกส ชนะ ฝรั่งเศส 1-0 ช่วงต่อเวลาพิเศษ) ใครคือตัวสำรองฮีโร่ที่ยิงไกลเป็นประตูชัยให้โปรตุเกส?',
+    options: ['Ricardo Quaresma', 'Renato Sanches', 'Éder', 'Nani'],
+    correctIndex: 2,
+    explanation: 'Éder กองหน้าตัวสำรองซัดไกลนอกกรอบเขตโทษในนาทีที่ 109 พาโปรตุเกสคว้าแชมป์ยูโรสมัยแรก'
+  },
+  {
+    id: 'tr_hard_22',
+    difficulty: 'hard',
+    question: 'ก่อนยุคของ แมนเชสเตอร์ ซิตี้ (100 คะแนน) สโมสรแบล็คเบิร์น โรเวอร์ส เคยคว้าแชมป์พรีเมียร์ลีก 1994/95 โดยมีคู่กองหน้าเจ้าของฉายา "SAS" คือ Alan Shearer กับใคร?',
+    options: ['Teddy Sheringham', 'Chris Sutton', 'Les Ferdinand', 'Robbie Fowler'],
+    correctIndex: 1,
+    explanation: 'คู่กองหน้า SAS ของ Blackburn Rovers ชุดแชมป์พรีเมียร์ลีก 1994/95 คือ Alan Shearer และ Chris Sutton'
+  },
+  {
+    id: 'tr_hard_23',
+    difficulty: 'hard',
+    question: 'เปาโล มัลดินี่ (Paolo Maldini) ตำนานกัปตันทีม เอซี มิลาน สวมเสื้อหมายเลขใดจนสโมสรประกาศรีไทร์เบอร์เสื้อเพื่อเป็นเกียรติแก่เขา?',
+    options: ['เบอร์ 2', 'เบอร์ 3', 'เบอร์ 4', 'เบอร์ 6'],
+    correctIndex: 1,
+    explanation: 'AC Milan รีไทร์เสื้อหมายเลข 3 ของ Paolo Maldini (และหมายเลข 6 ของ Franco Baresi)'
+  },
+  {
+    id: 'tr_hard_24',
+    difficulty: 'hard',
+    question: 'นักเตะคนใดเป็นเจ้าของสถิติได้รับ "ใบแดง" มากที่สุดในประวัติศาสตร์ของสโมสร เรอัล มาดริด และศึก ลาลีกา สเปน?',
+    options: ['Pepe', 'Casemiro', 'Sergio Ramos', 'Fernando Hierro'],
+    correctIndex: 2,
+    explanation: 'Sergio Ramos ได้รับใบแดงตลอดอาชีพกับเรอัล มาดริด ถึง 26 ใบ สูงสุดในประวัติศาสตร์สโมสรและลาลีกา'
+  },
+  {
+    id: 'tr_hard_25',
+    difficulty: 'hard',
+    question: 'ผู้รักษาประตูชาวบราซิลคนใดที่ทำสถิติยิงประตูจากลูกฟรีคิกและจุดโทษตลอดอาชีพค้าแข้งมากกว่า 130 ประตู สูงที่สุดในโลกสำหรับผู้รักษาประตู?',
+    options: ['José Luis Chilavert', 'Rogério Ceni', 'René Higuita', 'Jorge Campos'],
+    correctIndex: 1,
+    explanation: 'Rogério Ceni ตำนานนายทวารของ São Paulo ยิงประตูตลอดอาชีพไปถึง 131 ประตู สูงที่สุดในประวัติศาสตร์โลกฟุตบอล'
+  },
+  {
+    id: 'tr_hard_26',
+    difficulty: 'hard',
+    question: 'ใครคือนักเตะทวีปแอฟริกาคนเดียวในประวัติศาสตร์ที่เคยคว้ารางวัล บัลลงดอร์ (Ballon d\'Or) มาครองได้สำเร็จ (ในปี 1995)?',
+    options: ['Didier Drogba', 'Samuel Eto\'o', 'George Weah', 'Mohamed Salah'],
+    correctIndex: 2,
+    explanation: 'George Weah ตำนานกองหน้าชาวไลบีเรียของ AC Milan คว้ารางวัล Ballon d\'Or ปี 1995 (และต่อมาได้เป็นประธานาธิบดีไลบีเรีย)'
+  },
+  {
+    id: 'tr_hard_27',
+    difficulty: 'hard',
+    question: 'ในนัดชิงชนะเลิศ ยูฟ่า แชมเปียนส์ลีก ปี 2004 โชเซ่ มูรินโญ่ แจ้งเกิดด้วยการพา เอฟซี ปอร์โต้ เอาชนะสโมสรใด 3-0?',
+    options: ['Deportivo La Coruña', 'Olympique Lyonnais', 'AS Monaco', 'Valencia'],
+    correctIndex: 2,
+    explanation: 'FC Porto ของ José Mourinho เอาชนะ AS Monaco ของ Didier Deschamps 3-0 ในนัดชิง UCL ปี 2004'
+  },
+  {
+    id: 'tr_hard_28',
+    difficulty: 'hard',
+    question: 'นักเตะคนใดเป็นเจ้าของสถิติคว้าแชมป์ ยูฟ่า แชมเปียนส์ลีก (รวมยูโรเปียนคัพ) มากที่สุดในประวัติศาสตร์ถึง 6 สมัย (ร่วมกับ Paco Gento, Kroos, Nacho, Carvajal)?',
+    options: ['Cristiano Ronaldo', 'Paolo Maldini', 'Luka Modrić', 'Andrés Iniesta'],
+    correctIndex: 2,
+    explanation: 'Luka Modrić (พร้อมด้วย Carvajal, Kroos, Nacho) คว้าแชมป์ UCL สมัยที่ 6 ในปี 2024 เทียบเท่าสถิติสูงสุดตลอดกาลของ Paco Gento'
+  },
+  {
+    id: 'tr_hard_29',
+    difficulty: 'hard',
+    question: 'ใครคือนักเตะที่ยิงประตูเร็วที่สุดในประวัติศาสตร์ศึก ยูฟ่า แชมเปียนส์ลีก ด้วยเวลาเพียง 10.12 วินาที (ในเกม บาเยิร์น มิวนิค พบ เรอัล มาดริด ปี 2007)?',
+    options: ['Giovane Élber', 'Roy Makaay', 'Claudio Pizarro', 'Bastian Schweinsteiger'],
+    correctIndex: 1,
+    explanation: 'Roy Makaay กองหน้าชาวดัตช์ของบาเยิร์น ฉกบอลจาก Roberto Carlos ยิงเข้าประตูตั้งแต่วินาทีที่ 10.12'
+  },
+  {
+    id: 'tr_hard_30',
+    difficulty: 'hard',
+    question: '誰คือนักเตะที่ยิงประตูเร็วที่สุดในประวัติศาสตร์ ฟุตบอลโลก รอบสุดท้าย ด้วยเวลาเพียง 10.8 วินาที (ในฟุตบอลโลก 2002)?',
+    options: ['Clint Dempsey', 'Hakan Şükür', 'Ronaldo Nazário', 'Tim Cahill'],
+    correctIndex: 1,
+    explanation: 'Hakan Şükür กองหน้าทีมชาติตุรกี ยิงใส่เกาหลีใต้ตั้งแต่วินาทีที่ 10.8 ในนัดชิงอันดับ 3 ฟุตบอลโลก 2002'
+  },
+  {
+    id: 'tr_hard_31',
+    difficulty: 'hard',
+    question: 'ในนัดชิงชนะเลิศ UCL ปี 1997 (ดอร์ทมุนด์ ชนะ ยูเวนตุส 3-1) ตัวสำรองดาวรุ่งคนใดลงสนามมาแล้วชิพบอลข้ามหัว Peruzzi เข้าประตูด้วยสัมผัสบอลแรกหลังลงสนามเพียง 16 วินาที?',
+    options: ['Andreas Möller', 'Karl-Heinz Riedle', 'Lars Ricken', 'Matthias Sammer'],
+    correctIndex: 2,
+    explanation: 'Lars Ricken ดาวรุ่งวัย 20 ปีของดอร์ทมุนด์ ยิงไกลปิดกล่อง 3-1 หลังจากเพิ่งถูกเปลี่ยนตัวลงมาเพียง 16 วินาที'
+  },
+  {
+    id: 'tr_hard_32',
+    difficulty: 'hard',
+    question: 'ใครคือผู้เล่นอายุมากที่สุดในประวัติศาสตร์ที่ลงสนามในศึก ฟุตบอลโลก รอบสุดท้าย ด้วยวัย 45 ปี 161 วัน (ในฟุตบอลโลก 2018)?',
+    options: ['Roger Milla', 'Dino Zoff', 'Essam El-Hadary', 'Faryd Mondragón'],
+    correctIndex: 2,
+    explanation: 'Essam El-Hadary ผู้รักษาประตูกัปตันทีมชาติอียิปต์ ลงเฝ้าเสาในฟุตบอลโลก 2018 ด้วยวัย 45 ปี 161 วัน (แถมเซฟจุดโทษได้ด้วย)'
+  },
+  {
+    id: 'tr_hard_33',
+    difficulty: 'hard',
+    question: 'ใครคือผู้เล่นอายุมากที่สุดที่ยิงประตูได้ในศึก ฟุตบอลโลก รอบสุดท้าย ด้วยวัย 42 ปี 39 วัน (ในฟุตบอลโลก 1994)?',
+    options: ['Cristiano Ronaldo', 'Roger Milla', 'Pepe', 'Miroslav Klose'],
+    correctIndex: 1,
+    explanation: 'Roger Milla ตำนานกองหน้าทีมชาติแคเมอรูน ยิงประตูใส่รัสเซียในฟุตบอลโลก 1994 ด้วยวัย 42 ปี 39 วัน'
+  },
+  {
+    id: 'tr_hard_34',
+    difficulty: 'hard',
+    question: 'สโมสรเดียวจากประเทศฝรั่งเศสที่เคยคว้าแชมป์ ยูฟ่า แชมเปียนส์ลีก มาครองได้สำเร็จ (ในปี 1993) คือสโมสรใด?',
+    options: ['Paris Saint-Germain', 'AS Monaco', 'Olympique Marseille', 'Olympique Lyonnais'],
+    correctIndex: 2,
+    explanation: 'Olympique Marseille เอาชนะ AC Milan 1-0 จากลูกโหม่งของ Basile Boli คว้าแชมป์ UCL สมัยแรกในปี 1993'
+  },
+  {
+    id: 'tr_hard_35',
+    difficulty: 'hard',
+    question: 'ใครคือผู้ทำประตูชัยให้ อาแจ็กซ์ อัมสเตอร์ดัม เอาชนะ เอซี มิลาน 1-0 ในนัดชิงชนะเลิศ UCL ปี 1995 ด้วยวัยเพียง 18 ปี?',
+    options: ['Dennis Bergkamp', 'Clarence Seedorf', 'Patrick Kluivert', 'Edgar Davids'],
+    correctIndex: 2,
+    explanation: 'Patrick Kluivert ในวัย 18 ปี 327 วัน จิ้มหัวเกือกเป็นประตูชัยนาที 85 เป็นนักเตะอายุน้อยที่สุดที่ยิงในนัดชิง UCL'
+  },
+  {
+    id: 'tr_hard_36',
+    difficulty: 'hard',
+    question: 'ในการย้ายทีมสุดอื้อฉาวปี 2000 นักเตะคนใดย้ายข้ามฟากโดยตรงจาก บาร์เซโลน่า ไปร่วมทัพคู่อริตลอดกาลอย่าง เรอัล มาดริด ด้วยค่าตัวสถิติโลก?',
+    options: ['Ronaldo Nazário', 'Michael Laudrup', 'Luís Figo', 'Samuel Eto\'o'],
+    correctIndex: 2,
+    explanation: 'Luís Figo ย้ายจาก Barcelona ไป Real Madrid ในยุคเริ่มต้น Galácticos ของ Florentino Pérez จนเกิดเหตุการณ์ปาหัวหมูที่คัมป์นู'
+  },
+  {
+    id: 'tr_hard_37',
+    difficulty: 'hard',
+    question: 'ใครคือผู้เล่นที่คว้าแชมป์ พรีเมียร์ลีก อังกฤษ ฤดูกาล 2015/16 ร่วมกับ เลสเตอร์ ซิตี้ และคว้ารางวัลนักเตะยอดเยี่ยมแห่งปีของ PFA ในฤดูกาลนั้น?',
+    options: ['Jamie Vardy', 'N\'Golo Kanté', 'Riyad Mahrez', 'Kasper Schmeichel'],
+    correctIndex: 2,
+    explanation: 'Riyad Mahrez คว้ารางวัล PFA Players\' Player of the Year 2015/16 (ส่วน Jamie Vardy ได้รางวัล FWA Footballer of the Year)'
+  },
+  {
+    id: 'tr_hard_38',
+    difficulty: 'hard',
+    question: 'ในนัดชิงชนะเลิศ ยูโร 1988 (เนเธอร์แลนด์ ชนะ สหภาพโซเวียต 2-0) ตำนานคนใดยิงลูกวอลเลย์มุมแคบสุดมหัศจรรย์ที่เป็นหนึ่งในประตูที่สวยที่สุดตลอดกาล?',
+    options: ['Ruud Gullit', 'Marco van Basten', 'Frank Rijkaard', 'Ronald Koeman'],
+    correctIndex: 1,
+    explanation: 'Marco van Basten วอลเลย์จังหวะเดียวจากมุมแคบข้ามหัว Rinat Dasayev พาอัศวินสีส้มคว้าแชมป์ยูโร 1988'
+  },
+  {
+    id: 'tr_hard_39',
+    difficulty: 'hard',
+    question: 'สามทหารเสือดัตช์แห่งสโมสร เอซี มิลาน ยุคปลายทศวรรษ 1980s - ต้น 1990s ประกอบด้วย Marco van Basten, Ruud Gullit และใคร?',
+    options: ['Ronald Koeman', 'Dennis Bergkamp', 'Frank Rijkaard', 'Edwin van der Sar'],
+    correctIndex: 2,
+    explanation: 'สามทหารเสือดัตช์ของ AC Milan คือ Van Basten, Gullit และ Frank Rijkaard (ส่วน Ronald Koeman อยู่กับ Barcelona)'
+  },
+  {
+    id: 'tr_hard_40',
+    difficulty: 'hard',
+    question: 'สโมสรใดครองสถิติเก็บคะแนนต่อ 1 ฤดูกาลสูงสุดในประวัติศาสตร์ กัลโช่ เซเรียอา อิตาลี ด้วยผลงานถึง 102 คะแนน (ฤดูกาล 2013/14)?',
+    options: ['Inter Milan', 'AC Milan', 'Juventus', 'Napoli'],
+    correctIndex: 2,
+    explanation: 'Juventus ยุคของกุนซือ Antonio Conte ทำสถิติชนะ 33 นัด เก็บได้ถึง 102 คะแนนในฤดูกาล 2013/14'
+  },
+  {
+    id: 'tr_hard_41',
+    difficulty: 'hard',
+    question: 'ใครคือนักเตะที่ครองสถิติยิงประตูสูงสุดต่อ 1 ฤดูกาลในศึก กัลโช่ เซเรียอา อิตาลี ที่จำนวน 36 ประตู (ทำสถิติร่วมกัน 2 คน)?',
+    options: ['Cristiano Ronaldo และ Zlatan Ibrahimović', 'Gonzalo Higuaín และ Ciro Immobile', 'Luca Toni และ Mauro Icardi', 'Victor Osimhen และ Lautaro Martínez'],
+    correctIndex: 1,
+    explanation: 'Gonzalo Higuaín (Napoli 2015/16) และ Ciro Immobile (Lazio 2019/20) ครองสถิติยิงสูงสุดต่อฤดูกาลในเซเรียอาที่ 36 ประตู'
+  },
+  {
+    id: 'tr_hard_42',
+    difficulty: 'hard',
+    question: 'ในประวัติศาสตร์ฟุตบอลโลก มีเพียง 3 คนเท่านั้นที่สามารถคว้าแชมป์ฟุตบอลโลกได้ทั้งในฐานะ "นักเตะ" และ "ผู้จัดการทีม" ได้แก่ Mário Zagallo, Franz Beckenbauer และใคร?',
+    options: ['Zinedine Zidane', 'Didier Deschamps', 'Carlo Ancelotti', 'Pep Guardiola'],
+    correctIndex: 1,
+    explanation: 'Didier Deschamps คว้าแชมป์โลกในฐานะกัปตันทีมชาติฝรั่งเศสปี 1998 และในฐานะกุนซือปี 2018'
+  },
+  {
+    id: 'tr_hard_43',
+    difficulty: 'hard',
+    question: 'ผู้รักษาประตูทีมชาติอาร์เจนตินาในศึกฟุตบอลโลก 1990 ที่ได้รับฉายาว่า "เจ้าพ่อเซฟจุดโทษ" พาทีมทะลุเข้าชิงชนะเลิศคือใคร?',
+    options: ['Nery Pumpido', 'Sergio Goycochea', 'Roberto Abbondanzieri', 'Carlos Roa'],
+    correctIndex: 1,
+    explanation: 'Sergio Goycochea ลงมาเป็นมือหนึ่งแทน Pumpido ที่บาดเจ็บ และเซฟจุดโทษพาอาร์เจนตินาชนะทั้งยูโกสลาเวียและอิตาลี'
+  },
+  {
+    id: 'tr_hard_44',
+    difficulty: 'hard',
+    question: 'ในนัดชิงชนะเลิศ UCL ปี 2018 (เรอัล มาดริด ชนะ ลิเวอร์พูล 3-1) ใครคือคนตีลังกาจักรยานอากาศยิงประตูสุดสวยหลังจากลงมาเป็นตัวสำรองได้เพียง 3 นาที?',
+    options: ['Cristiano Ronaldo', 'Karim Benzema', 'Gareth Bale', 'Marco Asensio'],
+    correctIndex: 2,
+    explanation: 'Gareth Bale ลงมาเป็นสำรองแล้วตีลังกาจักรยานอากาศยิงสุดสวย ก่อนยิงไกลอีกประตูพาเรอัล มาดริดชนะ 3-1 ที่เคียฟ'
+  },
+  {
+    id: 'tr_hard_45',
+    difficulty: 'hard',
+    question: 'สโมสรใดเป็นทีมเดียวจากสกอตแลนด์ที่เคยคว้าแชมป์ ยูโรเปียนคัพ (UCL) มาครองได้สำเร็จในปี 1967 ด้วยชุดนักเตะท้องถิ่นทั้งหมด (The Lisbon Lions)?',
+    options: ['Rangers', 'Celtic', 'Aberdeen', 'Dundee United'],
+    correctIndex: 1,
+    explanation: 'Celtic ของกุนซือ Jock Stein เอาชนะ Inter Milan 2-1 ที่ลิสบอนในปี 1967 โดยนักเตะทุกคนเกิดในรัศมี 30 ไมล์รอบเมืองกลาสโกว์'
+  },
+  {
+    id: 'tr_hard_46',
+    difficulty: 'hard',
+    question: 'ใครคือผู้เล่นที่ทำแฮตทริกได้ในนัดชิงชนะเลิศ ยูฟ่า ยูโรปาลีก 2024 พาทีม อตาลันต้า หยุดสถิติไร้พ่าย 51 นัดของ ไบเออร์ เลเวอร์คูเซ่น (ชนะ 3-0)?',
+    options: ['Gianluca Scamacca', 'Charles De Ketelaere', 'Ademola Lookman', 'Teun Koopmeiners'],
+    correctIndex: 2,
+    explanation: 'Ademola Lookman ระเบิดฟอร์มยิงแฮตทริกคนเดียว 3 ประตู พา Atalanta คว้าแชมป์ยุโรปสมัยแรกในประวัติศาสตร์สโมสร'
+  },
+  {
+    id: 'tr_hard_47',
+    difficulty: 'hard',
+    question: 'เจมี่ คาร์ราเกอร์ (Jamie Carragher) ตำนานกองหลังลิเวอร์พูล สมัยเป็นเด็กเคยเป็นแฟนบอลตัวยงของสโมสรคู่ปรับทีมใด?',
+    options: ['Manchester United', 'Everton', 'Chelsea', 'Leeds United'],
+    correctIndex: 1,
+    explanation: 'Jamie Carragher (รวมถึง Robbie Fowler และ Ian Rush) เคยเป็นแฟนบอล Everton ในวัยเด็กก่อนก้าวขึ้นเป็นตำนานของ Liverpool'
+  },
+  {
+    id: 'tr_hard_48',
+    difficulty: 'hard',
+    question: 'ในพรีเมียร์ลีก ฤดูกาล 2003/04 ยุคไร้พ่ายของ อาร์เซนอล นักเตะคนใดเป็นคนยิงจุดโทษชนคานในนาทีสุดท้ายที่ โอลด์ แทรฟฟอร์ด จนทำให้อาร์เซนอลรอดพ้นความพ่ายแพ้ (เสมอ 0-0)?',
+    options: ['Cristiano Ronaldo', 'Ryan Giggs', 'Ruud van Nistelrooy', 'Paul Scholes'],
+    correctIndex: 2,
+    explanation: 'Ruud van Nistelrooy ยิงจุดโทษชนคานในนาทีสุดท้ายของเกม "Battle of Old Trafford" ทำให้อาร์เซนอลรักษาสถิติไร้พ่ายไว้ได้สำเร็จ'
+  },
+  {
+    id: 'tr_hard_49',
+    difficulty: 'hard',
+    question: 'ท่าดีใจ "Scorpion Kick" (พุ่งใช้ส้นเท้าดีดบอลสกัดบนเส้นประตู) อันโด่งดังในเกมอุ่นเครื่องกับทีมชาติอังกฤษที่เวมบลีย์ปี 1995 เป็นผลงานของผู้รักษาประตูคนใด?',
+    options: ['Jorge Campos', 'José Luis Chilavert', 'René Higuita', 'Óscar Córdoba'],
+    correctIndex: 2,
+    explanation: 'René Higuita ผู้รักษาประตูจอมลีลาทีมชาติโคลอมเบีย โชว์ท่า Scorpion Kick สกัดลูกยิงของ Jamie Redknapp'
+  },
+  {
+    id: 'tr_hard_50',
+    difficulty: 'hard',
+    question: 'ใครคือผู้เล่นที่ครองสถิติยิงประตูสูงสุดตลอดกาลในศึก เอล กลาซิโก้ (El Clásico) ระหว่าง บาร์เซโลน่า และ เรอัล มาดริด ด้วยผลงาน 26 ประตู?',
+    options: ['Cristiano Ronaldo', 'Alfredo Di Stéfano', 'Lionel Messi', 'Karim Benzema'],
+    correctIndex: 2,
+    explanation: 'Lionel Messi ยิงในศึก El Clásico รวม 26 ประตู สูงที่สุดในประวัติศาสตร์ (รองลงมาคือ Cristiano Ronaldo และ Di Stéfano ที่ 18 ประตู)'
+  },
+  {
+    id: 'tr_hard_51',
+    difficulty: 'hard',
+    question: 'นักเตะคนใดเป็นเจ้าของสถิติยิงประตูติดต่อกันในศึก ลาลีกา สเปน ยาวนานที่สุดในโลกถึง 21 นัดติดต่อกัน (ฤดูกาล 2012/13)?',
+    options: ['Cristiano Ronaldo', 'Lionel Messi', 'Luis Suárez', 'Ronaldo Nazário'],
+    correctIndex: 1,
+    explanation: 'Lionel Messi ยิงประตูครบทุกทีมในลีก 21 นัดติดต่อกัน รวม 33 ประตูในฤดูกาล 2012/13'
+  },
+  {
+    id: 'tr_hard_52',
+    difficulty: 'hard',
+    question: 'ในศึกพรีเมียร์ลีก อังกฤษ มีเพียง 3 สโมสรที่เคยแพ้ด้วยสกอร์ขาดลอยที่สุด 0-9 ได้แก่ อิปสวิช ทาวน์, เซาแธมป์ตัน (2 ครั้ง) และสโมสรใดในปี 2022?',
+    options: ['Norwich City', 'AFC Bournemouth', 'Watford', 'Sheffield United'],
+    correctIndex: 1,
+    explanation: 'AFC Bournemouth แพ้ให้กับ Liverpool 0-9 ที่แอนฟิลด์ เมื่อเดือนสิงหาคม 2022 เทียบเท่าสถิติชนะขาดลอยที่สุดในพรีเมียร์ลีก'
+  },
+  {
+    id: 'tr_hard_53',
+    difficulty: 'hard',
+    question: 'ใครคือนักเตะที่ครองสถิติยิงประตูจากลูกฟรีคิกโดยตรงมากที่สุดในประวัติศาสตร์ พรีเมียร์ลีก อังกฤษ (18 ประตู)?',
+    options: ['Cristiano Ronaldo', 'Thierry Henry', 'David Beckham', 'James Ward-Prowse'],
+    correctIndex: 2,
+    explanation: 'David Beckham ยิงฟรีคิกในพรีเมียร์ลีกไปถึง 18 ประตู (ตามมาติดๆ ด้วย James Ward-Prowse ที่ 17 ประตู)'
+  },
+  {
+    id: 'tr_hard_54',
+    difficulty: 'hard',
+    question: 'ใครคือผู้จัดการทีมคนเดียวที่เคยพาทีมคว้าแชมป์ลีกสูงสุดได้ครบทั้ง 5 ลีกใหญ่ยุโรป (อังกฤษ, สเปน, อิตาลี, เยอรมนี, ฝรั่งเศส)?',
+    options: ['José Mourinho', 'Pep Guardiola', 'Carlo Ancelotti', 'Jürgen Klopp'],
+    correctIndex: 2,
+    explanation: 'Carlo Ancelotti คว้าแชมป์ลีกครบทั้ง 5 ลีกใหญ่ยุโรป ได้แก่ AC Milan, Chelsea, PSG, Bayern Munich และ Real Madrid'
+  },
+  {
+    id: 'tr_hard_55',
+    difficulty: 'hard',
+    question: 'ในฟุตบอลโลก 1998 รอบ 8 ทีมสุดท้าย (เนเธอร์แลนด์ ชนะ อาร์เจนตินา 2-1) ใครคือผู้ดูดบอลลงจากลูกวางยาว 60 หลาของ Frank de Boer แล้วดีดไซด์ก้อยเข้าประตูชัยในนาทีที่ 90?',
+    options: ['Patrick Kluivert', 'Marc Overmars', 'Dennis Bergkamp', 'Clarence Seedorf'],
+    correctIndex: 2,
+    explanation: 'Dennis Bergkamp โชว์เฟิร์สต์ทัชระดับจักรวาล แตะหลบ Roberto Ayala แล้วดีดไซด์ก้อยเสียบสามเหลี่ยมพาเนเธอร์แลนด์เข้ารอบรองชนะเลิศ'
+  },
+  {
+    id: 'tr_hard_56',
+    difficulty: 'hard',
+    question: 'สโมสร เดปอร์ติโบ ลา คอรุนญ่า ยุค "ซูเปอร์เดปอร์" คว้าแชมป์ ลาลีกา สเปน เพียงสมัยเดียวในประวัติศาสตร์สโมสรเมื่อฤดูกาล 1999/2000 โดยมีใครเป็นดาวซัลโวประจำทีม?',
+    options: ['Diego Tristán', 'Roy Makaay', 'Walter Pandiani', 'Juan Carlos Valerón'],
+    correctIndex: 1,
+    explanation: 'Roy Makaay ยิง 22 ประตูพา Deportivo La Coruña คว้าแชมป์ลาลีกาฤดูกาล 1999/2000 ได้อย่างยิ่งใหญ่'
   }
 ];
 
