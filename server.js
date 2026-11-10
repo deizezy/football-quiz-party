@@ -2976,7 +2976,9 @@ function finishFootyGridWave(room) {
 }
 
 // Pick a smart set of clubs that guarantees rich 2-club and 3-club player overlaps!
-function pickSmartClubPool(count) {
+// cooldownClubIds: Set of club IDs currently on cooldown — these are excluded from the pool
+function pickSmartClubPool(count, cooldownClubIds) {
+  const excludeSet = cooldownClubIds instanceof Set ? cooldownClubIds : new Set();
   const clubOverlapWeight = new Map();
   for (const p of PLAYERS) {
     if (Array.isArray(p.clubs) && p.clubs.length >= 2) {
@@ -2986,9 +2988,26 @@ function pickSmartClubPool(count) {
     }
   }
   const rankedClubs = [...CLUBS]
+    .filter((c) => !excludeSet.has(c.id))
     .sort((a, b) => (clubOverlapWeight.get(b.id) || 0) - (clubOverlapWeight.get(a.id) || 0))
     .slice(0, 26);
-  const sourceClubs = rankedClubs.length >= 10 ? rankedClubs : CLUBS;
+
+  // Fallback: if too few clubs after filtering, include ALL clubs minus cooldown
+  const minRequired = Math.max(count, 10);
+  let sourceClubs;
+  if (rankedClubs.length >= minRequired) {
+    sourceClubs = rankedClubs;
+  } else {
+    // Expand pool: use all clubs minus cooldown, sorted by overlap weight
+    sourceClubs = [...CLUBS]
+      .filter((c) => !excludeSet.has(c.id))
+      .sort((a, b) => (clubOverlapWeight.get(b.id) || 0) - (clubOverlapWeight.get(a.id) || 0));
+    // Last resort: if even after removing cooldown we have fewer than count, clear cooldown and use all
+    if (sourceClubs.length < count) {
+      sourceClubs = [...CLUBS].sort((a, b) => (clubOverlapWeight.get(b.id) || 0) - (clubOverlapWeight.get(a.id) || 0));
+    }
+  }
+
   if (count <= 1) {
     return [sourceClubs[Math.floor(Math.random() * sourceClubs.length)]];
   }
@@ -3925,10 +3944,32 @@ function startModeRound(room, options = {}) {
     room.usedPlayers = [];
     room.lastWaveResults = [];
 
+    // ─── Club Cooldown System: prevent same clubs from repeating ───
+    if (!room.clubCooldowns) room.clubCooldowns = new Map();
+    // Tick down all existing cooldowns by 1 each round
+    for (const [cid, remaining] of room.clubCooldowns) {
+      if (remaining <= 1) {
+        room.clubCooldowns.delete(cid);
+      } else {
+        room.clubCooldowns.set(cid, remaining - 1);
+      }
+    }
+    const cooldownClubIds = new Set(room.clubCooldowns.keys());
+    // ─── End Cooldown Tick ───
+
     if (room.settings.clubSelectMode === 'random') {
       const isSingleClubMode = mode === 'club_battle';
       const count = getTargetClubPoolSize(room);
-      const chosenClubs = pickSmartClubPool(count);
+      const chosenClubs = pickSmartClubPool(count, cooldownClubIds);
+
+      // Set cooldown for the chosen clubs (3 rounds before they can reappear)
+      // With 38 total clubs and ~3 per round, cooldown=3 ensures at least 3 different
+      // sets of clubs rotate before any can reappear (covers 9+ unique clubs minimum)
+      const COOLDOWN_ROUNDS = 3;
+      for (const club of chosenClubs) {
+        room.clubCooldowns.set(club.id, COOLDOWN_ROUNDS);
+      }
+
       for (let i = 0; i < count; i++) {
         const isBonusClub = !isSingleClubMode && room.players.length === 2 && i >= room.players.length;
         const p = room.players[(room.roundNumber + i) % room.players.length];
@@ -4849,6 +4890,7 @@ function handleApiAction(req, res, body) {
     room.clueBuzzerRound = null;
     room.clueFlipTurnIndex = 0;
     room.lastWaveResults = [];
+    room.clubCooldowns = new Map();
     room.state = 'LOBBY';
     broadcastRoom(code, 'scores_reset');
     res.writeHead(200, { 'Content-Type': 'application/json' });
