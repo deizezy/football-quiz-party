@@ -550,7 +550,7 @@ function serializeModeDataForClients(room) {
     };
   }
 
-  // MODE 9: CHAIN LINK (Player -> Shared Club -> Teammate -> Shared Club...)
+  // MODE 9: CHAIN LINK (Turn-Based Player -> Shared Club -> Teammate -> Shared Club...)
   if (mode === 'chain_link') {
     if (!room.chainLinkHistory || room.chainLinkHistory.length === 0) {
       const starter = pickChainStarterPlayer();
@@ -588,8 +588,29 @@ function serializeModeDataForClients(room) {
         };
       });
 
+    const activePlayers = room.players || [];
+    const turnIdx =
+      activePlayers.length > 0
+        ? ((room.chainTurnIndex || 0) % activePlayers.length + activePlayers.length) % activePlayers.length
+        : 0;
+    const turnPlayer = activePlayers[turnIdx] || activePlayers[0] || null;
+    const nextIdx = activePlayers.length > 0 ? (turnIdx + 1) % activePlayers.length : 0;
+    const nextTurnPlayer = activePlayers[nextIdx] || null;
+
     return {
       chainLength: hist.length,
+      currentTurnPlayerId: turnPlayer ? turnPlayer.id : null,
+      currentTurnPlayerName: turnPlayer ? turnPlayer.name : 'ผู้เล่น 1',
+      currentTurnPlayerAvatar: turnPlayer ? turnPlayer.avatar : '⚽',
+      nextTurnPlayerName: nextTurnPlayer ? nextTurnPlayer.name : '',
+      nextTurnPlayerAvatar: nextTurnPlayer ? nextTurnPlayer.avatar : '⚽',
+      turnOrder: activePlayers.map((p, idx) => ({
+        id: p.id,
+        name: p.name,
+        avatar: p.avatar,
+        score: p.score,
+        isCurrentTurn: idx === turnIdx
+      })),
       currentAnchor: {
         ...currentAnchor,
         availableClubs: availableAnchorClubs
@@ -714,6 +735,10 @@ function clearRoomTimers(room) {
   if (room.untimedBotInterval) {
     clearInterval(room.untimedBotInterval);
     room.untimedBotInterval = null;
+  }
+  if (room.chainBotTimeout) {
+    clearTimeout(room.chainBotTimeout);
+    room.chainBotTimeout = null;
   }
   if (room.botTimeouts) {
     room.botTimeouts.forEach((t) => clearTimeout(t));
@@ -996,6 +1021,105 @@ function scheduleBotActions(room) {
   });
 }
 
+function getActiveChainTurnPlayer(room) {
+  const activePlayers = room.players || [];
+  if (activePlayers.length === 0) return null;
+  const idx = ((room.chainTurnIndex || 0) % activePlayers.length + activePlayers.length) % activePlayers.length;
+  room.chainTurnIndex = idx;
+  return activePlayers[idx];
+}
+
+function scheduleChainBotTurn(room) {
+  if (room.chainBotTimeout) {
+    clearTimeout(room.chainBotTimeout);
+    room.chainBotTimeout = null;
+  }
+  if (room.state !== 'PLAYING' || room.settings.gameMode !== 'chain_link') return;
+  const turnPlayer = getActiveChainTurnPlayer(room);
+  if (!turnPlayer || !turnPlayer.isBot) return;
+
+  const delayMs = 2600 + Math.floor(Math.random() * 1800);
+  room.chainBotTimeout = setTimeout(() => {
+    if (room.state !== 'PLAYING' || room.settings.gameMode !== 'chain_link') return;
+    const currentTurn = getActiveChainTurnPlayer(room);
+    if (!currentTurn || currentTurn.id !== turnPlayer.id) return;
+
+    const hist = room.chainLinkHistory || [];
+    if (hist.length === 0) return;
+    const anchor = hist[hist.length - 1];
+    const anchorPlayer = PLAYERS.find((p) => p.id === anchor.playerId);
+    if (!anchorPlayer) return;
+    const usedPlayerIds = new Set(hist.map((h) => h.playerId));
+    const usedClubIds = new Set(room.chainUsedClubs || []);
+    const availClubs = (anchorPlayer.clubs || []).filter((cid) => !usedClubIds.has(cid));
+    const validNext = PLAYERS.filter(
+      (p) =>
+        !usedPlayerIds.has(p.id) &&
+        p.clubs.length >= 2 &&
+        p.clubs.some((cid) => availClubs.includes(cid))
+    );
+    if (validNext.length > 0 && Math.random() < 0.85) {
+      const pick = validNext[Math.floor(Math.random() * validNext.length)];
+      handlePlayerSubmission(room, turnPlayer.id, pick.name, pick.id);
+    }
+  }, delayMs);
+}
+
+function handleChainTurnTimeout(room) {
+  if (room.state !== 'PLAYING' || room.settings.gameMode !== 'chain_link') return;
+  const turnPlayer = getActiveChainTurnPlayer(room);
+  const oldChainLen = (room.chainLinkHistory || []).length;
+
+  if (turnPlayer) {
+    recordPlayerResultStats(turnPlayer, false, null, null);
+  }
+
+  let trapBonusMsg = '';
+  if (room.lastChainMoverId && (!turnPlayer || room.lastChainMoverId !== turnPlayer.id)) {
+    const prevMover = (room.players || []).find((p) => p.id === room.lastChainMoverId);
+    if (prevMover) {
+      prevMover.score += 1;
+      trapBonusMsg = ` • 🎯 ${prevMover.name} รับโบนัสส่งไม้ต่อชนะ +1 แต้ม!`;
+    }
+  }
+
+  // Start a fresh chain and pass the turn to the next player!
+  const starter = pickChainStarterPlayer();
+  room.chainLinkHistory = [
+    {
+      step: 1,
+      playerId: starter.id,
+      playerName: starter.name,
+      flag: starter.flag,
+      flagUrl: starter.flagUrl || getFlagUrlFromEmoji(starter.flag),
+      photoUrl: starter.photoUrl || null,
+      position: starter.position,
+      viaClubId: null,
+      viaClubName: 'จุดเริ่มต้นลูกโซ่ใหม่ (Starter)',
+      viaClubBadgeUrl: null,
+      byPlayerName: '🎲 ระบบสุ่มเริ่มโซ่ใหม่',
+      pointsEarned: 0
+    }
+  ];
+  room.chainUsedClubs = [];
+  room.chainHintText = null;
+  room.lastChainMoverId = null;
+
+  if ((room.players || []).length > 0) {
+    room.chainTurnIndex = ((room.chainTurnIndex || 0) + 1) % room.players.length;
+  }
+  const nextTurnPlayer = getActiveChainTurnPlayer(room);
+
+  room.waveStartTime = Date.now();
+  room.timeLeft = room.settings.timeLimit || 15;
+
+  broadcastRoom(room.code, 'top10_updated', {
+    toastMessage: `💥 หมดเวลา! ${turnPlayer ? turnPlayer.name : 'ผู้เล่น'} ต่อโซ่ไม่ทัน โซ่ขาดที่ ${oldChainLen} คน!${trapBonusMsg} ➔ เริ่มโซ่ใหม่ ตาของ ${nextTurnPlayer ? nextTurnPlayer.name : 'คนถัดไป'}!`
+  });
+
+  scheduleChainBotTurn(room);
+}
+
 function startWave(room) {
   clearRoomTimers(room);
   room.state = 'PLAYING';
@@ -1008,13 +1132,16 @@ function startWave(room) {
     mode === 'lineup_quiz' ||
     mode === 'footy_grid' ||
     mode === 'connections' ||
-    mode === 'who_are_ya_wordle' ||
-    mode === 'chain_link';
+    mode === 'who_are_ya_wordle';
   room.timeLeft = isUntimedMode ? 0 : room.settings.timeLimit;
   room.totalWavesPlayed = (room.totalWavesPlayed || 0) + 1;
 
   broadcastRoom(room.code, 'wave_started');
-  scheduleBotActions(room);
+  if (mode === 'chain_link') {
+    scheduleChainBotTurn(room);
+  } else {
+    scheduleBotActions(room);
+  }
 
   if (!isUntimedMode) {
     room.timerInterval = setInterval(() => {
@@ -1025,7 +1152,11 @@ function startWave(room) {
       broadcastRoom(room.code, 'timer_tick', { timeLeft: remaining });
 
       if (remaining <= 0) {
-        finishWave(room);
+        if (room.settings.gameMode === 'chain_link') {
+          handleChainTurnTimeout(room);
+        } else {
+          finishWave(room);
+        }
       }
     }, 250);
   }
@@ -1407,8 +1538,19 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
     };
   }
 
-  // Continuous untimed mode for Mode 9 (Chain Link: Player -> Shared Club -> Teammate)
+  // Turn-Based mode for Mode 9 (Chain Link: Player -> Shared Club -> Teammate)
   if (mode === 'chain_link') {
+    const currentTurnPlayer = getActiveChainTurnPlayer(room);
+    if (currentTurnPlayer && player && player.id !== currentTurnPlayer.id) {
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `⏳ ยังไม่ถึงตาของคุณ! ตอนนี้เป็นตาของ ${currentTurnPlayer.avatar} ${currentTurnPlayer.name}`
+        }
+      };
+    }
+
     if (!cleanInput) {
       return {
         ok: false,
@@ -1495,7 +1637,16 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
     if (player) {
       player.score += pts;
       recordPlayerResultStats(player, true, null, guessedPlayer.name);
+      room.lastChainMoverId = player.id;
     }
+
+    // Advance turn to the next player & reset per-turn countdown clock!
+    if ((room.players || []).length > 0) {
+      room.chainTurnIndex = ((room.chainTurnIndex || 0) + 1) % room.players.length;
+    }
+    const nextTurnPlayer = getActiveChainTurnPlayer(room);
+    room.waveStartTime = Date.now();
+    room.timeLeft = room.settings.timeLimit || 15;
 
     if (!guessedPlayer.photoUrl) {
       getPlayerPhotoByName(guessedPlayer.name).then((photo) => {
@@ -1549,15 +1700,18 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
     }
 
     const bonusTxt = milestoneBonus > 0 ? ' (🔥 โบนัสโซ่ยาวครบ 5 ข้อ +1 แต้ม!)' : '';
+    const nextTurnTxt = nextTurnPlayer ? ` ➔ 🟢 ตาต่อไป: ${nextTurnPlayer.avatar} ${nextTurnPlayer.name}!` : '';
     broadcastRoom(room.code, 'top10_updated', {
-      toastMessage: `🔗 ${player ? player.name : 'ผู้เล่น'} เชื่อม ${anchorPlayer.name} ➔ [${bridgeClubObj?.name || chosenBridgeClubId}] ➔ ${guessedPlayer.name} (+${pts} แต้ม${bonusTxt})${autoPivotMsg}`
+      toastMessage: `🔗 ${player ? player.name : 'ผู้เล่น'} เชื่อม ${anchorPlayer.name} ➔ [${bridgeClubObj?.name || chosenBridgeClubId}] ➔ ${guessedPlayer.name} (+${pts} แต้ม${bonusTxt})${autoPivotMsg}${nextTurnTxt}`
     });
+
+    scheduleChainBotTurn(room);
 
     return {
       ok: true,
       top10Feedback: {
         correct: true,
-        message: `✅ เชื่อมสำเร็จผ่าน [${bridgeClubObj?.name || chosenBridgeClubId}] ➔ ${guessedPlayer.name} (+${pts} คะแนน${bonusTxt})${autoPivotMsg}`
+        message: `✅ เชื่อมสำเร็จผ่าน [${bridgeClubObj?.name || chosenBridgeClubId}] ➔ ${guessedPlayer.name} (+${pts} คะแนน${bonusTxt})${nextTurnTxt}`
       }
     };
   }
@@ -2903,6 +3057,9 @@ function startModeRound(room, options = {}) {
   } else if (mode === 'chain_link') {
     room.roundNumber += 1;
     room.waveNumber = 1;
+    room.chainTurnIndex =
+      (room.players || []).length > 0 ? (room.roundNumber - 1) % room.players.length : 0;
+    room.lastChainMoverId = null;
     const starter = pickChainStarterPlayer();
     room.chainLinkHistory = [
       {
@@ -3642,9 +3799,15 @@ function handleApiAction(req, res, body) {
         viaClubId: chosenCid,
         viaClubName: clubObj?.name || chosenCid,
         viaClubBadgeUrl: clubObj?.badgeUrl || null,
-        byPlayerName: '👁️ ระบบช่วยเชื่อม (0 แต้ม)',
+        byPlayerName: '👁️ ระบบช่วยเชื่อม (ข้ามตา 0 แต้ม)',
         pointsEarned: 0
       });
+      if ((room.players || []).length > 0) {
+        room.chainTurnIndex = ((room.chainTurnIndex || 0) + 1) % room.players.length;
+      }
+      room.waveStartTime = Date.now();
+      room.timeLeft = room.settings.timeLimit || 15;
+      scheduleChainBotTurn(room);
     } else {
       startModeRound(room);
     }

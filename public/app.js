@@ -447,7 +447,7 @@ function updateTimerOnly() {
   const circleEl = document.getElementById('countdownCircle');
   const barEl = document.getElementById('timerProgressBar');
 
-  if (isUntimedContinuousMode(mode)) {
+  if (isUntimedContinuousMode(mode) && mode !== 'chain_link') {
     if (numEl) numEl.textContent = '∞';
     if (circleEl) circleEl.classList.remove('urgent');
     if (barEl) {
@@ -1449,9 +1449,10 @@ function buildModeStageHTML(room, isReveal = false) {
     `;
   }
 
-  // MODE 9: CHAIN LINK (Player -> Shared Club -> Teammate -> Shared Club...)
+  // MODE 9: CHAIN LINK (Turn-Based Player -> Shared Club -> Teammate -> Shared Club...)
   if (mode === 'chain_link') {
     const anchor = md.currentAnchor || {};
+    const isMyTurn = md.currentTurnPlayerId === state.playerId;
     const availClubsHtml = (anchor.availableClubs || [])
       .map((c) => {
         const bImg = c.badgeUrl ? `<img src="${c.badgeUrl}" alt="${c.name}" style="width:15px;height:15px;object-fit:contain;" onerror="this.style.display='none'" />` : '';
@@ -1463,13 +1464,38 @@ function buildModeStageHTML(room, isReveal = false) {
       .map((c) => `<span class="used-chip" style="font-size:0.74rem;border-color:rgba(239,68,68,0.4);color:#fca5a5;">🔒 ${c.name}</span>`)
       .join('');
 
+    const turnQueuePillsHtml = (md.turnOrder || [])
+      .map((tp) => {
+        const activeStyle = tp.isCurrentTurn
+          ? 'background:rgba(16,185,129,0.25);border:2px solid #10b981;color:#fff;font-weight:800;box-shadow:0 0 12px rgba(16,185,129,0.35);'
+          : 'background:rgba(15,23,42,0.7);border:1px solid rgba(148,163,184,0.25);color:#cbd5e1;';
+        return `<span style="padding:5px 12px;border-radius:999px;font-size:0.82rem;display:inline-flex;align-items:center;gap:6px;${activeStyle}">
+          ${tp.isCurrentTurn ? '🟢' : '⚪'} ${tp.avatar} ${tp.name} <small style="opacity:0.85;">(${tp.score} แต้ม)</small>
+        </span>`;
+      })
+      .join('<span style="color:#64748b;font-weight:700;">➔</span>');
+
+    const turnBannerHtml = !isReveal
+      ? `
+        <div style="padding:10px 14px;margin-bottom:10px;border-radius:12px;background:${isMyTurn ? 'rgba(16,185,129,0.16)' : 'rgba(30,41,59,0.85)'};border:1px solid ${isMyTurn ? '#10b981' : 'rgba(148,163,184,0.3)'};display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span style="font-size:0.82rem;color:#94a3b8;font-weight:700;">🔄 ลำดับเทิร์น:</span>
+            ${turnQueuePillsHtml}
+          </div>
+          <div style="font-size:0.78rem;color:#fde68a;font-weight:600;">
+            ⏱️ ตอบไม่ทันเวลา = โซ่ขาด! (คนส่งไม้ต่อก่อนหน้ารับโบนัส +1 แต้ม)
+          </div>
+        </div>
+      `
+      : '';
+
     const toolbarHtml = !isReveal
       ? `
         <div class="top10-toolbar">
           <div class="top10-toolbar-left">
             <span class="top10-progress-pill">🔗 ความยาวลูกโซ่: <strong>${md.chainLength || 1}</strong> คน (ต่อสำเร็จรับ <strong>+2 แต้ม</strong>)</span>
             <button type="button" class="btn btn-outline btn-sm" data-chain-hint="1">💡 คำใบ้คนถัดไป</button>
-            <button type="button" class="btn btn-outline btn-sm" data-chain-auto="1">👁️ ให้ระบบต่อให้ 1 ก้าว</button>
+            <button type="button" class="btn btn-outline btn-sm" data-chain-auto="1">🏳️ ข้ามตานี้ (ให้ระบบต่อให้ 1 ก้าว)</button>
           </div>
           <div class="top10-toolbar-actions">
             <button type="button" class="btn btn-accent btn-sm" data-chain-reset="1">🔄 เริ่มลูกโซ่ใหม่</button>
@@ -1502,6 +1528,7 @@ function buildModeStageHTML(room, isReveal = false) {
       .join('');
 
     return `
+      ${turnBannerHtml}
       ${toolbarHtml}
       ${hintBannerHtml}
       <div class="chain-anchor-card">
@@ -1880,9 +1907,14 @@ function renderPlayingView(room) {
     document.getElementById('playingClubName').textContent = `Who Are Ya? Wordle ข้อที่ #${room.roundNumber}`;
     document.getElementById('playingClubSub').innerHTML = `พิมพ์ชื่อนักเตะเพื่อเทียบ <strong>สัญชาติ / ลีก / สโมสร / ตำแหน่ง</strong> (🟢ตรงเป๊ะ / 🟡เคยอยู่ร่วมทีมหรือลีกร่วม / ⚪ไม่ตรง) ยิ่งทายตอนภาพเบลอยิ่งได้แต้มเยอะ (+4 ถึง +1)!`;
   } else if (mode === 'chain_link') {
+    const turnName = room.modeData?.currentTurnPlayerName || 'ผู้เล่น 1';
+    const turnAvatar = room.modeData?.currentTurnPlayerAvatar || '⚽';
     banner.style.background = `linear-gradient(135deg, #06b6d4, #0f172a)`;
-    document.getElementById('playingClubName').textContent = `Chain Link ต่อโซ่เพื่อนร่วมทีม (ความยาวโซ่: ${room.modeData?.chainLength || 0} ลิงก์)`;
-    document.getElementById('playingClubSub').innerHTML = `พิมพ์ชื่อนักเตะที่เคยอยู่สโมสรเดียวกับคนล่าสุดในโซ่ (<strong>+2 แต้ม/ลิงก์</strong> + โบนัสทุก 5 ลิงก์ • ห้ามซ้ำคน & ห้ามใช้สโมสรเชื่อมซ้ำ!)`;
+    document.getElementById('playingClubName').textContent = `Chain Link ต่อโซ่เพื่อนร่วมทีม • ตาของ ${turnAvatar} ${turnName}`;
+    document.getElementById('playingClubSub').innerHTML = `ผลัดกันตอบทีละคน! ต่อโซ่สำเร็จรับ <strong>+2 แต้ม</strong> (โบนัสทุก 5 ลิงก์) • หากหมดเวลาโซ่ขาด คนส่งไม้ต่อก่อนหน้ารับโบนัส <strong>+1 แต้ม</strong>!`;
+    if (room.modeData?.currentTurnPlayerId === state.playerId) {
+      document.getElementById('answerPromptLabel').textContent = `🟢 ถึงตาของคุณแล้ว! พิมพ์ชื่อเพื่อนร่วมทีมต่อจาก "${room.modeData?.currentAnchor?.playerName || ''}" ก่อนหมดเวลา:`;
+    }
   }
 
   const playingTargetBanner = document.getElementById('playingTargetReachedBanner');
@@ -1898,12 +1930,21 @@ function renderPlayingView(room) {
 
   const me = room.players.find((p) => p.id === state.playerId);
   const hasSubmitted = !isUntimedContinuousMode(mode) && me && me.hasSubmitted;
+  const isWaitingForOtherTurnInChain =
+    mode === 'chain_link' &&
+    room.modeData?.currentTurnPlayerId &&
+    room.modeData.currentTurnPlayerId !== state.playerId;
 
   const inputZone = document.getElementById('answerInputZone');
   const lockedZone = document.getElementById('answerLockedZone');
   const guessInput = document.getElementById('playerGuessInput');
 
-  if (hasSubmitted) {
+  if (isWaitingForOtherTurnInChain) {
+    inputZone.classList.add('hidden');
+    stageEl.classList.remove('hidden');
+    lockedZone.classList.remove('hidden');
+    document.getElementById('lockedAnswerText').textContent = `⏳ ตอนนี้เป็นตาของ ${room.modeData.currentTurnPlayerAvatar || '⚽'} ${room.modeData.currentTurnPlayerName} กำลังคิดต่อโซ่... (คิวถัดไป: ${room.modeData.nextTurnPlayerAvatar || '⚽'} ${room.modeData.nextTurnPlayerName || ''})`;
+  } else if (hasSubmitted) {
     inputZone.classList.add('hidden');
     stageEl.classList.toggle('hidden', mode === 'trivia_quiz');
     lockedZone.classList.remove('hidden');
