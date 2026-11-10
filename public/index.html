@@ -121,177 +121,194 @@
       <!-- Center Arena -->
       <section class="arena-panel">
 
-        <!-- STATE A: LOBBY & 9 GAME MODES SELECTOR -->
+        <!-- STATE A: LOBBY & 9 GAME MODES SELECTOR (SPLIT LAYOUT: LEFT MODES / RIGHT SETTINGS & START) -->
         <div id="lobbyView" class="state-view active">
-          <div class="arena-card">
-            <div class="arena-badge">🎮 เลือกโหมดเกมฟุตบอล (9 Party Modes)</div>
-            <h2>เลือกโหมดที่ต้องการดวลกับเพื่อนๆ</h2>
-            <p class="muted-text">สามารถสลับเล่นได้ทุกโหมดโดยคะแนนสะสมต่อเนื่องไปจนถึงแต้มเป้าหมายแชมป์!</p>
-
-            <!-- Game Modes Cards -->
-            <div id="gameModesGrid" class="modes-grid">
-              <div class="mode-card active" data-mode="multi_club_pool">
-                <div class="mode-icon">🌟</div>
-                <div class="mode-info">
-                  <h4>🌟 โหมดใหม่: ลงสโมสรคนละทีม ล่าแต้มคูณ!</h4>
-                  <p>ผู้เล่นพิมพ์สโมสรคนละทีม (เช่น Arsenal, Chelsea, Spurs) แล้วทายนักเตะ ตรงกี่สโมสรได้แต้มตามนั้น (1, 2, 3... แต้ม)</p>
-                </div>
+          <div class="arena-card lobby-arena-card">
+            <div class="lobby-top-header">
+              <div>
+                <div class="arena-badge">🎮 เลือกโหมดเกมฟุตบอล (9 Party Modes)</div>
+                <h2>เลือกโหมดทางซ้าย • ตั้งค่า & กดเริ่มเกมทางขวาได้เลย!</h2>
               </div>
-
-              <div class="mode-card" data-mode="club_battle">
-                <div class="mode-icon">🏟️</div>
-                <div class="mode-info">
-                  <h4>ทายนักเตะประจำสโมสร (1 ทีม)</h4>
-                  <p>เลือกสโมสรเดียวแข่งกันพิมพ์ชื่อนักเตะ (ตอบถูก +1 แต้ม • ⚡ไวสุดในรอบ +1 • 🔥คอมโบทุก 3 รอบติด +1 แต้ม!)</p>
-                </div>
-              </div>
-
-              <div class="mode-card" data-mode="lineup_quiz">
-                <div class="mode-icon">📋</div>
-                <div class="mode-info">
-                  <h4>2. ทายผัง 11 ตัวจริงในตำนาน</h4>
-                  <p>ดูผังสนามเปิดชื่อ 11 ตัวจริง (ทายสด +3 แต้ม • ใบ้ทีละขั้น: สัญชาติ +2 / เบอร์เสื้อ & ชื่อย่อ +1 • ปิดผังคนที่ 11 โบนัส +1!)</p>
-                </div>
-              </div>
-
-              <div class="mode-card" data-mode="top10_stats">
-                <div class="mode-icon">📊</div>
-                <div class="mode-info">
-                  <h4>3. ทายท็อป 10 สถิติลูกหนัง (ไม่จำกัดเวลา!)</h4>
-                  <p>คะแนนตามความยากอันดับ (#1-#3 ได้ +1 • #4-#7 ได้ +2 • #8-#10 ได้ +3 แต้ม • ใช้คำใบ้ได้ +1 แต้ม!)</p>
-                </div>
-              </div>
-
-              <div class="mode-card" data-mode="career_path">
-                <div class="mode-icon">🕵️‍♂️</div>
-                <div class="mode-info">
-                  <h4>4. เส้นทางค้าแข้ง (ฉันคือใคร?)</h4>
-                  <p>ทายจากไทม์ไลน์ย้ายสโมสร (ทายสดไม่เปิดคำใบ้ +3 แต้ม • เปิดคำใบ้ +1 แต้ม • ⚡ตอบถูกคนแรก +1 โบนัส!)</p>
-                </div>
-              </div>
-
-              <div class="mode-card" data-mode="trivia_quiz">
-                <div class="mode-icon">⚡</div>
-                <div class="mode-info">
-                  <h4>5. ควิซแฟนพันธุ์แท้ 4 ตัวเลือก</h4>
-                  <p>คะแนนตามระดับความยาก (🟢ง่าย +1 • 🟡ปานกลาง +2 • 🔴ยาก +3 แต้ม • ⚡มือไวตอบถูกคนแรก +1 โบนัส!)</p>
-                </div>
-              </div>
-
-              <div class="mode-card" data-mode="footy_grid">
-                <div class="mode-icon">🔢</div>
-                <div class="mode-info">
-                  <h4>6. ตาราง XO ฟุตบอล 3x3</h4>
-                  <p>ผลัดกันวาง XO ยึดช่องตารางไขว้ (ช่องทั่วไป +2 • 💎ช่องหายาก +3 • ใช้คำใบ้ +1 • 🏆เรียงครบ 3 ช่อง BINGO โบนัส +3 แต้ม!)</p>
-                </div>
-              </div>
-
-              <div class="mode-card" data-mode="connections">
-                <div class="mode-icon">🧩</div>
-                <div class="mode-info">
-                  <h4>7. จับกลุ่ม 16 นักเตะ 4 ความลับ (Connections)</h4>
-                  <p>คลิกเลือกนักเตะทีละ 4 คนที่มีความเชื่อมโยงลับเดียวกัน (🟢ง่าย +1 • 🟡กลาง +2 • 🔵ยาก +3 • 🟣แฟนพันธุ์แท้ +4 แต้ม!)</p>
-                </div>
-              </div>
-
-              <div class="mode-card" data-mode="who_are_ya_wordle">
-                <div class="mode-icon">🖼️</div>
-                <div class="mode-info">
-                  <h4>8. ทายนักเตะจากรูปเบลอ + Wordle (Who Are Ya?)</h4>
-                  <p>ดูรูปเบลอแล้วพิมพ์ทาย! ทุกครั้งที่ทายจะเทียบสีใบ้ (🟢ตรง / 🟡เคยอยู่สโมสรเดียวกัน) และรูปชัดขึ้นเรื่อยๆ (+1 ถึง +4 แต้ม!)</p>
-                </div>
-              </div>
-
-              <div class="mode-card" data-mode="chain_link">
-                <div class="mode-icon">🔗</div>
-                <div class="mode-info">
-                  <h4>9. ต่อโซ่นักเตะเพื่อนร่วมทีม (Chain Link)</h4>
-                  <p>ผลัดกันตอบทีละคนก่อนหมดเวลา! ต่อลูกโซ่เพื่อนร่วมทีมที่เคยอยู่สโมสรเดียวกัน (ต่อสำเร็จ +2 แต้ม • ใครทำโซ่ขาด คนส่งไม้ต่อรับโบนัส +1 แต้ม!)</p>
-                </div>
-              </div>
+              <p class="muted-text">สลับเล่นได้ทุกโหมดโดยคะแนนสะสมต่อเนื่องไปจนถึงแต้มเป้าหมายแชมป์</p>
             </div>
 
-            <div class="settings-grid">
-              <!-- Timer & Target Score Setting -->
-              <div class="setting-box">
-                <div id="settingGroupTimer">
-                  <label>⏱️ เวลาตอบต่อรอบ (ปรับได้ 5 - 60 วินาที)</label>
-                  <div class="timer-adjuster">
-                    <button class="btn btn-outline btn-sm" data-time-delta="-5">-5s</button>
-                    <button class="btn btn-outline btn-sm" data-time-delta="-1">-1s</button>
-                    <div class="timer-big-display"><span id="lobbyTimeValue">15</span> <small>วินาที</small></div>
-                    <button class="btn btn-outline btn-sm" data-time-delta="1">+1s</button>
-                    <button class="btn btn-outline btn-sm" data-time-delta="5">+5s</button>
+            <div class="lobby-split-layout">
+              <!-- LEFT COLUMN: 10 COMPACT MODE CARDS (2x5 GRID) -->
+              <div class="lobby-modes-column">
+                <div id="gameModesGrid" class="modes-grid">
+                  <div class="mode-card active" data-mode="multi_club_pool">
+                    <div class="mode-icon">🌟</div>
+                    <div class="mode-info">
+                      <h4>1A. ลงสโมสรคนละทีม ล่าแต้มคูณ!</h4>
+                      <p>ตรง 1 ทีม +1 • ตรง 2 ทีม +2 • ตรง 3 ทีม +3 แต้ม</p>
+                    </div>
                   </div>
-                  <div class="preset-chips">
-                    <button class="chip" data-time-preset="10">10 วิ (ไวมาก)</button>
-                    <button class="chip active" data-time-preset="15">15 วิ (มาตรฐาน)</button>
-                    <button class="chip" data-time-preset="20">20 วิ</button>
-                    <button class="chip" data-time-preset="30">30 วิ (ชิลๆ)</button>
+
+                  <div class="mode-card" data-mode="club_battle">
+                    <div class="mode-icon">🏟️</div>
+                    <div class="mode-info">
+                      <h4>1B. ทายนักเตะประจำสโมสร (1 ทีม)</h4>
+                      <p>ตอบถูก +1 • ⚡ไวสุด +1 • 🔥คอมโบ 3 รอบติด +1</p>
+                    </div>
+                  </div>
+
+                  <div class="mode-card" data-mode="lineup_quiz">
+                    <div class="mode-icon">📋</div>
+                    <div class="mode-info">
+                      <h4>2. ทายผัง 11 ตัวจริงในตำนาน</h4>
+                      <p>40 แมตช์ดัง • ทายสด +3 • ใบ้ทีละขั้น +2/+1 แต้ม</p>
+                    </div>
+                  </div>
+
+                  <div class="mode-card" data-mode="top10_stats">
+                    <div class="mode-icon">📊</div>
+                    <div class="mode-info">
+                      <h4>3. ทายท็อป 10 สถิติลูกหนัง</h4>
+                      <p>32 หัวข้อ • อันดับ #1-#3 (+1) • #4-#7 (+2) • #8-#10 (+3)</p>
+                    </div>
+                  </div>
+
+                  <div class="mode-card" data-mode="career_path">
+                    <div class="mode-icon">🕵️‍♂️</div>
+                    <div class="mode-info">
+                      <h4>4. เส้นทางค้าแข้ง (ฉันคือใคร?)</h4>
+                      <p>65 ตำนาน & สตาร์ • ทายสด +3 • เปิดใบ้ +1 • ไวสุด +1</p>
+                    </div>
+                  </div>
+
+                  <div class="mode-card" data-mode="trivia_quiz">
+                    <div class="mode-icon">⚡</div>
+                    <div class="mode-info">
+                      <h4>5. ควิซแฟนพันธุ์แท้ 4 ตัวเลือก</h4>
+                      <p>165 คำถาม • 🟢ง่าย +1 • 🟡กลาง +2 • 🔴ยาก +3 • ไวสุด +1</p>
+                    </div>
+                  </div>
+
+                  <div class="mode-card" data-mode="footy_grid">
+                    <div class="mode-icon">🔢</div>
+                    <div class="mode-info">
+                      <h4>6. ตาราง XO ฟุตบอล 3x3</h4>
+                      <p>ผลัดกันวาง XO • ช่องละ +2/+3 • 🏆เรียง 3 ช่อง BINGO +3</p>
+                    </div>
+                  </div>
+
+                  <div class="mode-card" data-mode="connections">
+                    <div class="mode-icon">🧩</div>
+                    <div class="mode-info">
+                      <h4>7. จับกลุ่ม 16 นักเตะ 4 ความลับ</h4>
+                      <p>คลิกจับกลุ่มทีละ 4 คน (🟢+1 • 🟡+2 • 🔵+3 • 🟣+4 แต้ม)</p>
+                    </div>
+                  </div>
+
+                  <div class="mode-card" data-mode="who_are_ya_wordle">
+                    <div class="mode-icon">🖼️</div>
+                    <div class="mode-info">
+                      <h4>8. ทายรูปเบลอ + Wordle</h4>
+                      <p>เทียบสีใบ้ 🟢ตรง / 🟡เคยอยู่ร่วมทีม (+4 ถึง +1 แต้ม)</p>
+                    </div>
+                  </div>
+
+                  <div class="mode-card" data-mode="chain_link">
+                    <div class="mode-icon">🔗</div>
+                    <div class="mode-info">
+                      <h4>9. ต่อโซ่นักเตะเพื่อนร่วมทีม</h4>
+                      <p>ผลัดกันเชื่อมเพื่อนร่วมทีม (+2 แต้ม • ทำโซ่ขาดคนก่อนได้ +1)</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- RIGHT COLUMN: STICKY SELECTED MODE SETTINGS & START BUTTON -->
+              <aside class="lobby-config-panel">
+                <div class="selected-mode-banner">
+                  <span id="selectedModeIconLabel" class="selected-mode-icon">🌟</span>
+                  <div>
+                    <small>โหมดที่เลือกอยู่ตอนนี้</small>
+                    <h3 id="selectedModeTitleLabel">ลงสโมสรคนละทีม ล่าแต้มคูณ!</h3>
                   </div>
                 </div>
 
-                <div id="settingGroupUntimedNotice" class="hidden" style="padding:12px 14px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);border-radius:12px;margin-bottom:14px;">
-                  <div style="font-weight:700;color:#34d399;margin-bottom:4px;">♾️ โหมดกระดานสด (ไม่จำกัดเวลาต่อข้อ!)</div>
-                  <div style="font-size:0.84rem;color:#cbd5e1;">ทุกคนสามารถพิมพ์ทายคำตอบเปิดป้ายได้ต่อเนื่องทันที และมีปุ่มกดดูคำใบ้ (💡) หรือเปิดเฉลย (👁️) ได้ตลอดเวลา</div>
+                <!-- Mode-Specific Settings & Rules -->
+                <div class="setting-box" id="settingBoxModeSpecific">
+                  <div id="settingGroupClubRules">
+                    <label>⚡ กติกาเมื่อตอบชื่อนักเตะซ้ำกันในรอบเดียวกัน</label>
+                    <select id="duplicateRuleSelect" class="select-input">
+                      <option value="strict_unique">คนตอบไวกว่าได้คะแนนคนเดียว (คนช้าได้ 0)</option>
+                      <option value="speed_split">ได้คะแนนตามจำนวนสโมสรที่ตรงทั้งคู่</option>
+                      <option value="both_cancel">ใจตรงกันซ้ำกัน = โมฆะ ไม่ได้คะแนนทั้งคู่ (0)</option>
+                    </select>
+
+                    <label style="margin-top: 12px;">🎲 วิธีเลือกสโมสรลงกระดาน</label>
+                    <select id="clubSelectModeInput" class="select-input">
+                      <option value="random" selected>🎲 สุ่มสโมสรให้ผู้เล่นอัตโนมัติ (เริ่มไว!)</option>
+                      <option value="both">⌨️ ให้ผู้เล่นพิมพ์/คลิกเลือกสโมสรเองคนละทีม</option>
+                    </select>
+                  </div>
+
+                  <div id="settingGroupPoolSize">
+                    <label style="margin-top: 12px;">🏟️ จำนวนสโมสรบนกระดาน (โหมด 🌟 ล่าแต้มคูณ)</label>
+                    <select id="clubPoolSizeRuleSelect" class="select-input">
+                      <option value="fixed_3" selected>🔒 ล็อก 3 สโมสรเสมอ (แม้คนเยอะก็มีแค่ 3 ทีม)</option>
+                      <option value="by_players">👥 ตามจำนวนผู้เล่น (ขั้นต่ำ 3 ทีม • 4–6 คนมี 4–6 ทีม)</option>
+                    </select>
+                  </div>
+
+                  <div id="settingGroupTriviaDiff" class="hidden">
+                    <label>🎚️ ระดับความยากคำถาม (โหมด 5: ควิซ 4 ตัวเลือก)</label>
+                    <select id="triviaDifficultySelect" class="select-input">
+                      <option value="all" selected>🎲 รวมทุกระดับความยาก (ง่าย + ปานกลาง + ยาก)</option>
+                      <option value="easy">🟢 ระดับง่าย (+1 แต้ม • แฟนบอลทั่วไปตอบสนุก)</option>
+                      <option value="medium">🟡 ระดับปานกลาง (+2 แต้ม • แฟนบอลตัวยง)</option>
+                      <option value="hard">🔴 ระดับยาก (+3 แต้ม • แฟนพันธุ์แท้ตัวจริง!)</option>
+                    </select>
+                  </div>
+
+                  <div id="settingGroupModeInfo" class="hidden" style="padding:10px 12px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.35);border-radius:10px;">
+                    <div id="settingModeInfoTitle" style="font-weight:700;color:#93c5fd;margin-bottom:4px;font-size:0.88rem;">💡 กติกาพิเศษของโหมดนี้</div>
+                    <div id="settingModeInfoDesc" style="font-size:0.8rem;color:#cbd5e1;line-height:1.45;"></div>
+                  </div>
                 </div>
 
-                <label style="margin-top: 16px;">🏆 เป้าหมายคะแนนเพื่อคว้าแชมป์ (Target Score)</label>
-                <select id="targetScoreSelect" class="select-input">
-                  <option value="5">5 คะแนน (มินิแมตช์ ไวๆ)</option>
-                  <option value="10" selected>10 คะแนน (แมตช์มาตรฐาน แนะนำ!)</option>
-                  <option value="15">15 คะแนน (แมตช์ดวลเดือด)</option>
-                  <option value="20">20 คะแนน (มาราธอนลูกหนัง)</option>
-                  <option value="0">ไม่จำกัดแต้ม (กดจบแมตช์เองเมื่อไหร่ก็ได้)</option>
-                </select>
-              </div>
+                <!-- Timer & Target Score Setting -->
+                <div class="setting-box">
+                  <div id="settingGroupTimer">
+                    <label>⏱️ เวลาตอบต่อรอบ / ต่อเทิร์น (5 - 60 วินาที)</label>
+                    <div class="timer-adjuster">
+                      <button class="btn btn-outline btn-xs" data-time-delta="-5">-5s</button>
+                      <button class="btn btn-outline btn-xs" data-time-delta="-1">-1s</button>
+                      <div class="timer-big-display"><span id="lobbyTimeValue">15</span> <small>วินาที</small></div>
+                      <button class="btn btn-outline btn-xs" data-time-delta="1">+1s</button>
+                      <button class="btn btn-outline btn-xs" data-time-delta="5">+5s</button>
+                    </div>
+                    <div class="preset-chips">
+                      <button class="chip" data-time-preset="10">10 วิ</button>
+                      <button class="chip active" data-time-preset="15">15 วิ</button>
+                      <button class="chip" data-time-preset="20">20 วิ</button>
+                      <button class="chip" data-time-preset="30">30 วิ</button>
+                    </div>
+                  </div>
 
-              <!-- Mode-Specific Settings -->
-              <div class="setting-box" id="settingBoxModeSpecific">
-                <div id="settingGroupClubRules">
-                  <label>⚡ กติกาเมื่อตอบชื่อนักเตะซ้ำกันในรอบเดียวกัน</label>
-                  <select id="duplicateRuleSelect" class="select-input">
-                    <option value="strict_unique">คนตอบไวกว่าได้คะแนนคนเดียว (คนช้าได้ 0)</option>
-                    <option value="speed_split">ได้คะแนนตามจำนวนสโมสรที่ตรงทั้งคู่</option>
-                    <option value="both_cancel">ใจตรงกันซ้ำกัน = โมฆะ ไม่ได้คะแนนทั้งคู่ (0)</option>
+                  <div id="settingGroupUntimedNotice" class="hidden" style="padding:10px 12px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);border-radius:10px;margin-bottom:10px;">
+                    <div style="font-weight:700;color:#34d399;margin-bottom:2px;font-size:0.86rem;">♾️ โหมดกระดานสด (ไม่จำกัดเวลาต่อข้อ!)</div>
+                    <div style="font-size:0.78rem;color:#cbd5e1;">พิมพ์ทายคำตอบเปิดป้ายได้ต่อเนื่อง และกดดูคำใบ้ (💡) หรือเปิดเฉลย (👁️) ได้ตลอดเวลา</div>
+                  </div>
+
+                  <label style="margin-top: 12px;">🏆 เป้าหมายคะแนนเพื่อคว้าแชมป์ (Target Score)</label>
+                  <select id="targetScoreSelect" class="select-input">
+                    <option value="5">5 คะแนน (มินิแมตช์ ไวๆ)</option>
+                    <option value="10" selected>10 คะแนน (แมตช์มาตรฐาน แนะนำ!)</option>
+                    <option value="15">15 คะแนน (แมตช์ดวลเดือด)</option>
+                    <option value="20">20 คะแนน (มาราธอนลูกหนัง)</option>
+                    <option value="0">ไม่จำกัดแต้ม (กดจบแมตช์เองเมื่อไหร่ก็ได้)</option>
                   </select>
-
-                  <label style="margin-top: 16px;">🎲 วิธีเลือกสโมสรลงกระดาน (เปลี่ยนได้ก่อนเริ่มเกม)</label>
-                  <select id="clubSelectModeInput" class="select-input">
-                    <option value="random" selected>🎲 สุ่มสโมสรให้ผู้เล่นแต่ละคนอัตโนมัติ (ค่าเริ่มต้น - เริ่มไว!)</option>
-                    <option value="both">⌨️ ให้ผู้เล่นพิมพ์/คลิกเลือกสโมสรเองคนละทีม</option>
-                  </select>
                 </div>
 
-                <div id="settingGroupPoolSize">
-                  <label style="margin-top: 16px;">🏟️ จำนวนสโมสรบนกระดาน (โหมด 🌟 ล่าแต้มคูณ)</label>
-                  <select id="clubPoolSizeRuleSelect" class="select-input">
-                    <option value="fixed_3" selected>🔒 ล็อก 3 สโมสรเสมอ (แม้คนเยอะก็มีแค่ 3 ทีม)</option>
-                    <option value="by_players">👥 ตามจำนวนผู้เล่น (ขั้นต่ำ 3 ทีม • ถ้า 4–6 คนก็มี 4–6 ทีม)</option>
-                  </select>
+                <div class="arena-cta" style="margin-top: 4px;">
+                  <button id="startClubSelectBtn" class="btn btn-primary btn-xl" style="width: 100%;">
+                    ⚽ เริ่มเกมโหมดที่เลือกเลย!
+                  </button>
                 </div>
-
-                <div id="settingGroupTriviaDiff" class="hidden">
-                  <label>🎚️ ระดับความยากคำถาม (โหมด 5: ควิซแฟนพันธุ์แท้ 4 ตัวเลือก)</label>
-                  <select id="triviaDifficultySelect" class="select-input">
-                    <option value="all" selected>🎲 รวมทุกระดับความยาก (ง่าย + ปานกลาง + ยาก)</option>
-                    <option value="easy">🟢 ระดับง่าย (+1 แต้ม • แฟนบอลทั่วไปตอบสนุก)</option>
-                    <option value="medium">🟡 ระดับปานกลาง (+2 แต้ม • แฟนบอลตัวยง)</option>
-                    <option value="hard">🔴 ระดับยาก (+3 แต้ม • แฟนพันธุ์แท้ตัวจริง!)</option>
-                  </select>
-                </div>
-
-                <div id="settingGroupModeInfo" class="hidden" style="padding:12px 14px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.35);border-radius:12px;">
-                  <div id="settingModeInfoTitle" style="font-weight:700;color:#93c5fd;margin-bottom:4px;">💡 กติกาพิเศษของโหมดนี้</div>
-                  <div id="settingModeInfoDesc" style="font-size:0.84rem;color:#cbd5e1;line-height:1.5;"></div>
-                </div>
-              </div>
-            </div>
-
-            <div class="arena-cta">
-              <button id="startClubSelectBtn" class="btn btn-primary btn-xl">
-                ⚽ เริ่มเกมโหมดที่เลือกเลย!
-              </button>
+              </aside>
             </div>
           </div>
         </div>

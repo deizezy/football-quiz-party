@@ -500,7 +500,16 @@ function renderRoom() {
   });
 
   document.querySelectorAll('[data-mode]').forEach((card) => {
-    card.classList.toggle('active', card.dataset.mode === gameMode);
+    const isActive = card.dataset.mode === gameMode;
+    card.classList.toggle('active', isActive);
+    if (isActive) {
+      const iconEl = card.querySelector('.mode-icon');
+      const titleEl = card.querySelector('.mode-info h4');
+      const bannerIcon = document.getElementById('selectedModeIconLabel');
+      const bannerTitle = document.getElementById('selectedModeTitleLabel');
+      if (bannerIcon && iconEl) bannerIcon.textContent = iconEl.textContent.trim();
+      if (bannerTitle && titleEl) bannerTitle.textContent = titleEl.textContent.trim();
+    }
   });
 
   // Show/hide Lobby settings dynamically based on selected gameMode
