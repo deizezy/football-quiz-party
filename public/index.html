@@ -15,46 +15,158 @@
   <div id="floatingReactions" class="floating-reactions"></div>
   <div id="toastContainer" class="toast-container"></div>
 
-  <!-- SCREEN 1: HOME / CREATE OR JOIN ROOM -->
+  <!-- SCREEN 1: HOME / FOOTBALL MATCHDAY ARENA -->
   <main id="homeScreen" class="screen active">
-    <div class="hero-card">
-      <div class="badge-top">🏆 9-IN-1 FOOTBALL QUIZ PARTY HUB</div>
-      <h1 class="game-title">FOOTBALL QUIZ <span>PARTY</span></h1>
-      <p class="game-subtitle">
-        ศูนย์รวมเกมทายฟุตบอลออนไลน์ 9 โหมด: ทายนักเตะสโมสร • ผัง 11 ตัวจริง • ท็อป 10 สถิติ • เส้นทางค้าแข้ง • ควิซ 4 ตัวเลือก • ตาราง XO 3x3 • จับกลุ่ม 16 นักเตะ • ทายภาพเบลอ Wordle • ต่อโซ่เพื่อนร่วมทีม
-      </p>
-
-      <div class="profile-setup">
-        <label class="field-label">ชื่อผู้เล่นของคุณ</label>
-        <input type="text" id="playerNameInput" class="text-input" placeholder="เช่น โค้ชเตี้ย, เทพเมสซี่..." maxlength="20" />
-
-        <label class="field-label" style="margin-top: 14px;">เลือกไอคอนประจำตัว</label>
-        <div id="avatarPicker" class="avatar-picker"></div>
-      </div>
-
-      <div class="home-actions">
-        <button id="createRoomBtn" class="btn btn-primary btn-lg">
-          <span>🏟️ สร้างห้องปาร์ตี้ใหม่ (Create Room)</span>
-        </button>
-
-        <div class="divider"><span>หรือเข้าร่วมห้องเพื่อน</span></div>
-
-        <div class="join-row">
-          <input type="text" id="joinCodeInput" class="text-input code-input" placeholder="รหัสห้อง 5 ตัวอักษร" maxlength="6" />
-          <button id="joinRoomBtn" class="btn btn-accent">เข้าร่วม 🚀</button>
+    <div class="home-arena-shell">
+      <!-- LEFT PANEL: STADIUM SHOWCASE, LIVE STATS & 9 FOOTBALL MODES PREVIEW -->
+      <section class="home-showcase-panel">
+        <div class="home-pitch-decor">
+          <div class="pitch-line-top"></div>
+          <div class="pitch-center-circle">⚽</div>
         </div>
-      </div>
 
-      <div class="league-pills">
-        <span>🏟️ ทายสโมสร</span>
-        <span>📋 ผัง 11 ตัวจริง</span>
-        <span>📊 ท็อป 10 สถิติ</span>
-        <span>🕵️‍♂️ เส้นทางค้าแข้ง</span>
-        <span>⚡ ควิซ 4 ตัวเลือก</span>
-        <span>🔢 ตาราง XO 3x3</span>
-        <span>🧩 จับกลุ่ม 4 ความลับ</span>
-        <span>🖼️ รูปเบลอ Wordle</span>
-        <span>🔗 ต่อโซ่นักเตะ</span>
+        <div class="badge-top">🏆 MATCHDAY ARENA • 9-IN-1 FOOTBALL QUIZ PARTY</div>
+        <h1 class="game-title">FOOTBALL QUIZ <span>PARTY</span></h1>
+        <p class="game-subtitle">
+          สังเวียนดวลความรู้ลูกหนังออนไลน์แบบเรียลไทม์! ท้าดวลกับแก๊งเพื่อนครบ <strong>5 ลีกใหญ่ยุโรป & ตำนานระดับโลก</strong> สะสมแต้มชิงถ้วยแชมป์ในห้องเดียว
+        </p>
+
+        <!-- Live Football Database Highlights -->
+        <div class="home-stats-strip">
+          <div class="home-stat-card">
+            <span class="stat-icon">🏃‍♂️</span>
+            <div>
+              <strong>662+ คน</strong>
+              <small>นักเตะตำนาน & สตาร์ดัง</small>
+            </div>
+          </div>
+          <div class="home-stat-card">
+            <span class="stat-icon">🏟️</span>
+            <div>
+              <strong>32 สโมสร</strong>
+              <small>ครบ 5 ลีกใหญ่ยุโรป</small>
+            </div>
+          </div>
+          <div class="home-stat-card">
+            <span class="stat-icon">🥇</span>
+            <div>
+              <strong>9 โหมดเกม</strong>
+              <small>สุ่มโจทย์ไม่ซ้ำทุกรอบ</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5 European Leagues & Club Badges Showcase -->
+        <div class="home-leagues-box">
+          <div class="home-leagues-header">
+            <span>🌍 5 ลีกใหญ่ยุโรป & สโมสรชั้นนำในเกม</span>
+            <div class="home-league-flags">
+              <span class="league-flag-pill"><img src="https://flagcdn.com/w40/gb-eng.png" alt="ENG" /> Premier League</span>
+              <span class="league-flag-pill"><img src="https://flagcdn.com/w40/es.png" alt="ESP" /> La Liga</span>
+              <span class="league-flag-pill"><img src="https://flagcdn.com/w40/it.png" alt="ITA" /> Serie A</span>
+              <span class="league-flag-pill"><img src="https://flagcdn.com/w40/de.png" alt="GER" /> Bundesliga</span>
+              <span class="league-flag-pill"><img src="https://flagcdn.com/w40/fr.png" alt="FRA" /> Ligue 1</span>
+            </div>
+          </div>
+          <div id="homeClubCrestsStrip" class="home-club-crests-strip"></div>
+        </div>
+
+        <!-- 9 Football Modes Tactical Board Preview -->
+        <div class="home-modes-preview-grid">
+          <div class="home-mode-mini">
+            <span>🌟</span>
+            <div>
+              <strong>ล่าแต้มคูณ 3 สโมสร</strong>
+              <small>ตอบ 1 ชื่อ คูณแต้มตามสโมสร</small>
+            </div>
+          </div>
+          <div class="home-mode-mini">
+            <span>📋</span>
+            <div>
+              <strong>ผัง 11 ตัวจริงตำนาน</strong>
+              <small>40 นัดชิง & ชุดแชมป์ประวัติศาสตร์</small>
+            </div>
+          </div>
+          <div class="home-mode-mini">
+            <span>📊</span>
+            <div>
+              <strong>ท็อป 10 สถิติลูกหนัง</strong>
+              <small>32 หัวข้อ All-Time & 2026/27</small>
+            </div>
+          </div>
+          <div class="home-mode-mini">
+            <span>🕵️‍♂️</span>
+            <div>
+              <strong>เส้นทางค้าแข้งปริศนา</strong>
+              <small>65 สตาร์ดัง ทายจากประวัติย้ายทีม</small>
+            </div>
+          </div>
+          <div class="home-mode-mini">
+            <span>⚡</span>
+            <div>
+              <strong>ควิซแฟนพันธุ์แท้ 4 ช้อยส์</strong>
+              <small>165 คำถาม ง่าย / กลาง / ยาก</small>
+            </div>
+          </div>
+          <div class="home-mode-mini">
+            <span>🔢</span>
+            <div>
+              <strong>ตาราง XO ฟุตบอล 3x3</strong>
+              <small>ผลัดกันวาง XO เรียง 3 ช่อง BINGO</small>
+            </div>
+          </div>
+          <div class="home-mode-mini">
+            <span>🧩</span>
+            <div>
+              <strong>จับกลุ่ม 16 นักเตะ</strong>
+              <small>ไขความลับ 4 หมวดหมู่ฟุตบอล</small>
+            </div>
+          </div>
+          <div class="home-mode-mini">
+            <span>🖼️</span>
+            <div>
+              <strong>ทายภาพเบลอ Wordle</strong>
+              <small>เทียบสีใบ้ สัญชาติ / ลีก / สโมสร</small>
+            </div>
+          </div>
+          <div class="home-mode-mini">
+            <span>🔗</span>
+            <div>
+              <strong>ต่อโซ่เพื่อนร่วมทีม</strong>
+              <small>ผลัดกันเชื่อมนักเตะที่เคยร่วมทีม</small>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT PANEL: LOCKER ROOM PLAYER CHECK-IN & CREATE/JOIN MATCH -->
+      <div class="hero-card">
+        <div class="locker-header">
+          <div class="locker-badge">🎽 PLAYER CHECK-IN • ลงทะเบียนเข้าสนาม</div>
+          <h2>พร้อมลงสนามดวลหรือยัง?</h2>
+          <p>ตั้งชื่อกัปตันทีมและเลือกสัญลักษณ์ประจำตัวของคุณ</p>
+        </div>
+
+        <div class="profile-setup">
+          <label class="field-label">👕 ชื่อผู้เล่น / ชื่อโค้ชของคุณ</label>
+          <input type="text" id="playerNameInput" class="text-input" placeholder="เช่น โค้ชเตี้ย, เทพเมสซี่, ป๋าเฟอร์กี้..." maxlength="20" />
+
+          <label class="field-label" style="margin-top: 14px;">⚽ เลือกตราสัญลักษณ์ประจำตัว</label>
+          <div id="avatarPicker" class="avatar-picker"></div>
+        </div>
+
+        <div class="home-actions">
+          <button id="createRoomBtn" class="btn btn-primary btn-lg home-kickoff-btn">
+            <span>🏟️ เปิดสนามสร้างห้องปาร์ตี้ใหม่ (Kick-Off!)</span>
+          </button>
+
+          <div class="divider"><span>🎫 หรือมีรหัสตั๋วเข้าห้องเพื่อนแล้ว?</span></div>
+
+          <div class="join-row">
+            <input type="text" id="joinCodeInput" class="text-input code-input" placeholder="รหัสห้อง 5 ตัว" maxlength="6" />
+            <button id="joinRoomBtn" class="btn btn-accent">เข้าสนาม 🚀</button>
+          </div>
+        </div>
       </div>
     </div>
   </main>

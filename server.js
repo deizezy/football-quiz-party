@@ -36,7 +36,7 @@ function shuffleArray(arr) {
   return copy;
 }
 
-const AVATARS = ['⚽', '🦁', '🔥', '⚡', '👑', '🦊', '🐯', '🦅', '🐉', '🌟', '🎯', '🛡️'];
+const AVATARS = ['⚽', '🥅', '👟', '🧤', '👕', '🏆', '🥇', '👑', '🐐', '🔥', '⚡', '🦁'];
 const BOT_NAMES = ['โค้ชเป๊ป (Bot)', 'ป๋าเฟอร์กี้ (Bot)', 'คล็อปป์ (Bot)', 'มูรินโญ่ (Bot)', 'อันเช่ (Bot)'];
 
 function generateRoomCode() {

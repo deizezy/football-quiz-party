@@ -1,6 +1,6 @@
 // Frontend Multiplayer Client for 9-in-1 Football Quiz Party Hub
 
-const AVATARS = ['⚽', '🦁', '🔥', '⚡', '👑', '🦊', '🐯', '🦅', '🐉', '🌟', '🎯', '🛡️'];
+const AVATARS = ['⚽', '🥅', '👟', '🧤', '👕', '🏆', '🥇', '👑', '🐐', '🔥', '⚡', '🦁'];
 
 const MODE_META = {
   multi_club_pool: {
@@ -215,6 +215,39 @@ function preparePlayerSearchIndex(players) {
   }
 }
 
+function renderHomeClubCrests() {
+  const strip = document.getElementById('homeClubCrestsStrip');
+  if (!strip || !Array.isArray(state.clubs) || state.clubs.length === 0) return;
+  const featuredIds = [
+    'manutd',
+    'liverpool',
+    'arsenal',
+    'chelsea',
+    'mancity',
+    'realmadrid',
+    'barcelona',
+    'bayern',
+    'acmilan',
+    'juventus',
+    'inter',
+    'psg'
+  ];
+  const featuredClubs = featuredIds
+    .map((id) => state.clubs.find((c) => c.id === id))
+    .filter(Boolean);
+  const list = featuredClubs.length > 0 ? featuredClubs : state.clubs.slice(0, 10);
+  strip.innerHTML = list
+    .map(
+      (c) => `
+        <span class="home-club-crest-item">
+          ${renderClubCrestHTML(c, 22)}
+          <span>${c.name}</span>
+        </span>
+      `
+    )
+    .join('');
+}
+
 function hydrateDatabaseFromLocalCache() {
   if (state.players.length > 0) return;
   try {
@@ -226,6 +259,7 @@ function hydrateDatabaseFromLocalCache() {
       state.clubs = cached.clubs || state.clubs;
       state.players = cached.players;
       preparePlayerSearchIndex(state.players);
+      renderHomeClubCrests();
       renderLeagueTabs();
       renderClubsGrid();
     }
@@ -244,6 +278,7 @@ async function loadDatabase(isRetry = false) {
     state.clubs = data.clubs || [];
     state.players = data.players || [];
     preparePlayerSearchIndex(state.players);
+    renderHomeClubCrests();
     renderLeagueTabs();
     renderClubsGrid();
 
