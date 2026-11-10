@@ -196,7 +196,7 @@ async function apiAction(action, payload = {}) {
   return data;
 }
 
-const DB_CACHE_KEY = 'fcq_db_cache_v3';
+const DB_CACHE_KEY = 'fcq_db_cache_v4';
 let isDatabaseLoading = false;
 
 function preparePlayerSearchIndex(players) {
@@ -1168,23 +1168,58 @@ function buildModeStageHTML(room, isReveal = false) {
     `;
   }
 
-  // MODE 6: 3x3 FOOTY TIC-TAC-TOE GRID (Untimed Continuous Board with Random Generator & Cell Hint/Reveal)
+  // MODE 6: 3x3 FOOTY TIC-TAC-TOE GRID (Turn-Based XO + Bingo Bonus + Random Generator)
   if (mode === 'footy_grid') {
     const cells = md.cells || Array(9).fill(null);
     const cellMeta = md.cellMeta || [];
+    const winningSet = new Set(md.winningCellIndices || []);
     const filledCount = cells.filter(Boolean).length;
+    const isMultiplayer = (md.turnOrder || []).length > 1;
+    const isMyTurn = !isMultiplayer || md.currentTurnPlayerId === state.playerId;
+
     if (cells[state.selectedGridCellIndex]) {
       const firstOpen = cells.findIndex((c) => !c);
       if (firstOpen >= 0) state.selectedGridCellIndex = firstOpen;
     }
 
+    const turnQueuePillsHtml = (md.turnOrder || [])
+      .map((tp) => {
+        const activeStyle = tp.isCurrentTurn
+          ? 'background:rgba(16,185,129,0.25);border:2px solid #10b981;color:#fff;font-weight:800;box-shadow:0 0 12px rgba(16,185,129,0.35);'
+          : 'background:rgba(15,23,42,0.7);border:1px solid rgba(148,163,184,0.25);color:#cbd5e1;';
+        return `<span style="padding:5px 12px;border-radius:999px;font-size:0.82rem;display:inline-flex;align-items:center;gap:6px;${activeStyle}">
+          ${tp.isCurrentTurn ? '🟢' : '⚪'} ${tp.avatar} ${tp.name} <small style="opacity:0.85;">(${tp.score} แต้ม)</small>
+        </span>`;
+      })
+      .join('<span style="color:#64748b;font-weight:700;">➔</span>');
+
+    const turnBannerHtml =
+      !isReveal && isMultiplayer && filledCount < 9
+        ? `
+          <div style="padding:10px 14px;margin-bottom:10px;border-radius:12px;background:${isMyTurn ? 'rgba(16,185,129,0.16)' : 'rgba(30,41,59,0.85)'};border:1px solid ${isMyTurn ? '#10b981' : 'rgba(148,163,184,0.3)'};display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-size:0.82rem;color:#94a3b8;font-weight:700;">🔄 ลำดับเทิร์นวาง XO:</span>
+              ${turnQueuePillsHtml}
+            </div>
+            <div style="font-size:0.78rem;color:#fde68a;font-weight:600;">
+              🏆 เรียงครบ 3 ช่อง (แนวนอน / แนวตั้ง / แนวทแยง) รับโบนัส BINGO +3 แต้ม!
+            </div>
+          </div>
+        `
+        : '';
+
     const toolbarHtml = !isReveal
       ? `
         <div class="top10-toolbar">
           <div class="top10-toolbar-left">
-            <span class="top10-progress-pill">ยึดแล้ว <strong>${filledCount}/9</strong> ช่อง</span>
+            <span class="top10-progress-pill">ยึดแล้ว <strong>${filledCount}/9</strong> ช่อง (เรียง 3 ช่องรับโบนัส <strong>BINGO +3</strong>)</span>
             <button type="button" class="btn btn-outline btn-sm" data-grid-hint="${state.selectedGridCellIndex}">💡 คำใบ้ช่องที่เลือก</button>
             <button type="button" class="btn btn-outline btn-sm" data-grid-reveal="${state.selectedGridCellIndex}">👁️ เฉลยช่องที่เลือก</button>
+            ${
+              isMultiplayer && filledCount < 9
+                ? `<button type="button" class="btn btn-outline btn-sm" data-grid-skip="1">🏳️ ข้ามตานี้</button>`
+                : ''
+            }
           </div>
           <div class="top10-toolbar-actions">
             <button type="button" class="btn btn-accent btn-sm" data-grid-random="1">🎲 สุ่มตาราง XO 3x3 ใหม่</button>
@@ -1214,7 +1249,7 @@ function buildModeStageHTML(room, isReveal = false) {
         `
         : '';
 
-    let html = `${toolbarHtml}${clearedBannerHtml}<div class="footy-grid-wrapper"><div class="footy-grid-board">`;
+    let html = `${turnBannerHtml}${toolbarHtml}${clearedBannerHtml}<div class="footy-grid-wrapper"><div class="footy-grid-board">`;
     html += `<div class="grid-header-cell"><strong>XO 3x3</strong><small>คลิกเลือกช่อง</small></div>`;
     (md.cols || []).forEach((col) => {
       html += `<div class="grid-header-cell">${renderHdrIcon(col)}<strong>${col.label}</strong><small>${col.sub}</small></div>`;
@@ -1227,18 +1262,22 @@ function buildModeStageHTML(room, isReveal = false) {
         const claimed = cells[cellIdx];
         const metaInfo = cellMeta[cellIdx] || {};
         const isSelected = !isReveal && !claimed && state.selectedGridCellIndex === cellIdx;
+        const isBingoCell = winningSet.has(cellIdx);
         if (claimed) {
+          const bingoStyle = isBingoCell
+            ? 'border:2px solid #fbbf24;box-shadow:0 0 16px rgba(251,191,36,0.45);background:linear-gradient(135deg, rgba(245,158,11,0.28), rgba(16,185,129,0.22));'
+            : '';
           const cellPhoto = claimed.photoUrl
             ? `<img src="${claimed.photoUrl}" class="player-photo-avatar" style="width:32px;height:32px;margin-bottom:3px;" onerror="this.style.display='none'" />`
             : `<div style="font-size:1.1rem;">${claimed.ownerAvatar}</div>`;
           html += `
-            <div class="grid-play-cell claimed">
+            <div class="grid-play-cell claimed" style="${bingoStyle}">
               ${cellPhoto}
               <strong style="font-size:0.82rem;color:#fde68a;display:flex;align-items:center;gap:4px;">
                 ${renderFlagHTML(claimed.playerFlag, claimed.flagUrl)} ${claimed.playerName}
               </strong>
               <small style="font-size:0.7rem;color:${claimed.revealed ? '#fbbf24' : '#6ee7b7'};">
-                ${claimed.revealed ? '👁️ เฉลยระบบ (0 แต้ม)' : `✅ ยึดโดย ${claimed.ownerName} (+${claimed.pointsEarned || 2} แต้ม)`}
+                ${claimed.revealed ? '👁️ เฉลยระบบ (0 แต้ม)' : `✅ ยึดโดย ${claimed.ownerName} (+${claimed.pointsEarned || 2} แต้ม)${isBingoCell ? ' 🏆BINGO!' : ''}`}
               </small>
             </div>
           `;
@@ -1704,6 +1743,14 @@ function bindDynamicStageEvents(container, room) {
       });
     }
 
+    const skipBtn = container.querySelector('[data-grid-skip]');
+    if (skipBtn) {
+      skipBtn.addEventListener('click', async () => {
+        sfx.beep(420, 0.08);
+        await apiAction('grid_skip_turn');
+      });
+    }
+
     container.querySelectorAll('[data-grid-random]').forEach((randomGridBtn) => {
       randomGridBtn.addEventListener('click', async () => {
         sfx.lockIn();
@@ -1895,9 +1942,14 @@ function renderPlayingView(room) {
     document.getElementById('playingClubName').textContent = `คำถามแฟนพันธุ์แท้ลูกหนัง ข้อที่ ${room.roundNumber}`;
     document.getElementById('playingClubSub').textContent = `กดเลือกคำตอบที่ถูกต้องให้ไวที่สุด!`;
   } else if (mode === 'footy_grid') {
+    const turnName = room.modeData?.currentTurnPlayerName || 'ผู้เล่น 1';
+    const turnAvatar = room.modeData?.currentTurnPlayerAvatar || '⚽';
+    const isMulti = (room.modeData?.turnOrder || []).length > 1;
     banner.style.background = `linear-gradient(135deg, #0d9488, #0f172a)`;
-    document.getElementById('playingClubName').textContent = room.modeData?.title || 'Footy Tic-Tac-Toe 3x3';
-    document.getElementById('playingClubSub').textContent = `คลิกเลือกช่องในตาราง แล้วพิมพ์ชื่อนักเตะเพื่อยึดช่อง! (ไม่จำกัดเวลา ห้ามใช้ชื่อซ้ำในกระดานเดียวกัน)`;
+    document.getElementById('playingClubName').textContent = isMulti
+      ? `${room.modeData?.title || 'Footy Tic-Tac-Toe 3x3'} • ตาของ ${turnAvatar} ${turnName}`
+      : room.modeData?.title || 'Footy Tic-Tac-Toe 3x3';
+    document.getElementById('playingClubSub').innerHTML = `คลิกเลือกช่องในตาราง แล้วพิมพ์ชื่อนักเตะเพื่อยึดช่อง! • 🏆 เรียงครบ 3 ช่องรับโบนัส <strong>BINGO +3 แต้ม</strong> (ห้ามใช้ชื่อซ้ำในตารางเดียวกัน)`;
   } else if (mode === 'connections') {
     banner.style.background = `linear-gradient(135deg, #8b5cf6, #0f172a)`;
     document.getElementById('playingClubName').textContent = room.modeData?.title || `Football Connections ชุดที่ #${room.roundNumber}`;
@@ -1934,6 +1986,12 @@ function renderPlayingView(room) {
     mode === 'chain_link' &&
     room.modeData?.currentTurnPlayerId &&
     room.modeData.currentTurnPlayerId !== state.playerId;
+  const isWaitingForOtherTurnInGrid =
+    mode === 'footy_grid' &&
+    (room.modeData?.turnOrder || []).length > 1 &&
+    (room.modeData?.cells || []).some((c) => !c) &&
+    room.modeData?.currentTurnPlayerId &&
+    room.modeData.currentTurnPlayerId !== state.playerId;
 
   const inputZone = document.getElementById('answerInputZone');
   const lockedZone = document.getElementById('answerLockedZone');
@@ -1944,6 +2002,11 @@ function renderPlayingView(room) {
     stageEl.classList.remove('hidden');
     lockedZone.classList.remove('hidden');
     document.getElementById('lockedAnswerText').textContent = `⏳ ตอนนี้เป็นตาของ ${room.modeData.currentTurnPlayerAvatar || '⚽'} ${room.modeData.currentTurnPlayerName} กำลังคิดต่อโซ่... (คิวถัดไป: ${room.modeData.nextTurnPlayerAvatar || '⚽'} ${room.modeData.nextTurnPlayerName || ''})`;
+  } else if (isWaitingForOtherTurnInGrid) {
+    inputZone.classList.add('hidden');
+    stageEl.classList.remove('hidden');
+    lockedZone.classList.remove('hidden');
+    document.getElementById('lockedAnswerText').textContent = `⏳ ตอนนี้เป็นตาของ ${room.modeData.currentTurnPlayerAvatar || '⚽'} ${room.modeData.currentTurnPlayerName} กำลังเลือกช่องวาง XO...`;
   } else if (hasSubmitted) {
     inputZone.classList.add('hidden');
     stageEl.classList.toggle('hidden', mode === 'trivia_quiz');

@@ -24,6 +24,8 @@ const PORT = process.env.PORT || 3000;
 const rooms = new Map();
 const roomStreams = new Map();
 const globalUsedTriviaIds = new Set();
+const globalUsedTop10Ids = new Set();
+const globalUsedWordleIds = new Set();
 
 function shuffleArray(arr) {
   const copy = [...arr];
@@ -159,18 +161,42 @@ function playerMatchesGridCriteria(player, criteria) {
   return false;
 }
 
+const GRID_BINGO_LINES = [
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8],
+  [0, 4, 8],
+  [2, 4, 6]
+];
+
+function getGridBingoLines(cells, playerId) {
+  if (!playerId || playerId === 'revealed') return [];
+  return GRID_BINGO_LINES.filter((line) =>
+    line.every((idx) => cells[idx] && cells[idx].ownerId === playerId)
+  ).map((line) => line.join('-'));
+}
+
+function getAllWinningCellIndices(cells) {
+  const winningSet = new Set();
+  for (const line of GRID_BINGO_LINES) {
+    const first = cells[line[0]];
+    if (
+      first &&
+      first.ownerId &&
+      first.ownerId !== 'revealed' &&
+      line.every((idx) => cells[idx] && cells[idx].ownerId === first.ownerId)
+    ) {
+      line.forEach((idx) => winningSet.add(idx));
+    }
+  }
+  return Array.from(winningSet);
+}
+
 function checkGridBingo(cells, playerId) {
-  const lines = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6]
-  ];
-  return lines.some((line) => line.every((idx) => cells[idx] && cells[idx].ownerId === playerId));
+  return getGridBingoLines(cells, playerId).length > 0;
 }
 
 function computeMatchSummary(room) {
@@ -457,13 +483,32 @@ function serializeModeDataForClients(room) {
       };
     });
 
+    const activePlayers = room.players || [];
+    const turnIdx =
+      activePlayers.length > 0
+        ? ((room.gridTurnIndex || 0) % activePlayers.length + activePlayers.length) % activePlayers.length
+        : 0;
+    const turnPlayer = activePlayers[turnIdx] || activePlayers[0] || null;
+    const cells = room.gridCells || Array(9).fill(null);
+
     return {
       gridId: grid.id,
       title: grid.title,
       cols: grid.cols.map(enrichHeader),
       rows: grid.rows.map(enrichHeader),
       availableGrids: FOOTY_GRIDS.map((g) => ({ id: g.id, title: g.title })),
-      cells: room.gridCells || Array(9).fill(null),
+      cells,
+      winningCellIndices: getAllWinningCellIndices(cells),
+      currentTurnPlayerId: turnPlayer ? turnPlayer.id : null,
+      currentTurnPlayerName: turnPlayer ? turnPlayer.name : 'ผู้เล่น 1',
+      currentTurnPlayerAvatar: turnPlayer ? turnPlayer.avatar : '⚽',
+      turnOrder: activePlayers.map((p, idx) => ({
+        id: p.id,
+        name: p.name,
+        avatar: p.avatar,
+        score: p.score,
+        isCurrentTurn: idx === turnIdx
+      })),
       cellMeta
     };
   }
@@ -471,7 +516,7 @@ function serializeModeDataForClients(room) {
   // MODE 7: FOOTBALL CONNECTIONS (16 Players -> 4 Secret Groups of 4)
   if (mode === 'connections') {
     if (!room.connectionsBoard) {
-      room.connectionsBoard = generateConnectionsBoard(room.roundNumber || 1);
+      room.connectionsBoard = generateConnectionsBoard(room.roundNumber || 1, room);
     }
     const board = room.connectionsBoard;
     if (!board) return null;
@@ -497,7 +542,7 @@ function serializeModeDataForClients(room) {
   // MODE 8: WHO ARE YA? (Blurred Photo + Wordle Attribute Matrix)
   if (mode === 'who_are_ya_wordle') {
     if (!room.wordleMysteryPlayer) {
-      room.wordleMysteryPlayer = pickMysteryWordlePlayer();
+      room.wordleMysteryPlayer = pickMysteryWordlePlayer(room);
     }
     const target = room.wordleMysteryPlayer;
     const solved = !!room.wordleSolved;
@@ -739,6 +784,10 @@ function clearRoomTimers(room) {
   if (room.chainBotTimeout) {
     clearTimeout(room.chainBotTimeout);
     room.chainBotTimeout = null;
+  }
+  if (room.gridBotTimeout) {
+    clearTimeout(room.gridBotTimeout);
+    room.gridBotTimeout = null;
   }
   if (room.botTimeouts) {
     room.botTimeouts.forEach((t) => clearTimeout(t));
@@ -1021,6 +1070,62 @@ function scheduleBotActions(room) {
   });
 }
 
+function getActiveGridTurnPlayer(room) {
+  const activePlayers = room.players || [];
+  if (activePlayers.length === 0) return null;
+  const idx = ((room.gridTurnIndex || 0) % activePlayers.length + activePlayers.length) % activePlayers.length;
+  room.gridTurnIndex = idx;
+  return activePlayers[idx];
+}
+
+function scheduleGridBotTurn(room) {
+  if (room.gridBotTimeout) {
+    clearTimeout(room.gridBotTimeout);
+    room.gridBotTimeout = null;
+  }
+  if (room.state !== 'PLAYING' || room.settings.gameMode !== 'footy_grid') return;
+  const cells = room.gridCells || Array(9).fill(null);
+  const openIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8].filter((i) => !cells[i]);
+  if (openIndices.length === 0) return;
+
+  const turnPlayer = getActiveGridTurnPlayer(room);
+  if (!turnPlayer || !turnPlayer.isBot) return;
+
+  const delayMs = 2400 + Math.floor(Math.random() * 1600);
+  room.gridBotTimeout = setTimeout(() => {
+    if (room.state !== 'PLAYING' || room.settings.gameMode !== 'footy_grid') return;
+    const currentTurn = getActiveGridTurnPlayer(room);
+    if (!currentTurn || currentTurn.id !== turnPlayer.id) return;
+
+    const grid =
+      room.customFootyGrid && room.customFootyGrid.id === room.currentGridId
+        ? room.customFootyGrid
+        : FOOTY_GRIDS.find((g) => g.id === room.currentGridId) || FOOTY_GRIDS[0];
+    const curCells = room.gridCells || Array(9).fill(null);
+    const curOpen = [0, 1, 2, 3, 4, 5, 6, 7, 8].filter((i) => !curCells[i]);
+    if (curOpen.length === 0) return;
+
+    const cellIdx = curOpen[Math.floor(Math.random() * curOpen.length)];
+    const rIdx = Math.floor(cellIdx / 3);
+    const cIdx = cellIdx % 3;
+    const usedNames = new Set(curCells.filter(Boolean).map((c) => normalizeText(c.playerName)));
+    const valid = PLAYERS.filter(
+      (p) =>
+        !usedNames.has(normalizeText(p.name)) &&
+        playerMatchesGridCriteria(p, grid.rows[rIdx]) &&
+        playerMatchesGridCriteria(p, grid.cols[cIdx])
+    );
+    if (valid.length > 0) {
+      const pick = valid[Math.floor(Math.random() * valid.length)];
+      handlePlayerSubmission(room, turnPlayer.id, pick.name, pick.id, { cellIndex: cellIdx });
+    } else {
+      room.gridTurnIndex = ((room.gridTurnIndex || 0) + 1) % room.players.length;
+      broadcastRoom(room.code, 'top10_updated');
+      scheduleGridBotTurn(room);
+    }
+  }, delayMs);
+}
+
 function getActiveChainTurnPlayer(room) {
   const activePlayers = room.players || [];
   if (activePlayers.length === 0) return null;
@@ -1139,6 +1244,8 @@ function startWave(room) {
   broadcastRoom(room.code, 'wave_started');
   if (mode === 'chain_link') {
     scheduleChainBotTurn(room);
+  } else if (mode === 'footy_grid') {
+    scheduleGridBotTurn(room);
   } else {
     scheduleBotActions(room);
   }
@@ -1316,8 +1423,19 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
     };
   }
 
-  // Continuous untimed mode for Mode 6 (Footy Tic-Tac-Toe 3x3 Grid)
+  // Turn-Based XO & Bingo Bonus mode for Mode 6 (Footy Tic-Tac-Toe 3x3 Grid)
   if (mode === 'footy_grid') {
+    const currentTurnPlayer = getActiveGridTurnPlayer(room);
+    if ((room.players || []).length > 1 && currentTurnPlayer && player && player.id !== currentTurnPlayer.id) {
+      return {
+        ok: true,
+        top10Feedback: {
+          correct: false,
+          message: `⏳ ยังไม่ถึงตาของคุณวาง XO! ตอนนี้เป็นตาของ ${currentTurnPlayer.avatar} ${currentTurnPlayer.name}`
+        }
+      };
+    }
+
     const grid = room.customFootyGrid || FOOTY_GRIDS.find((g) => g.id === room.currentGridId) || FOOTY_GRIDS[0];
     if (!room.gridCells) room.gridCells = Array(9).fill(null);
     const cellIdx = Math.max(0, Math.min(8, extra.cellIndex || 0));
@@ -1396,8 +1514,18 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
       });
     }
 
-    const gotBingo = player ? checkGridBingo(room.gridCells, player.id) : false;
-    const bingoBonus = gotBingo ? 3 : 0;
+    if (!Array.isArray(room.awardedBingoLines)) room.awardedBingoLines = [];
+    const completedLines = player ? getGridBingoLines(room.gridCells, player.id) : [];
+    const newBingoLines = completedLines.filter((lineKey) => {
+      const token = `${player.id}:${lineKey}`;
+      if (!room.awardedBingoLines.includes(token)) {
+        room.awardedBingoLines.push(token);
+        return true;
+      }
+      return false;
+    });
+    const gotBingo = newBingoLines.length > 0;
+    const bingoBonus = newBingoLines.length * 3;
     const pts = baseCellPts + bingoBonus;
     room.gridCells[cellIdx].pointsEarned = pts;
 
@@ -1406,15 +1534,29 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
       recordPlayerResultStats(player, true, null, footballer.name);
     }
 
+    if ((room.players || []).length > 0) {
+      room.gridTurnIndex = ((room.gridTurnIndex || 0) + 1) % room.players.length;
+    }
+    const nextTurnPlayer = getActiveGridTurnPlayer(room);
+    const hasOpenCells = room.gridCells.some((c) => !c);
+    const nextTurnTxt =
+      hasOpenCells && (room.players || []).length > 1 && nextTurnPlayer
+        ? ` ➔ 🟢 ตาต่อไป: ${nextTurnPlayer.avatar} ${nextTurnPlayer.name}!`
+        : '';
+
     const rareTag = !isHintedCell && isRareCell ? ' 💎ช่องหายาก!' : '';
-    const msg = `🎉 ${player ? player.name : 'ผู้เล่น'} ยึดช่อง [${rowCrit.label} x ${colCrit.label}] ด้วย ${footballer.name}${rareTag} (+${pts} แต้ม${gotBingo ? ' 🔥BINGO +3!' : ''})`;
+    const msg = `🎉 ${player ? player.name : 'ผู้เล่น'} ยึดช่อง [${rowCrit.label} x ${colCrit.label}] ด้วย ${footballer.name}${rareTag} (+${pts} แต้ม${gotBingo ? ` 🔥BINGO +${bingoBonus}!` : ''})${nextTurnTxt}`;
     broadcastRoom(room.code, 'top10_updated', { toastMessage: msg });
+
+    if (hasOpenCells) {
+      scheduleGridBotTurn(room);
+    }
 
     return {
       ok: true,
       top10Feedback: {
         correct: true,
-        message: `✅ ยึดช่องสำเร็จ! ${footballer.name}${rareTag} (+${pts} คะแนน${gotBingo ? ' รวมโบนัส BINGO +3!' : ''})`
+        message: `✅ ยึดช่องสำเร็จ! ${footballer.name}${rareTag} (+${pts} คะแนน${gotBingo ? ` รวมโบนัส BINGO +${bingoBonus}!` : ''})${nextTurnTxt}`
       }
     };
   }
@@ -1428,7 +1570,7 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
       };
     }
     if (!room.wordleMysteryPlayer) {
-      room.wordleMysteryPlayer = pickMysteryWordlePlayer();
+      room.wordleMysteryPlayer = pickMysteryWordlePlayer(room);
     }
     if (room.wordleSolved || room.wordleRevealed) {
       return {
@@ -2573,7 +2715,12 @@ function pickSmartClubPool(count) {
 }
 
 // Generate a dynamic 4x4 Football Connections board (4 secret categories of 4 players each)
-function generateConnectionsBoard(roundNum) {
+function generateConnectionsBoard(roundNum, room = null) {
+  if (room && !Array.isArray(room.usedConnectionCategoryIds)) {
+    room.usedConnectionCategoryIds = [];
+  }
+  const usedCatSet = new Set(room && room.usedConnectionCategoryIds ? room.usedConnectionCategoryIds : []);
+
   const clubOverlapWeight = new Map();
   for (const p of PLAYERS) {
     if (Array.isArray(p.clubs) && p.clubs.length >= 2) {
@@ -2684,11 +2831,18 @@ function generateConnectionsBoard(roundNum) {
     }
   }
 
-  for (let attempt = 0; attempt < 120; attempt++) {
-    const g4 = tier4Pool[Math.floor(Math.random() * tier4Pool.length)];
-    const g3 = tier3Pool[Math.floor(Math.random() * tier3Pool.length)];
-    const g2 = tier2Pool[Math.floor(Math.random() * tier2Pool.length)];
-    const g1 = tier1Pool[Math.floor(Math.random() * tier1Pool.length)];
+  const pickFromTier = (pool, ignoreUsed) => {
+    const fresh = ignoreUsed ? pool : pool.filter((g) => !usedCatSet.has(g.id));
+    const list = fresh.length > 0 ? fresh : pool;
+    return list[Math.floor(Math.random() * list.length)];
+  };
+
+  for (let attempt = 0; attempt < 150; attempt++) {
+    const ignoreUsed = attempt >= 90;
+    const g4 = pickFromTier(tier4Pool, ignoreUsed);
+    const g3 = pickFromTier(tier3Pool, ignoreUsed);
+    const g2 = pickFromTier(tier2Pool, ignoreUsed);
+    const g1 = pickFromTier(tier1Pool, ignoreUsed);
     const chosenGroups = [g4, g3, g2, g1].filter(Boolean);
     if (chosenGroups.length < 4) continue;
 
@@ -2750,6 +2904,13 @@ function generateConnectionsBoard(roundNum) {
     }
 
     if (ok && groupsOut.length === 4) {
+      if (room && Array.isArray(room.usedConnectionCategoryIds)) {
+        groupsOut.forEach((g) => {
+          if (!room.usedConnectionCategoryIds.includes(g.id)) {
+            room.usedConnectionCategoryIds.push(g.id);
+          }
+        });
+      }
       groupsOut.sort((a, b) => a.tier - b.tier);
       const allTiles = groupsOut
         .flatMap((g) =>
@@ -2795,13 +2956,26 @@ const VERIFIED_STAR_PHOTOS = {
   'Thibaut Courtois': 'https://a.espncdn.com/i/headshots/soccer/players/full/134912.png'
 };
 
-// Pick a mystery player for Mode 8 (Who Are Ya? Blurred Photo + Wordle Attribute Matrix)
-function pickMysteryWordlePlayer(previousId = null) {
+// Pick a non-repeating mystery player for Mode 8 (Who Are Ya? Blurred Photo + Wordle Attribute Matrix)
+function pickMysteryWordlePlayer(roomOrPrevId = null) {
   for (const p of PLAYERS) {
     if (!p.photoUrl && VERIFIED_STAR_PHOTOS[p.name]) {
       p.photoUrl = VERIFIED_STAR_PHOTOS[p.name];
     }
   }
+  const roomObj = roomOrPrevId && typeof roomOrPrevId === 'object' ? roomOrPrevId : null;
+  const previousId =
+    typeof roomOrPrevId === 'string'
+      ? roomOrPrevId
+      : roomObj && roomObj.wordleMysteryPlayer
+        ? roomObj.wordleMysteryPlayer.id
+        : null;
+
+  if (roomObj && !Array.isArray(roomObj.usedWordleIds)) {
+    roomObj.usedWordleIds = previousId ? [previousId] : [];
+  }
+  const usedRoomSet = new Set(roomObj ? roomObj.usedWordleIds : previousId ? [previousId] : []);
+
   const clubOverlapWeight = new Map();
   for (const p of PLAYERS) {
     if (Array.isArray(p.clubs) && p.clubs.length >= 2) {
@@ -2817,17 +2991,30 @@ function pickMysteryWordlePlayer(previousId = null) {
       .map((c) => c.id)
   );
 
-  const withPhotos = PLAYERS.filter(
-    (p) =>
-      p.id !== previousId &&
-      p.photoUrl &&
-      p.clubs.some((cid) => famousClubIds.has(cid))
-  );
-  const pool =
-    withPhotos.length > 0
-      ? withPhotos
-      : PLAYERS.filter((p) => p.id !== previousId && p.clubs.some((cid) => famousClubIds.has(cid)));
-  return pool[Math.floor(Math.random() * pool.length)] || PLAYERS[0];
+  const baseFamous = PLAYERS.filter((p) => p.clubs.some((cid) => famousClubIds.has(cid)));
+  const withPhotos = baseFamous.filter((p) => !!p.photoUrl);
+  const candidatePool = withPhotos.length >= 10 ? withPhotos : baseFamous;
+
+  let pool = candidatePool.filter((p) => !usedRoomSet.has(p.id) && !globalUsedWordleIds.has(p.id));
+  if (pool.length === 0) {
+    globalUsedWordleIds.clear();
+    if (previousId) globalUsedWordleIds.add(previousId);
+    pool = candidatePool.filter((p) => !usedRoomSet.has(p.id));
+  }
+  if (pool.length === 0) {
+    if (roomObj) roomObj.usedWordleIds = previousId ? [previousId] : [];
+    pool = candidatePool.filter((p) => p.id !== previousId);
+  }
+
+  const shuffled = shuffleArray(pool);
+  const chosen = shuffled[0] || candidatePool[0] || PLAYERS[0];
+  if (roomObj && chosen) {
+    if (!roomObj.usedWordleIds.includes(chosen.id)) roomObj.usedWordleIds.push(chosen.id);
+  }
+  if (chosen) {
+    globalUsedWordleIds.add(chosen.id);
+  }
+  return chosen;
 }
 
 // Pick a well-connected starting player for Mode 9 (Chain Link: Player -> Club -> Teammate)
@@ -2927,10 +3114,28 @@ function startModeRound(room, options = {}) {
   } else if (mode === 'top10_stats') {
     room.roundNumber += 1;
     room.waveNumber = 1;
-    const chosen = options.listId
-      ? TOP10_LISTS.find((l) => l.id === options.listId)
-      : TOP10_LISTS[(room.roundNumber - 1) % TOP10_LISTS.length];
+    if (!Array.isArray(room.usedTop10Ids)) room.usedTop10Ids = [];
+    let chosen = options.listId ? TOP10_LISTS.find((l) => l.id === options.listId) : null;
+    if (!chosen) {
+      const usedSet = new Set(room.usedTop10Ids);
+      let pool = TOP10_LISTS.filter((l) => !usedSet.has(l.id) && !globalUsedTop10Ids.has(l.id));
+      if (pool.length === 0) {
+        globalUsedTop10Ids.clear();
+        if (room.currentTop10Id) globalUsedTop10Ids.add(room.currentTop10Id);
+        pool = TOP10_LISTS.filter((l) => !usedSet.has(l.id));
+      }
+      if (pool.length === 0) {
+        room.usedTop10Ids = room.currentTop10Id ? [room.currentTop10Id] : [];
+        pool = TOP10_LISTS.filter((l) => l.id !== room.currentTop10Id);
+      }
+      const shuffled = shuffleArray(pool);
+      chosen = shuffled[0] || TOP10_LISTS[0];
+    }
     room.currentTop10Id = (chosen || TOP10_LISTS[0]).id;
+    if (!room.usedTop10Ids.includes(room.currentTop10Id)) {
+      room.usedTop10Ids.push(room.currentTop10Id);
+    }
+    globalUsedTop10Ids.add(room.currentTop10Id);
     room.unlockedTop10Ranks = {};
     room.hintedTop10Ranks = {};
     startWave(room);
@@ -3016,6 +3221,8 @@ function startModeRound(room, options = {}) {
   } else if (mode === 'footy_grid') {
     room.roundNumber += 1;
     room.waveNumber = 1;
+    room.gridTurnIndex =
+      (room.players || []).length > 0 ? (room.roundNumber - 1) % room.players.length : 0;
     if (options.gridId && options.gridId !== 'random') {
       const chosen = FOOTY_GRIDS.find((g) => g.id === options.gridId) || FOOTY_GRIDS[0];
       room.currentGridId = chosen.id;
@@ -3027,17 +3234,17 @@ function startModeRound(room, options = {}) {
     }
     room.gridCells = Array(9).fill(null);
     room.hintedGridCells = {};
+    room.awardedBingoLines = [];
     startWave(room);
   } else if (mode === 'connections') {
     room.roundNumber += 1;
     room.waveNumber = 1;
-    room.connectionsBoard = generateConnectionsBoard(room.roundNumber);
+    room.connectionsBoard = generateConnectionsBoard(room.roundNumber, room);
     startWave(room);
   } else if (mode === 'who_are_ya_wordle') {
     room.roundNumber += 1;
     room.waveNumber = 1;
-    const prevId = room.wordleMysteryPlayer ? room.wordleMysteryPlayer.id : null;
-    const nextMystery = pickMysteryWordlePlayer(prevId);
+    const nextMystery = pickMysteryWordlePlayer(room);
     room.wordleMysteryPlayer = nextMystery;
     room.wordleGuesses = [];
     room.wordleHintStep = 0;
@@ -3517,9 +3724,26 @@ function handleApiAction(req, res, body) {
           flagUrl: sample.flagUrl || getFlagUrlFromEmoji(sample.flag),
           photoUrl: sample.photoUrl || null
         };
+        if ((room.players || []).length > 0) {
+          room.gridTurnIndex = ((room.gridTurnIndex || 0) + 1) % room.players.length;
+        }
         broadcastRoom(code, 'top10_updated');
+        scheduleGridBotTurn(room);
       }
     }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
+  }
+
+  if (action === 'grid_skip_turn') {
+    if ((room.players || []).length > 0) {
+      room.gridTurnIndex = ((room.gridTurnIndex || 0) + 1) % room.players.length;
+    }
+    const nextTurnPlayer = getActiveGridTurnPlayer(room);
+    broadcastRoom(code, 'top10_updated', {
+      toastMessage: `🏳️ ข้ามเทิร์นวาง XO ➔ 🟢 ตาต่อไปของ ${nextTurnPlayer ? `${nextTurnPlayer.avatar} ${nextTurnPlayer.name}` : 'ผู้เล่นถัดไป'}!`
+    });
+    scheduleGridBotTurn(room);
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ ok: true, room: serializeRoomForClients(room) }));
   }
@@ -3680,13 +3904,19 @@ function handleApiAction(req, res, body) {
   }
 
   if (action === 'connections_reveal_one') {
-    if (!room.connectionsBoard) room.connectionsBoard = generateConnectionsBoard(room.roundNumber || 1);
+    if (!room.connectionsBoard) room.connectionsBoard = generateConnectionsBoard(room.roundNumber || 1, room);
     const board = room.connectionsBoard;
     const openGrp = board.groups.find((g) => !g.solved);
     if (openGrp) {
       openGrp.solved = true;
       openGrp.revealed = true;
       openGrp.solvedBy = '👁️ เปิดเฉลย (0 แต้ม)';
+      const rem = board.groups.filter((g) => !g.solved);
+      if (rem.length === 1) {
+        rem[0].solved = true;
+        rem[0].revealed = true;
+        rem[0].solvedBy = '👁️ เปิดเฉลยกลุ่มสุดท้าย (0 แต้ม)';
+      }
       broadcastRoom(code, 'top10_updated');
     }
     res.writeHead(200, { 'Content-Type': 'application/json' });

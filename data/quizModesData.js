@@ -876,6 +876,278 @@ const TOP10_LISTS = [
       { rank: 9, name: 'James Milner', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '89 แอสซิสต์', points: 140, aliases: ['milner', 'มิลเนอร์'] },
       { rank: 10, name: 'Mohamed Salah', flag: '🇪🇬', stat: '80+ แอสซิสต์', points: 120, aliases: ['salah', 'ซาลาห์'] }
     ]
+  },
+  {
+    id: 'wc_top_scorers',
+    title: '10 อันดับดาวซัลโวสูงสุดตลอดกาล ฟุตบอลโลก (FIFA World Cup)',
+    category: '🌍 FIFA World Cup All-Time Top Scorers',
+    items: [
+      { rank: 1, name: 'Miroslav Klose', flag: '🇩🇪', stat: '16 ประตู', points: 100, aliases: ['klose', 'โคลเซ่'] },
+      { rank: 2, name: 'Ronaldo Nazário', flag: '🇧🇷', stat: '15 ประตู', points: 100, aliases: ['ronaldo', 'r9', 'โรนัลโด้อ้วน'] },
+      { rank: 3, name: 'Gerd Müller', flag: '🇩🇪', stat: '14 ประตู', points: 110, aliases: ['gerd muller', 'แกร์ด มุลเลอร์'] },
+      { rank: 4, name: 'Lionel Messi', flag: '🇦🇷', stat: '13 ประตู', points: 100, aliases: ['messi', 'เมสซี่'] },
+      { rank: 5, name: 'Just Fontaine', flag: '🇫🇷', stat: '13 ประตู', points: 140, aliases: ['fontaine', 'ฟงแตน'] },
+      { rank: 6, name: 'Kylian Mbappé', flag: '🇫🇷', stat: '12 ประตู', points: 100, aliases: ['mbappe', 'เอ็มบัปเป้'] },
+      { rank: 7, name: 'Pelé', flag: '🇧🇷', stat: '12 ประตู', points: 110, aliases: ['pele', 'เปเล่'] },
+      { rank: 8, name: 'Jürgen Klinsmann', flag: '🇩🇪', stat: '11 ประตู', points: 130, aliases: ['klinsmann', 'คลินส์มันน์'] },
+      { rank: 9, name: 'Sándor Kocsis', flag: '🇭🇺', stat: '11 ประตู', points: 150, aliases: ['kocsis', 'ค็อกซิส'] },
+      { rank: 10, name: 'Gabriel Batistuta', flag: '🇦🇷', stat: '10 ประตู', points: 130, aliases: ['batistuta', 'บาติสตูต้า'] }
+    ]
+  },
+  {
+    id: 'intl_top_scorers',
+    title: '10 อันดับดาวซัลโวทีมชาติสูงสุดตลอดกาลของโลก',
+    category: '🌍 International Football All-Time Top Scorers',
+    items: [
+      { rank: 1, name: 'Cristiano Ronaldo', flag: '🇵🇹', stat: '133+ ประตู (โปรตุเกส)', points: 100, aliases: ['ronaldo', 'cr7', 'โรนัลโด้'] },
+      { rank: 2, name: 'Lionel Messi', flag: '🇦🇷', stat: '112+ ประตู (อาร์เจนตินา)', points: 100, aliases: ['messi', 'เมสซี่'] },
+      { rank: 3, name: 'Ali Daei', flag: '🇮🇷', stat: '108 ประตู (อิหร่าน)', points: 130, aliases: ['ali daei', 'อาลี ดาอี'] },
+      { rank: 4, name: 'Sunil Chhetri', flag: '🇮🇳', stat: '94 ประตู (อินเดีย)', points: 140, aliases: ['chhetri', 'เชตรี'] },
+      { rank: 5, name: 'Mokhtar Dahari', flag: '🇲🇾', stat: '89 ประตู (มาเลเซีย)', points: 150, aliases: ['dahari', 'ดาฮารี'] },
+      { rank: 6, name: 'Romelu Lukaku', flag: '🇧🇪', stat: '85+ ประตู (เบลเยียม)', points: 110, aliases: ['lukaku', 'ลูกากู'] },
+      { rank: 7, name: 'Ferenc Puskás', flag: '🇭🇺', stat: '84 ประตู (ฮังการี)', points: 130, aliases: ['puskas', 'ปุสกัส'] },
+      { rank: 8, name: 'Robert Lewandowski', flag: '🇵🇱', stat: '84+ ประตู (โปแลนด์)', points: 110, aliases: ['lewandowski', 'เลวานดอฟสกี้'] },
+      { rank: 9, name: 'Neymar Jr', flag: '🇧🇷', stat: '79 ประตู (บราซิล)', points: 110, aliases: ['neymar', 'เนย์มาร์'] },
+      { rank: 10, name: 'Pelé', flag: '🇧🇷', stat: '77 ประตู (บราซิล)', points: 120, aliases: ['pele', 'เปเล่'] }
+    ]
+  },
+  {
+    id: 'ballon_dor_winners',
+    title: '10 อันดับตำนานที่คว้ารางวัลบัลลงดอร์ (Ballon d\'Or) มากที่สุด',
+    category: '🌕 Ballon d\'Or All-Time Leaders',
+    items: [
+      { rank: 1, name: 'Lionel Messi', flag: '🇦🇷', stat: '8 สมัย', points: 100, aliases: ['messi', 'เมสซี่'] },
+      { rank: 2, name: 'Cristiano Ronaldo', flag: '🇵🇹', stat: '5 สมัย', points: 100, aliases: ['ronaldo', 'cr7', 'โรนัลโด้'] },
+      { rank: 3, name: 'Michel Platini', flag: '🇫🇷', stat: '3 สมัย', points: 120, aliases: ['platini', 'พลาตินี่'] },
+      { rank: 4, name: 'Johan Cruyff', flag: '🇳🇱', stat: '3 สมัย', points: 120, aliases: ['cruyff', 'ครอยฟ์'] },
+      { rank: 5, name: 'Marco van Basten', flag: '🇳🇱', stat: '3 สมัย', points: 120, aliases: ['van basten', 'ฟาน บาสเท่น'] },
+      { rank: 6, name: 'Franz Beckenbauer', flag: '🇩🇪', stat: '2 สมัย', points: 130, aliases: ['beckenbauer', 'เบ็คเค่นบาวเออร์'] },
+      { rank: 7, name: 'Ronaldo Nazário', flag: '🇧🇷', stat: '2 สมัย', points: 110, aliases: ['ronaldo', 'r9', 'โรนัลโด้อ้วน'] },
+      { rank: 8, name: 'Alfredo Di Stéfano', flag: '🇪🇸', stat: '2 สมัย', points: 140, aliases: ['di stefano', 'ดิ สเตฟาโน่'] },
+      { rank: 9, name: 'Kevin Keegan', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '2 สมัย', points: 150, aliases: ['keegan', 'คีแกน'] },
+      { rank: 10, name: 'Karl-Heinz Rummenigge', flag: '🇩🇪', stat: '2 สมัย', points: 140, aliases: ['rummenigge', 'รุมเมนิกเก้'] }
+    ]
+  },
+  {
+    id: 'el_clasico_scorers',
+    title: '10 อันดับดาวซัลโวสูงสุดตลอดกาล ศึกเอล กลาซิโก้ (El Clásico)',
+    category: '⚔️ El Clásico All-Time Top Scorers',
+    items: [
+      { rank: 1, name: 'Lionel Messi', flag: '🇦🇷', stat: '26 ประตู (Barcelona)', points: 100, aliases: ['messi', 'เมสซี่'] },
+      { rank: 2, name: 'Cristiano Ronaldo', flag: '🇵🇹', stat: '18 ประตู (Real Madrid)', points: 100, aliases: ['ronaldo', 'cr7', 'โรนัลโด้'] },
+      { rank: 3, name: 'Alfredo Di Stéfano', flag: '🇪🇸', stat: '18 ประตู (Real Madrid)', points: 130, aliases: ['di stefano', 'ดิ สเตฟาโน่'] },
+      { rank: 4, name: 'Karim Benzema', flag: '🇫🇷', stat: '16 ประตู (Real Madrid)', points: 110, aliases: ['benzema', 'เบนเซม่า'] },
+      { rank: 5, name: 'Raúl González', flag: '🇪🇸', stat: '15 ประตู (Real Madrid)', points: 120, aliases: ['raul', 'ราอูล'] },
+      { rank: 6, name: 'César Rodríguez', flag: '🇪🇸', stat: '14 ประตู (Barcelona)', points: 150, aliases: ['cesar', 'เซซาร์'] },
+      { rank: 7, name: 'Ferenc Puskás', flag: '🇭🇺', stat: '14 ประตู (Real Madrid)', points: 130, aliases: ['puskas', 'ปุสกัส'] },
+      { rank: 8, name: 'Paco Gento', flag: '🇪🇸', stat: '14 ประตู (Real Madrid)', points: 140, aliases: ['gento', 'เฆนโต้'] },
+      { rank: 9, name: 'Luis Suárez', flag: '🇺🇾', stat: '11 ประตู (Barcelona)', points: 110, aliases: ['suarez', 'ซัวเรซ'] },
+      { rank: 10, name: 'Hugo Sánchez', flag: '🇲🇽', stat: '10 ประตู (Real Madrid)', points: 140, aliases: ['hugo sanchez', 'อูโก้ ซานเชซ'] }
+    ]
+  },
+  {
+    id: 'pl_clean_sheets',
+    title: '10 อันดับผู้รักษาประตูคลีนชีตสูงสุดตลอดกาล พรีเมียร์ลีก',
+    category: '🧤 Premier League All-Time Clean Sheets',
+    items: [
+      { rank: 1, name: 'Petr Čech', flag: '🇨🇿', stat: '202 คลีนชีต', points: 100, aliases: ['cech', 'petr cech', 'เช็ก'] },
+      { rank: 2, name: 'David James', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '169 คลีนชีต', points: 120, aliases: ['david james', 'เดวิด เจมส์'] },
+      { rank: 3, name: 'Mark Schwarzer', flag: '🇦🇺', stat: '151 คลีนชีต', points: 130, aliases: ['schwarzer', 'ชวาร์เซอร์'] },
+      { rank: 4, name: 'David de Gea', flag: '🇪🇸', stat: '147 คลีนชีต', points: 100, aliases: ['de gea', 'เด เคอา'] },
+      { rank: 5, name: 'Nigel Martyn', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '137 คลีนชีต', points: 150, aliases: ['martyn', 'ไนเจล มาร์ติน'] },
+      { rank: 6, name: 'Pepe Reina', flag: '🇪🇸', stat: '136 คลีนชีต', points: 120, aliases: ['reina', 'เรน่า'] },
+      { rank: 7, name: 'Edwin van der Sar', flag: '🇳🇱', stat: '132 คลีนชีต', points: 110, aliases: ['van der sar', 'ฟาน เดอร์ ซาร์'] },
+      { rank: 8, name: 'Tim Howard', flag: '🇺🇸', stat: '132 คลีนชีต', points: 130, aliases: ['tim howard', 'ทิม ฮาวเวิร์ด'] },
+      { rank: 9, name: 'Brad Friedel', flag: '🇺🇸', stat: '132 คลีนชีต', points: 140, aliases: ['friedel', 'ฟรีเดล'] },
+      { rank: 10, name: 'Peter Schmeichel', flag: '🇩🇰', stat: '128 คลีนชีต', points: 110, aliases: ['schmeichel', 'ชไมเคิ่ล'] }
+    ]
+  },
+  {
+    id: 'pl_most_apps',
+    title: '10 อันดับนักเตะที่ลงสนามมากที่สุดตลอดกาล พรีเมียร์ลีก',
+    category: '🏃‍♂️ Premier League All-Time Appearances',
+    items: [
+      { rank: 1, name: 'Gareth Barry', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '653 นัด', points: 100, aliases: ['gareth barry', 'barry', 'แกเร็ธ แบร์รี่'] },
+      { rank: 2, name: 'James Milner', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '635+ นัด', points: 100, aliases: ['milner', 'เจมส์ มิลเนอร์'] },
+      { rank: 3, name: 'Ryan Giggs', flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', stat: '632 นัด', points: 100, aliases: ['giggs', 'ไรอัน กิ๊กส์'] },
+      { rank: 4, name: 'Frank Lampard', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '609 นัด', points: 100, aliases: ['lampard', 'แลมพาร์ด'] },
+      { rank: 5, name: 'David James', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '572 นัด', points: 120, aliases: ['david james', 'เดวิด เจมส์'] },
+      { rank: 6, name: 'Gary Speed', flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', stat: '535 นัด', points: 140, aliases: ['gary speed', 'แกรี่ สปีด'] },
+      { rank: 7, name: 'Emile Heskey', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '516 นัด', points: 130, aliases: ['heskey', 'เฮสกี้'] },
+      { rank: 8, name: 'Mark Schwarzer', flag: '🇦🇺', stat: '514 นัด', points: 140, aliases: ['schwarzer', 'ชวาร์เซอร์'] },
+      { rank: 9, name: 'Jamie Carragher', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '508 นัด', points: 120, aliases: ['carragher', 'คาร์ราเกอร์'] },
+      { rank: 10, name: 'Phil Neville', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '505 นัด', points: 130, aliases: ['phil neville', 'ฟิล เนวิลล์'] }
+    ]
+  },
+  {
+    id: 'ucl_top_assists',
+    title: '10 อันดับจอมแอสซิสต์สูงสุดตลอดกาล ยูฟ่า แชมเปียนส์ลีก (UCL)',
+    category: '🎯 UEFA Champions League All-Time Top Assists',
+    items: [
+      { rank: 1, name: 'Cristiano Ronaldo', flag: '🇵🇹', stat: '42 แอสซิสต์', points: 100, aliases: ['ronaldo', 'cr7', 'โรนัลโด้'] },
+      { rank: 2, name: 'Ángel Di María', flag: '🇦🇷', stat: '41 แอสซิสต์', points: 110, aliases: ['di maria', 'ดิมาเรีย'] },
+      { rank: 3, name: 'Lionel Messi', flag: '🇦🇷', stat: '40 แอสซิสต์', points: 100, aliases: ['messi', 'เมสซี่'] },
+      { rank: 4, name: 'Neymar Jr', flag: '🇧🇷', stat: '33 แอสซิสต์', points: 110, aliases: ['neymar', 'เนย์มาร์'] },
+      { rank: 5, name: 'Ryan Giggs', flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', stat: '31 แอสซิสต์', points: 120, aliases: ['giggs', 'กิ๊กส์'] },
+      { rank: 6, name: 'Xavi Hernández', flag: '🇪🇸', stat: '30 แอสซิสต์', points: 120, aliases: ['xavi', 'ชาบี'] },
+      { rank: 7, name: 'Thomas Müller', flag: '🇩🇪', stat: '30 แอสซิสต์', points: 120, aliases: ['muller', 'มุลเลอร์'] },
+      { rank: 8, name: 'Kevin De Bruyne', flag: '🇧🇪', stat: '29+ แอสซิสต์', points: 110, aliases: ['de bruyne', 'kdb', 'เดอบรอยน์'] },
+      { rank: 9, name: 'Andrés Iniesta', flag: '🇪🇸', stat: '29 แอสซิสต์', points: 120, aliases: ['iniesta', 'อิเนียสต้า'] },
+      { rank: 10, name: 'Karim Benzema', flag: '🇫🇷', stat: '29 แอสซิสต์', points: 120, aliases: ['benzema', 'เบนเซม่า'] }
+    ]
+  },
+  {
+    id: 'ucl_most_apps',
+    title: '10 อันดับนักเตะลงสนามมากที่สุดตลอดกาล ยูฟ่า แชมเปียนส์ลีก (UCL)',
+    category: '🏆 UEFA Champions League All-Time Appearances',
+    items: [
+      { rank: 1, name: 'Cristiano Ronaldo', flag: '🇵🇹', stat: '183 นัด', points: 100, aliases: ['ronaldo', 'cr7', 'โรนัลโด้'] },
+      { rank: 2, name: 'Iker Casillas', flag: '🇪🇸', stat: '177 นัด', points: 110, aliases: ['casillas', 'กาซียาส'] },
+      { rank: 3, name: 'Lionel Messi', flag: '🇦🇷', stat: '163 นัด', points: 100, aliases: ['messi', 'เมสซี่'] },
+      { rank: 4, name: 'Thomas Müller', flag: '🇩🇪', stat: '155+ นัด', points: 110, aliases: ['muller', 'มุลเลอร์'] },
+      { rank: 5, name: 'Karim Benzema', flag: '🇫🇷', stat: '152 นัด', points: 110, aliases: ['benzema', 'เบนเซม่า'] },
+      { rank: 6, name: 'Toni Kroos', flag: '🇩🇪', stat: '151 นัด', points: 120, aliases: ['kroos', 'โครส'] },
+      { rank: 7, name: 'Xavi Hernández', flag: '🇪🇸', stat: '151 นัด', points: 120, aliases: ['xavi', 'ชาบี'] },
+      { rank: 8, name: 'Manuel Neuer', flag: '🇩🇪', stat: '145+ นัด', points: 120, aliases: ['neuer', 'นอยเออร์'] },
+      { rank: 9, name: 'Raúl González', flag: '🇪🇸', stat: '142 นัด', points: 130, aliases: ['raul', 'ราอูล'] },
+      { rank: 10, name: 'Sergio Ramos', flag: '🇪🇸', stat: '142 นัด', points: 120, aliases: ['ramos', 'รามอส'] }
+    ]
+  },
+  {
+    id: 'manutd_top_scorers',
+    title: '10 อันดับดาวซัลโวสูงสุดตลอดกาล แมนเชสเตอร์ ยูไนเต็ด',
+    category: '👹 Manchester United All-Time Top Scorers',
+    items: [
+      { rank: 1, name: 'Wayne Rooney', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '253 ประตู', points: 100, aliases: ['rooney', 'รูนี่ย์'] },
+      { rank: 2, name: 'Bobby Charlton', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '249 ประตู', points: 110, aliases: ['bobby charlton', 'charlton', 'บ็อบบี้ ชาร์ลตัน'] },
+      { rank: 3, name: 'Denis Law', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', stat: '237 ประตู', points: 130, aliases: ['denis law', 'เดนิส ลอว์'] },
+      { rank: 4, name: 'Jack Rowley', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '211 ประตู', points: 150, aliases: ['jack rowley', 'แจ็ค โรว์ลีย์'] },
+      { rank: 5, name: 'George Best', flag: '🇬🇧', stat: '179 ประตู', points: 120, aliases: ['george best', 'จอร์จ เบสต์'] },
+      { rank: 6, name: 'Ryan Giggs', flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', stat: '168 ประตู', points: 110, aliases: ['giggs', 'กิ๊กส์'] },
+      { rank: 7, name: 'Mark Hughes', flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', stat: '163 ประตู', points: 140, aliases: ['mark hughes', 'มาร์ค ฮิวส์'] },
+      { rank: 8, name: 'Paul Scholes', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '155 ประตู', points: 110, aliases: ['scholes', 'สโคลส์'] },
+      { rank: 9, name: 'Ruud van Nistelrooy', flag: '🇳🇱', stat: '150 ประตู', points: 110, aliases: ['van nistelrooy', 'ฟานนิสเตลรอย'] },
+      { rank: 10, name: 'Cristiano Ronaldo', flag: '🇵🇹', stat: '145 ประตู', points: 100, aliases: ['ronaldo', 'cr7', 'โรนัลโด้'] }
+    ]
+  },
+  {
+    id: 'liverpool_top_scorers',
+    title: '10 อันดับดาวซัลโวสูงสุดตลอดกาล ลิเวอร์พูล',
+    category: '🔴 Liverpool All-Time Top Scorers',
+    items: [
+      { rank: 1, name: 'Ian Rush', flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', stat: '346 ประตู', points: 100, aliases: ['ian rush', 'rush', 'เอียน รัช'] },
+      { rank: 2, name: 'Roger Hunt', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '285 ประตู', points: 140, aliases: ['roger hunt', 'โรเจอร์ ฮันท์'] },
+      { rank: 3, name: 'Gordon Hodgson', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '241 ประตู', points: 150, aliases: ['gordon hodgson', 'กอร์ดอน ฮอดจ์สัน'] },
+      { rank: 4, name: 'Billy Liddell', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', stat: '228 ประตู', points: 150, aliases: ['billy liddell', 'บิลลี่ ลิดเดลล์'] },
+      { rank: 5, name: 'Mohamed Salah', flag: '🇪🇬', stat: '220+ ประตู', points: 100, aliases: ['salah', 'ซาลาห์'] },
+      { rank: 6, name: 'Steven Gerrard', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '186 ประตู', points: 100, aliases: ['gerrard', 'เจอร์ราร์ด'] },
+      { rank: 7, name: 'Robbie Fowler', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '183 ประตู', points: 110, aliases: ['fowler', 'ฟาวเลอร์'] },
+      { rank: 8, name: 'Kenny Dalglish', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', stat: '172 ประตู', points: 120, aliases: ['dalglish', 'เคนนี่ ดัลกลิช'] },
+      { rank: 9, name: 'Michael Owen', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '158 ประตู', points: 110, aliases: ['owen', 'ไมเคิล โอเว่น'] },
+      { rank: 10, name: 'Sadio Mané', flag: '🇸🇳', stat: '120 ประตู', points: 110, aliases: ['mane', 'ซาดิโอ มาเน่'] }
+    ]
+  },
+  {
+    id: 'arsenal_top_scorers',
+    title: '10 อันดับดาวซัลโวสูงสุดตลอดกาล อาร์เซนอล',
+    category: '🔫 Arsenal All-Time Top Scorers',
+    items: [
+      { rank: 1, name: 'Thierry Henry', flag: '🇫🇷', stat: '228 ประตู', points: 100, aliases: ['henry', 'อองรี'] },
+      { rank: 2, name: 'Ian Wright', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '185 ประตู', points: 110, aliases: ['ian wright', 'เอียน ไรท์'] },
+      { rank: 3, name: 'Cliff Bastin', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '178 ประตู', points: 150, aliases: ['cliff bastin', 'คลิฟฟ์ บาสติน'] },
+      { rank: 4, name: 'John Radford', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '149 ประตู', points: 150, aliases: ['john radford', 'จอห์น แรดฟอร์ด'] },
+      { rank: 5, name: 'Robin van Persie', flag: '🇳🇱', stat: '132 ประตู', points: 110, aliases: ['van persie', 'rvp', 'ฟานเพอร์ซี่'] },
+      { rank: 6, name: 'Dennis Bergkamp', flag: '🇳🇱', stat: '120 ประตู', points: 110, aliases: ['bergkamp', 'เบิร์กแคมป์'] },
+      { rank: 7, name: 'Theo Walcott', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '108 ประตู', points: 120, aliases: ['walcott', 'วัลคอตต์'] },
+      { rank: 8, name: 'Olivier Giroud', flag: '🇫🇷', stat: '105 ประตู', points: 120, aliases: ['giroud', 'ชิรูด์'] },
+      { rank: 9, name: 'Pierre-Emerick Aubameyang', flag: '🇬🇦', stat: '92 ประตู', points: 120, aliases: ['aubameyang', 'โอบาเมยอง'] },
+      { rank: 10, name: 'Robert Pirès', flag: '🇫🇷', stat: '84 ประตู', points: 130, aliases: ['pires', 'ปิแรส'] }
+    ]
+  },
+  {
+    id: 'chelsea_top_scorers',
+    title: '10 อันดับดาวซัลโวสูงสุดตลอดกาล เชลซี',
+    category: '🦁 Chelsea All-Time Top Scorers',
+    items: [
+      { rank: 1, name: 'Frank Lampard', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '211 ประตู', points: 100, aliases: ['lampard', 'แลมพาร์ด'] },
+      { rank: 2, name: 'Bobby Tambling', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '202 ประตู', points: 140, aliases: ['bobby tambling', 'บ็อบบี้ แทมบลิง'] },
+      { rank: 3, name: 'Kerry Dixon', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '193 ประตู', points: 150, aliases: ['kerry dixon', 'เคอร์รี่ ดิกสัน'] },
+      { rank: 4, name: 'Didier Drogba', flag: '🇨🇮', stat: '164 ประตู', points: 100, aliases: ['drogba', 'ดร็อกบา'] },
+      { rank: 5, name: 'Peter Osgood', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '150 ประตู', points: 140, aliases: ['peter osgood', 'ปีเตอร์ ออสกู๊ด'] },
+      { rank: 6, name: 'Jimmy Greaves', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', stat: '132 ประตู', points: 130, aliases: ['jimmy greaves', 'จิมมี่ กรีฟส์'] },
+      { rank: 7, name: 'Eden Hazard', flag: '🇧🇪', stat: '110 ประตู', points: 100, aliases: ['hazard', 'อาซาร์'] },
+      { rank: 8, name: 'Jimmy Floyd Hasselbaink', flag: '🇳🇱', stat: '87 ประตู', points: 130, aliases: ['hasselbaink', 'ฮัสเซลเบงค์'] },
+      { rank: 9, name: 'Gianfranco Zola', flag: '🇮🇹', stat: '80 ประตู', points: 120, aliases: ['zola', 'โซล่า'] },
+      { rank: 10, name: 'Nicolas Anelka', flag: '🇫🇷', stat: '59 ประตู', points: 130, aliases: ['anelka', 'อเนลก้า'] }
+    ]
+  },
+  {
+    id: 'realmadrid_top_scorers',
+    title: '10 อันดับดาวซัลโวสูงสุดตลอดกาล เรอัล มาดริด',
+    category: '👑 Real Madrid All-Time Top Scorers',
+    items: [
+      { rank: 1, name: 'Cristiano Ronaldo', flag: '🇵🇹', stat: '450 ประตู', points: 100, aliases: ['ronaldo', 'cr7', 'โรนัลโด้'] },
+      { rank: 2, name: 'Karim Benzema', flag: '🇫🇷', stat: '354 ประตู', points: 100, aliases: ['benzema', 'เบนเซม่า'] },
+      { rank: 3, name: 'Raúl González', flag: '🇪🇸', stat: '323 ประตู', points: 110, aliases: ['raul', 'ราอูล'] },
+      { rank: 4, name: 'Alfredo Di Stéfano', flag: '🇪🇸', stat: '308 ประตู', points: 120, aliases: ['di stefano', 'ดิ สเตฟาโน่'] },
+      { rank: 5, name: 'Santillana', flag: '🇪🇸', stat: '290 ประตู', points: 150, aliases: ['santillana', 'ซานติญาน่า'] },
+      { rank: 6, name: 'Ferenc Puskás', flag: '🇭🇺', stat: '242 ประตู', points: 130, aliases: ['puskas', 'ปุสกัส'] },
+      { rank: 7, name: 'Hugo Sánchez', flag: '🇲🇽', stat: '208 ประตู', points: 130, aliases: ['hugo sanchez', 'อูโก้ ซานเชซ'] },
+      { rank: 8, name: 'Paco Gento', flag: '🇪🇸', stat: '182 ประตู', points: 140, aliases: ['gento', 'เฆนโต้'] },
+      { rank: 9, name: 'Gareth Bale', flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', stat: '106 ประตู', points: 110, aliases: ['bale', 'เบล'] },
+      { rank: 10, name: 'Ronaldo Nazário', flag: '🇧🇷', stat: '104 ประตู', points: 110, aliases: ['r9', 'โรนัลโด้อ้วน'] }
+    ]
+  },
+  {
+    id: 'barcelona_top_scorers',
+    title: '10 อันดับดาวซัลโวสูงสุดตลอดกาล บาร์เซโลน่า',
+    category: '🔵🔴 FC Barcelona All-Time Top Scorers',
+    items: [
+      { rank: 1, name: 'Lionel Messi', flag: '🇦🇷', stat: '672 ประตู', points: 100, aliases: ['messi', 'เมสซี่'] },
+      { rank: 2, name: 'César Rodríguez', flag: '🇪🇸', stat: '232 ประตู', points: 150, aliases: ['cesar', 'เซซาร์'] },
+      { rank: 3, name: 'Luis Suárez', flag: '🇺🇾', stat: '198 ประตู', points: 100, aliases: ['suarez', 'ซัวเรซ'] },
+      { rank: 4, name: 'László Kubala', flag: '🇭🇺', stat: '194 ประตู', points: 150, aliases: ['kubala', 'คูบาล่า'] },
+      { rank: 5, name: 'Samuel Eto\'o', flag: '🇨🇲', stat: '130 ประตู', points: 110, aliases: ['etoo', 'เอโต้'] },
+      { rank: 6, name: 'Rivaldo', flag: '🇧🇷', stat: '130 ประตู', points: 120, aliases: ['rivaldo', 'ริวัลโด้'] },
+      { rank: 7, name: 'Patrick Kluivert', flag: '🇳🇱', stat: '122 ประตู', points: 130, aliases: ['kluivert', 'ไคลเวิร์ต'] },
+      { rank: 8, name: 'Hristo Stoichkov', flag: '🇧🇬', stat: '117 ประตู', points: 130, aliases: ['stoichkov', 'สตอยช์คอฟ'] },
+      { rank: 9, name: 'Neymar Jr', flag: '🇧🇷', stat: '105 ประตู', points: 100, aliases: ['neymar', 'เนย์มาร์'] },
+      { rank: 10, name: 'Ronaldinho', flag: '🇧🇷', stat: '94 ประตู', points: 100, aliases: ['ronaldinho', 'โรนัลดินโญ่'] }
+    ]
+  },
+  {
+    id: 'bayern_top_scorers',
+    title: '10 อันดับดาวซัลโวสูงสุดตลอดกาล บาเยิร์น มิวนิค',
+    category: '🔴⚪ Bayern Munich All-Time Top Scorers',
+    items: [
+      { rank: 1, name: 'Gerd Müller', flag: '🇩🇪', stat: '565 ประตู', points: 100, aliases: ['gerd muller', 'แกร์ด มุลเลอร์'] },
+      { rank: 2, name: 'Robert Lewandowski', flag: '🇵🇱', stat: '344 ประตู', points: 100, aliases: ['lewandowski', 'เลวานดอฟสกี้'] },
+      { rank: 3, name: 'Thomas Müller', flag: '🇩🇪', stat: '245+ ประตู', points: 100, aliases: ['muller', 'โธมัส มุลเลอร์'] },
+      { rank: 4, name: 'Karl-Heinz Rummenigge', flag: '🇩🇪', stat: '217 ประตู', points: 130, aliases: ['rummenigge', 'รุมเมนิกเก้'] },
+      { rank: 5, name: 'Arjen Robben', flag: '🇳🇱', stat: '144 ประตู', points: 110, aliases: ['robben', 'ร็อบเบน'] },
+      { rank: 6, name: 'Giovane Élber', flag: '🇧🇷', stat: '139 ประตู', points: 140, aliases: ['elber', 'เอลแบร์'] },
+      { rank: 7, name: 'Franck Ribéry', flag: '🇫🇷', stat: '124 ประตู', points: 110, aliases: ['ribery', 'ริเบรี่'] },
+      { rank: 8, name: 'Claudio Pizarro', flag: '🇵🇪', stat: '125 ประตู', points: 130, aliases: ['pizarro', 'ปิซาร์โร่'] },
+      { rank: 9, name: 'Mario Gómez', flag: '🇩🇪', stat: '113 ประตู', points: 130, aliases: ['mario gomez', 'มาริโอ โกเมซ'] },
+      { rank: 10, name: 'Serge Gnabry', flag: '🇩🇪', stat: '90+ ประตู', points: 120, aliases: ['gnabry', 'นาบรี้'] }
+    ]
+  },
+  {
+    id: 'seriea_top_scorers',
+    title: '10 อันดับดาวซัลโวสูงสุดตลอดกาล กัลโช่ เซเรียอา อิตาลี',
+    category: '🇮🇹 Serie A All-Time Top Scorers',
+    items: [
+      { rank: 1, name: 'Silvio Piola', flag: '🇮🇹', stat: '274 ประตู', points: 140, aliases: ['piola', 'ปิโอล่า'] },
+      { rank: 2, name: 'Francesco Totti', flag: '🇮🇹', stat: '250 ประตู', points: 100, aliases: ['totti', 'ต๊อตติ'] },
+      { rank: 3, name: 'Gunnar Nordahl', flag: '🇸🇪', stat: '225 ประตู', points: 150, aliases: ['nordahl', 'นอร์ดาห์ล'] },
+      { rank: 4, name: 'Giuseppe Meazza', flag: '🇮🇹', stat: '216 ประตู', points: 140, aliases: ['meazza', 'จูเซ็ปเป้ เมอัซซ่า'] },
+      { rank: 5, name: 'Antonio Di Natale', flag: '🇮🇹', stat: '209 ประตู', points: 130, aliases: ['di natale', 'ดิ นาตาเล่'] },
+      { rank: 6, name: 'Roberto Baggio', flag: '🇮🇹', stat: '205 ประตู', points: 110, aliases: ['baggio', 'โรแบร์โต้ บาจโจ้'] },
+      { rank: 7, name: 'Ciro Immobile', flag: '🇮🇹', stat: '201 ประตู', points: 120, aliases: ['immobile', 'อิมโมบิเล่'] },
+      { rank: 8, name: 'Alessandro Del Piero', flag: '🇮🇹', stat: '188 ประตู', points: 110, aliases: ['del piero', 'เดล ปิเอโร่'] },
+      { rank: 9, name: 'Gabriel Batistuta', flag: '🇦🇷', stat: '184 ประตู', points: 120, aliases: ['batistuta', 'บาติสตูต้า'] },
+      { rank: 10, name: 'Fabio Quagliarella', flag: '🇮🇹', stat: '182 ประตู', points: 130, aliases: ['quagliarella', 'กวายาเรลล่า'] }
+    ]
   }
 ];
 
@@ -1319,6 +1591,506 @@ const CAREER_PATHS = [
       { years: '2019–2020', club: 'Birmingham City', apps: 41, goals: 4 },
       { years: '2020–2023', club: 'Borussia Dortmund', apps: 92, goals: 12 },
       { years: '2023–ปัจจุบัน', club: 'Real Madrid', apps: 45, goals: 23 }
+    ]
+  },
+  {
+    id: 'cp_messi',
+    answerName: 'Lionel Messi',
+    flag: '🇦🇷',
+    position: 'FW',
+    aliases: ['messi', 'เมสซี่', 'ลิโอเนล เมสซี่'],
+    hint: 'เจ้าของรางวัลบัลลงดอร์ 8 สมัย และกัปตันทีมชาติอาร์เจนตินาชุดแชมป์ฟุตบอลโลก 2022',
+    steps: [
+      { years: '2004–2021', club: 'Barcelona', apps: 520, goals: 474 },
+      { years: '2021–2023', club: 'Paris Saint-Germain', apps: 58, goals: 22 },
+      { years: '2023–ปัจจุบัน', club: 'Inter Miami', apps: 35, goals: 30 }
+    ]
+  },
+  {
+    id: 'cp_rooney',
+    answerName: 'Wayne Rooney',
+    flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+    position: 'FW',
+    aliases: ['rooney', 'รูนี่ย์', 'เวย์น รูนี่ย์'],
+    hint: 'ดาวยิงสูงสุดตลอดกาลของ แมนเชสเตอร์ ยูไนเต็ด ที่แจ้งเกิดตั้งแต่อายุ 16 ปีกับเอฟเวอร์ตัน',
+    steps: [
+      { years: '2002–2004', club: 'Everton', apps: 67, goals: 15 },
+      { years: '2004–2017', club: 'Manchester United', apps: 393, goals: 183 },
+      { years: '2017–2018', club: 'Everton', apps: 31, goals: 10 },
+      { years: '2018–2019', club: 'D.C. United', apps: 48, goals: 23 },
+      { years: '2020–2021', club: 'Derby County', apps: 30, goals: 6 }
+    ]
+  },
+  {
+    id: 'cp_drogba',
+    answerName: 'Didier Drogba',
+    flag: '🇨🇮',
+    position: 'FW',
+    aliases: ['drogba', 'ดร็อกบา', 'ดิดิเยร์ ดร็อกบา'],
+    hint: 'กองหน้าจอมพลังชาวไอวอรีโคสต์ ผู้โหม่งตีเสมอและยิงจุดโทษพาเชลซีคว้าแชมป์ UCL 2012',
+    steps: [
+      { years: '2002–2003', club: 'Guingamp', apps: 45, goals: 20 },
+      { years: '2003–2004', club: 'Olympique Marseille', apps: 35, goals: 19 },
+      { years: '2004–2012', club: 'Chelsea', apps: 226, goals: 100 },
+      { years: '2013–2014', club: 'Galatasaray', apps: 37, goals: 15 },
+      { years: '2014–2015', club: 'Chelsea', apps: 28, goals: 4 }
+    ]
+  },
+  {
+    id: 'cp_lampard',
+    answerName: 'Frank Lampard',
+    flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+    position: 'MF',
+    aliases: ['lampard', 'แลมพาร์ด', 'แฟรงค์ แลมพาร์ด'],
+    hint: 'กองกลางจอมสอดมายิงประตู ดาวซัลโวสูงสุดตลอดกาลของสโมสรเชลซี (211 ประตู)',
+    steps: [
+      { years: '1995–2001', club: 'West Ham United', apps: 148, goals: 24 },
+      { years: '2001–2014', club: 'Chelsea', apps: 429, goals: 147 },
+      { years: '2014–2015', club: 'Manchester City', apps: 32, goals: 6 },
+      { years: '2015–2016', club: 'New York City FC', apps: 29, goals: 15 }
+    ]
+  },
+  {
+    id: 'cp_gerrard',
+    answerName: 'Steven Gerrard',
+    flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+    position: 'MF',
+    aliases: ['gerrard', 'เจอร์ราร์ด', 'สตีเวน เจอร์ราร์ด'],
+    hint: 'กัปตันหมายเลข 8 ผู้พาลิเวอร์พูลสร้างปาฏิหาริย์ที่อิสตันบูล 2005',
+    steps: [
+      { years: '1998–2015', club: 'Liverpool', apps: 504, goals: 120 },
+      { years: '2015–2016', club: 'LA Galaxy', apps: 34, goals: 5 }
+    ]
+  },
+  {
+    id: 'cp_anelka',
+    answerName: 'Nicolas Anelka',
+    flag: '🇫🇷',
+    position: 'FW',
+    aliases: ['anelka', 'อเนลก้า', 'นิโกล่าส์ อเนลก้า'],
+    hint: 'ดาวยิงจอมพเนจรชาวฝรั่งเศสที่เคยค้าแข้งกับทั้ง Arsenal, Real Madrid, PSG, Liverpool, Man City และ Chelsea',
+    steps: [
+      { years: '1997–1999', club: 'Arsenal', apps: 65, goals: 23 },
+      { years: '1999–2000', club: 'Real Madrid', apps: 19, goals: 2 },
+      { years: '2000–2002', club: 'Paris Saint-Germain', apps: 39, goals: 10 },
+      { years: '2001–2002 (ยืมตัว)', club: 'Liverpool', apps: 20, goals: 4 },
+      { years: '2002–2005', club: 'Manchester City', apps: 89, goals: 37 },
+      { years: '2008–2012', club: 'Chelsea', apps: 125, goals: 38 },
+      { years: '2013 (ยืมตัว)', club: 'Juventus', apps: 2, goals: 0 }
+    ]
+  },
+  {
+    id: 'cp_kroos',
+    answerName: 'Toni Kroos',
+    flag: '🇩🇪',
+    position: 'MF',
+    aliases: ['kroos', 'โครส', 'โทนี่ โครส'],
+    hint: 'จอมทัพผู้จ่ายบอลแม่นราวจับวาง คว้าแชมป์ UCL 6 สมัยก่อนแขวนสตั๊ดหลังศึกยูโร 2024',
+    steps: [
+      { years: '2007–2014', club: 'Bayern Munich', apps: 130, goals: 13 },
+      { years: '2009–2010 (ยืมตัว)', club: 'Bayer Leverkusen', apps: 43, goals: 10 },
+      { years: '2014–2024', club: 'Real Madrid', apps: 306, goals: 22 }
+    ]
+  },
+  {
+    id: 'cp_modric',
+    answerName: 'Luka Modrić',
+    flag: '🇭🇷',
+    position: 'MF',
+    aliases: ['modric', 'โมดริช', 'ลูก้า โมดริช'],
+    hint: 'จอมทัพหมายเลข 10 ชาวโครเอเชีย ผู้คว้ารางวัลบัลลงดอร์ปี 2018',
+    steps: [
+      { years: '2003–2008', club: 'Dinamo Zagreb', apps: 94, goals: 27 },
+      { years: '2008–2012', club: 'Tottenham Hotspur', apps: 127, goals: 13 },
+      { years: '2012–ปัจจุบัน', club: 'Real Madrid', apps: 365, goals: 29 }
+    ]
+  },
+  {
+    id: 'cp_ramos',
+    answerName: 'Sergio Ramos',
+    flag: '🇪🇸',
+    position: 'DF',
+    aliases: ['ramos', 'รามอส', 'เซร์คิโอ รามอส'],
+    hint: 'ปราการหลังจอมโขกนาที 92:48 กัปตันระดับตำนานของเรอัล มาดริดและทีมชาติสเปน',
+    steps: [
+      { years: '2004–2005', club: 'Sevilla', apps: 39, goals: 2 },
+      { years: '2005–2021', club: 'Real Madrid', apps: 469, goals: 72 },
+      { years: '2021–2023', club: 'Paris Saint-Germain', apps: 45, goals: 4 },
+      { years: '2023–2024', club: 'Sevilla', apps: 28, goals: 3 }
+    ]
+  },
+  {
+    id: 'cp_benzema',
+    answerName: 'Karim Benzema',
+    flag: '🇫🇷',
+    position: 'FW',
+    aliases: ['benzema', 'เบนเซม่า', 'คาริม เบนเซม่า'],
+    hint: 'กองหน้าหมายเลข 9 เจ้าของรางวัลบัลลงดอร์ปี 2022 ที่เติบโตมาจากอคาเดมีของลียง',
+    steps: [
+      { years: '2004–2009', club: 'Olympique Lyonnais', apps: 112, goals: 43 },
+      { years: '2009–2023', club: 'Real Madrid', apps: 439, goals: 238 },
+      { years: '2023–ปัจจุบัน', club: 'Al-Ittihad', apps: 30, goals: 18 }
+    ]
+  },
+  {
+    id: 'cp_griezmann',
+    answerName: 'Antoine Griezmann',
+    flag: '🇫🇷',
+    position: 'FW',
+    aliases: ['griezmann', 'กรีซมันน์', 'อองตวน กรีซมันน์'],
+    hint: 'ดาวยิงสูงสุดตลอดกาลของสโมสร แอตเลติโก มาดริด และหัวใจแนวรุกทีมชาติฝรั่งเศส',
+    steps: [
+      { years: '2009–2014', club: 'Real Sociedad', apps: 179, goals: 46 },
+      { years: '2014–2019', club: 'Atlético Madrid', apps: 180, goals: 94 },
+      { years: '2019–2022', club: 'Barcelona', apps: 74, goals: 22 },
+      { years: '2021–ปัจจุบัน', club: 'Atlético Madrid', apps: 115, goals: 42 }
+    ]
+  },
+  {
+    id: 'cp_pogba',
+    answerName: 'Paul Pogba',
+    flag: '🇫🇷',
+    position: 'MF',
+    aliases: ['pogba', 'ป็อกบา', 'พอล ป็อกบา'],
+    hint: 'มิดฟิลด์แชมป์โลก 2018 ที่ย้ายไป-กลับระหว่าง แมนเชสเตอร์ ยูไนเต็ด และ ยูเวนตุส ถึง 2 รอบ',
+    steps: [
+      { years: '2011–2012', club: 'Manchester United', apps: 3, goals: 0 },
+      { years: '2012–2016', club: 'Juventus', apps: 124, goals: 28 },
+      { years: '2016–2022', club: 'Manchester United', apps: 154, goals: 29 },
+      { years: '2022–2024', club: 'Juventus', apps: 8, goals: 0 }
+    ]
+  },
+  {
+    id: 'cp_kante',
+    answerName: 'N\'Golo Kanté',
+    flag: '🇫🇷',
+    position: 'MF',
+    aliases: ['kante', 'กองเต้', 'เอ็นโกโล่ กองเต้'],
+    hint: 'มิดฟิลด์ตัวรับปอดเหล็กผู้คว้าแชมป์พรีเมียร์ลีก 2 ปีติดกับ เลสเตอร์ ซิตี้ และ เชลซี',
+    steps: [
+      { years: '2013–2015', club: 'SM Caen', apps: 75, goals: 4 },
+      { years: '2015–2016', club: 'Leicester City', apps: 37, goals: 1 },
+      { years: '2016–2023', club: 'Chelsea', apps: 190, goals: 11 },
+      { years: '2023–ปัจจุบัน', club: 'Al-Ittihad', apps: 35, goals: 3 }
+    ]
+  },
+  {
+    id: 'cp_mahrez',
+    answerName: 'Riyad Mahrez',
+    flag: '🇩🇿',
+    position: 'FW',
+    aliases: ['mahrez', 'มาห์เรซ', 'ริยาด มาห์เรซ'],
+    hint: 'ปีกขวาเท้าซ้ายจอมจับบอลดูดลงพื้นชาวแอลจีเรีย แชมป์พรีเมียร์ลีกกับทั้งเลสเตอร์และแมนฯ ซิตี้',
+    steps: [
+      { years: '2010–2014', club: 'Le Havre', apps: 60, goals: 6 },
+      { years: '2014–2018', club: 'Leicester City', apps: 158, goals: 42 },
+      { years: '2018–2023', club: 'Manchester City', apps: 145, goals: 43 },
+      { years: '2023–ปัจจุบัน', club: 'Al-Ahli', apps: 38, goals: 12 }
+    ]
+  },
+  {
+    id: 'cp_mane',
+    answerName: 'Sadio Mané',
+    flag: '🇸🇳',
+    position: 'FW',
+    aliases: ['mane', 'มาเน่', 'ซาดิโอ มาเน่'],
+    hint: 'แนวรุกชาวเซเนกัลเจ้าของสถิติแฮตทริกเร็วที่สุดในพรีเมียร์ลีก (2 นาที 56 วินาที)',
+    steps: [
+      { years: '2012–2014', club: 'Red Bull Salzburg', apps: 63, goals: 31 },
+      { years: '2014–2016', club: 'Southampton', apps: 67, goals: 21 },
+      { years: '2016–2022', club: 'Liverpool', apps: 196, goals: 90 },
+      { years: '2022–2023', club: 'Bayern Munich', apps: 25, goals: 7 },
+      { years: '2023–ปัจจุบัน', club: 'Al-Nassr', apps: 40, goals: 15 }
+    ]
+  },
+  {
+    id: 'cp_coutinho',
+    answerName: 'Philippe Coutinho',
+    flag: '🇧🇷',
+    position: 'MF',
+    aliases: ['coutinho', 'คูตินโญ่', 'ฟิลิปเป้ คูตินโญ่'],
+    hint: 'พ่อมดน้อยชาวบราซิลที่ย้ายจากลิเวอร์พูลไปบาร์เซโลน่าด้วยค่าตัวมหาศาล ก่อนถูกยืมไปบาเยิร์นแล้วกดบาร์ซ่า 2 ลูก',
+    steps: [
+      { years: '2010–2013', club: 'Inter Milan', apps: 28, goals: 3 },
+      { years: '2013–2018', club: 'Liverpool', apps: 152, goals: 41 },
+      { years: '2018–2022', club: 'Barcelona', apps: 76, goals: 17 },
+      { years: '2019–2020 (ยืมตัว)', club: 'Bayern Munich', apps: 23, goals: 8 },
+      { years: '2022–2024', club: 'Aston Villa', apps: 41, goals: 6 }
+    ]
+  },
+  {
+    id: 'cp_dembele',
+    answerName: 'Ousmane Dembélé',
+    flag: '🇫🇷',
+    position: 'FW',
+    aliases: ['dembele', 'เดมเบเล่', 'อุสมาน เดมเบเล่'],
+    hint: 'ปีกความเร็วสูงชาวฝรั่งเศสที่ถนัดทั้งสองเท้าเท่ากัน เคยอยู่ทั้งดอร์ทมุนด์ บาร์ซ่า และเปแอสเช',
+    steps: [
+      { years: '2015–2016', club: 'Stade Rennais', apps: 26, goals: 12 },
+      { years: '2016–2017', club: 'Borussia Dortmund', apps: 32, goals: 6 },
+      { years: '2017–2023', club: 'Barcelona', apps: 127, goals: 24 },
+      { years: '2023–ปัจจุบัน', club: 'Paris Saint-Germain', apps: 40, goals: 8 }
+    ]
+  },
+  {
+    id: 'cp_kane',
+    answerName: 'Harry Kane',
+    flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+    position: 'FW',
+    aliases: ['kane', 'แฮร์รี่ เคน', 'เคน'],
+    hint: 'กัปตันและดาวซัลโวสูงสุดตลอดกาลของทั้งทีมชาติอังกฤษและสโมสร ท็อตแน่ม ฮ็อทสเปอร์',
+    steps: [
+      { years: '2011–2013 (ยืมตัว)', club: 'Leyton Orient / Millwall / Leicester City', apps: 65, goals: 16 },
+      { years: '2009–2023', club: 'Tottenham Hotspur', apps: 317, goals: 213 },
+      { years: '2023–ปัจจุบัน', club: 'Bayern Munich', apps: 42, goals: 46 }
+    ]
+  },
+  {
+    id: 'cp_son',
+    answerName: 'Son Heung-min',
+    flag: '🇰🇷',
+    position: 'FW',
+    aliases: ['son', 'ซนฮึงมิน', 'ซน ฮึง-มิน'],
+    hint: 'กัปตันทีมชาติเกาหลีใต้ นักเตะเอเชียคนแรกที่คว้ารางวัลดาวซัลโวพรีเมียร์ลีก (2021/22)',
+    steps: [
+      { years: '2010–2013', club: 'Hamburger SV', apps: 73, goals: 20 },
+      { years: '2013–2015', club: 'Bayer Leverkusen', apps: 62, goals: 21 },
+      { years: '2015–ปัจจุบัน', club: 'Tottenham Hotspur', apps: 308, goals: 123 }
+    ]
+  },
+  {
+    id: 'cp_bruno',
+    answerName: 'Bruno Fernandes',
+    flag: '🇵🇹',
+    position: 'MF',
+    aliases: ['bruno', 'bruno fernandes', 'บรูโน่', 'บรูโน่ แฟร์นันด์ส'],
+    hint: 'จอมทัพกัปตันทีมแมนเชสเตอร์ ยูไนเต็ด ชาวโปรตุเกส ผู้เคยไปค้าแข้งในอิตาลีก่อนกลับไปโด่งดังกับสปอร์ติ้ง ลิสบอน',
+    steps: [
+      { years: '2013–2016', club: 'Udinese', apps: 86, goals: 10 },
+      { years: '2016–2017', club: 'Sampdoria', apps: 33, goals: 5 },
+      { years: '2017–2020', club: 'Sporting CP', apps: 83, goals: 39 },
+      { years: '2020–ปัจจุบัน', club: 'Manchester United', apps: 170, goals: 55 }
+    ]
+  },
+  {
+    id: 'cp_bernardo',
+    answerName: 'Bernardo Silva',
+    flag: '🇵🇹',
+    position: 'MF',
+    aliases: ['bernardo', 'bernardo silva', 'แบร์นาร์โด้ ซิลวา'],
+    hint: 'เพลย์เมกเกอร์ร่างเล็กเทคนิคสูงชาวโปรตุเกส ชุดแชมป์ลีกเอิงกับโมนาโกก่อนกวาดแชมป์กับแมนฯ ซิตี้',
+    steps: [
+      { years: '2013–2015', club: 'Benfica', apps: 1, goals: 0 },
+      { years: '2014–2017', club: 'AS Monaco', apps: 101, goals: 24 },
+      { years: '2017–ปัจจุบัน', club: 'Manchester City', apps: 240, goals: 40 }
+    ]
+  },
+  {
+    id: 'cp_gundogan',
+    answerName: 'İlkay Gündoğan',
+    flag: '🇩🇪',
+    position: 'MF',
+    aliases: ['gundogan', 'กุนโดกัน', 'อิลคาย กุนโดกัน'],
+    hint: 'กัปตันทีมแมนเชสเตอร์ ซิตี้ ชุดทริปเปิลแชมป์ 2023 ที่ย้ายไปบาร์เซโลน่า 1 ปีแล้วกลับมาซิตี้อีกครั้ง',
+    steps: [
+      { years: '2009–2011', club: '1. FC Nürnberg', apps: 48, goals: 6 },
+      { years: '2011–2016', club: 'Borussia Dortmund', apps: 105, goals: 10 },
+      { years: '2016–2023', club: 'Manchester City', apps: 188, goals: 44 },
+      { years: '2023–2024', club: 'Barcelona', apps: 36, goals: 5 },
+      { years: '2024–ปัจจุบัน', club: 'Manchester City', apps: 10, goals: 0 }
+    ]
+  },
+  {
+    id: 'cp_thiago',
+    answerName: 'Thiago Alcântara',
+    flag: '🇪🇸',
+    position: 'MF',
+    aliases: ['thiago', 'ธิอาโก้', 'ติอาโก้ อัลคันทาร่า'],
+    hint: 'มิดฟิลด์จอมเทคนิคผลผลิตจาก La Masia ผู้คว้าแชมป์ UCL กับทั้งบาร์เซโลน่าและบาเยิร์น มิวนิค',
+    steps: [
+      { years: '2009–2013', club: 'Barcelona', apps: 68, goals: 7 },
+      { years: '2013–2020', club: 'Bayern Munich', apps: 150, goals: 17 },
+      { years: '2020–2024', club: 'Liverpool', apps: 68, goals: 2 }
+    ]
+  },
+  {
+    id: 'cp_vidal',
+    answerName: 'Arturo Vidal',
+    flag: '🇨🇱',
+    position: 'MF',
+    aliases: ['vidal', 'วิดัล', 'อาร์ตูโร่ วิดัล'],
+    hint: 'มิดฟิลด์พันธุ์ดุทรงผมโมฮอว์กชาวชิลีที่กวาดแชมป์ลีกกับ ยูเวนตุส, บาเยิร์น, บาร์เซโลน่า และ อินเตอร์ มิลาน',
+    steps: [
+      { years: '2007–2011', club: 'Bayer Leverkusen', apps: 117, goals: 15 },
+      { years: '2011–2015', club: 'Juventus', apps: 124, goals: 35 },
+      { years: '2015–2018', club: 'Bayern Munich', apps: 79, goals: 14 },
+      { years: '2018–2020', club: 'Barcelona', apps: 66, goals: 11 },
+      { years: '2020–2022', club: 'Inter Milan', apps: 51, goals: 2 }
+    ]
+  },
+  {
+    id: 'cp_higuain',
+    answerName: 'Gonzalo Higuaín',
+    flag: '🇦🇷',
+    position: 'FW',
+    aliases: ['higuain', 'อิกวาอิน', 'กอนซาโล่ อิกวาอิน'],
+    hint: 'ดาวยิงชาวอาร์เจนไตน์เจ้าของสถิติยิง 36 ประตูในกัลโช่ เซเรียอา ฤดูกาลเดียวกับนาโปลี',
+    steps: [
+      { years: '2005–2007', club: 'River Plate', apps: 35, goals: 13 },
+      { years: '2007–2013', club: 'Real Madrid', apps: 190, goals: 107 },
+      { years: '2013–2016', club: 'Napoli', apps: 104, goals: 71 },
+      { years: '2016–2020', club: 'Juventus', apps: 105, goals: 48 },
+      { years: '2018–2019 (ยืมตัว)', club: 'AC Milan / Chelsea', apps: 29, goals: 11 }
+    ]
+  },
+  {
+    id: 'cp_cavani',
+    answerName: 'Edinson Cavani',
+    flag: '🇺🇾',
+    position: 'FW',
+    aliases: ['cavani', 'คาวานี่', 'เอดินสัน คาวานี่'],
+    hint: 'กองหน้าฉายา "เอล มาตาดอร์" เจ้าของท่าดีใจยิงธนู อดีตดาวยิงสูงสุดของเปแอสเชและนาโปลี',
+    steps: [
+      { years: '2007–2010', club: 'Palermo', apps: 109, goals: 34 },
+      { years: '2010–2013', club: 'Napoli', apps: 104, goals: 78 },
+      { years: '2013–2020', club: 'Paris Saint-Germain', apps: 200, goals: 138 },
+      { years: '2020–2022', club: 'Manchester United', apps: 41, goals: 12 },
+      { years: '2022–2023', club: 'Valencia', apps: 25, goals: 5 }
+    ]
+  },
+  {
+    id: 'cp_falcao',
+    answerName: 'Radamel Falcao',
+    flag: '🇨🇴',
+    position: 'FW',
+    aliases: ['falcao', 'ฟัลเกา', 'ราดาเมล ฟัลเกา'],
+    hint: 'พญาเสือแห่งโคลอมเบีย ยอดกองหน้าผู้ถล่มประตูถล่มทลายกับปอร์โต้ แอตฯ มาดริด และโมนาโก',
+    steps: [
+      { years: '2009–2011', club: 'FC Porto', apps: 51, goals: 41 },
+      { years: '2011–2013', club: 'Atlético Madrid', apps: 68, goals: 52 },
+      { years: '2013–2019', club: 'AS Monaco', apps: 108, goals: 65 },
+      { years: '2014–2016 (ยืมตัว)', club: 'Manchester United / Chelsea', apps: 36, goals: 5 },
+      { years: '2019–2021', club: 'Galatasaray', apps: 34, goals: 19 }
+    ]
+  },
+  {
+    id: 'cp_ozil',
+    answerName: 'Mesut Özil',
+    flag: '🇩🇪',
+    position: 'MF',
+    aliases: ['ozil', 'โอซิล', 'เมซุต โอซิล'],
+    hint: 'เพลย์เมกเกอร์ตาโปนชาวเยอรมัน เจ้าของสถิติทำ 19 แอสซิสต์ในพรีเมียร์ลีกฤดูกาลเดียวกับอาร์เซนอล',
+    steps: [
+      { years: '2006–2008', club: 'Schalke 04', apps: 30, goals: 0 },
+      { years: '2008–2010', club: 'Werder Bremen', apps: 71, goals: 13 },
+      { years: '2010–2013', club: 'Real Madrid', apps: 105, goals: 19 },
+      { years: '2013–2021', club: 'Arsenal', apps: 184, goals: 33 },
+      { years: '2021–2022', club: 'Fenerbahçe', apps: 32, goals: 8 }
+    ]
+  },
+  {
+    id: 'cp_kaka',
+    answerName: 'Kaká',
+    flag: '🇧🇷',
+    position: 'MF',
+    aliases: ['kaka', 'กาก้า', 'ริคาร์โด้ กาก้า'],
+    hint: 'เทพบุตรลูกหนังชาวบราซิล เจ้าของรางวัลบัลลงดอร์ปี 2007 สมัยค้าแข้งกับ เอซี มิลาน',
+    steps: [
+      { years: '2001–2003', club: 'São Paulo', apps: 59, goals: 23 },
+      { years: '2003–2009', club: 'AC Milan', apps: 193, goals: 70 },
+      { years: '2009–2013', club: 'Real Madrid', apps: 85, goals: 23 },
+      { years: '2013–2014', club: 'AC Milan', apps: 30, goals: 7 },
+      { years: '2014–2017', club: 'Orlando City', apps: 75, goals: 24 }
+    ]
+  },
+  {
+    id: 'cp_shevchenko',
+    answerName: 'Andriy Shevchenko',
+    flag: '🇺🇦',
+    position: 'FW',
+    aliases: ['shevchenko', 'เชฟเชนโก้', 'อังเดร เชฟเชนโก้'],
+    hint: 'ศูนย์หน้าติดจรวดชาวยูเครน เจ้าของรางวัลบัลลงดอร์ปี 2004 และตำนานหมายเลข 7 ของเอซี มิลาน',
+    steps: [
+      { years: '1994–1999', club: 'Dynamo Kyiv', apps: 117, goals: 60 },
+      { years: '1999–2006', club: 'AC Milan', apps: 208, goals: 127 },
+      { years: '2006–2009', club: 'Chelsea', apps: 48, goals: 9 },
+      { years: '2008–2009 (ยืมตัว)', club: 'AC Milan', apps: 18, goals: 0 },
+      { years: '2009–2012', club: 'Dynamo Kyiv', apps: 55, goals: 23 }
+    ]
+  },
+  {
+    id: 'cp_buffon',
+    answerName: 'Gianluigi Buffon',
+    flag: '🇮🇹',
+    position: 'GK',
+    aliases: ['buffon', 'บุฟฟ่อน', 'จานลุยจิ บุฟฟ่อน'],
+    hint: 'ตำนานผู้รักษาประตูทีมชาติอิตาลีชุดแชมป์โลก 2006 ที่เฝ้าเสาให้ยูเวนตุสยาวนานเกือบ 2 ทศวรรษ',
+    steps: [
+      { years: '1995–2001', club: 'Parma', apps: 168, goals: 0 },
+      { years: '2001–2018', club: 'Juventus', apps: 509, goals: 0 },
+      { years: '2018–2019', club: 'Paris Saint-Germain', apps: 17, goals: 0 },
+      { years: '2019–2021', club: 'Juventus', apps: 17, goals: 0 },
+      { years: '2021–2023', club: 'Parma', apps: 43, goals: 0 }
+    ]
+  },
+  {
+    id: 'cp_danialves',
+    answerName: 'Dani Alves',
+    flag: '🇧🇷',
+    position: 'DF',
+    aliases: ['dani alves', 'ดานี่ อัลเวส'],
+    hint: 'แบ็กขวาจอมบุกชาวบราซิลที่กวาดถ้วยแชมป์ระดับอาชีพมากเป็นอันดับต้นๆ ของโลก',
+    steps: [
+      { years: '2002–2008', club: 'Sevilla', apps: 175, goals: 11 },
+      { years: '2008–2016', club: 'Barcelona', apps: 247, goals: 14 },
+      { years: '2016–2017', club: 'Juventus', apps: 19, goals: 2 },
+      { years: '2017–2019', club: 'Paris Saint-Germain', apps: 48, goals: 2 },
+      { years: '2021–2022', club: 'Barcelona', apps: 14, goals: 1 }
+    ]
+  },
+  {
+    id: 'cp_cancelo',
+    answerName: 'João Cancelo',
+    flag: '🇵🇹',
+    position: 'DF',
+    aliases: ['cancelo', 'คันเซโล่', 'ชูเอา คันเซโล่'],
+    hint: 'ฟูลแบ็กจอมเทคนิคชาวโปรตุเกสที่เคยเล่นให้ทั้ง Inter, Juventus, Man City, Bayern และ Barcelona',
+    steps: [
+      { years: '2014–2018', club: 'Valencia', apps: 74, goals: 2 },
+      { years: '2017–2018 (ยืมตัว)', club: 'Inter Milan', apps: 26, goals: 1 },
+      { years: '2018–2019', club: 'Juventus', apps: 25, goals: 1 },
+      { years: '2019–2024', club: 'Manchester City', apps: 98, goals: 5 },
+      { years: '2023–2024 (ยืมตัว)', club: 'Bayern Munich / Barcelona', apps: 47, goals: 3 }
+    ]
+  },
+  {
+    id: 'cp_morata',
+    answerName: 'Álvaro Morata',
+    flag: '🇪🇸',
+    position: 'FW',
+    aliases: ['morata', 'โมราต้า', 'อัลวาโร่ โมราต้า'],
+    hint: 'กองหน้ากัปตันทีมชาติสเปนชุดแชมป์ยูโร 2024 ที่ย้ายสลับไปมาระหว่าง Real Madrid, Juventus, Chelsea และ Atlético Madrid',
+    steps: [
+      { years: '2010–2014', club: 'Real Madrid', apps: 37, goals: 10 },
+      { years: '2014–2016', club: 'Juventus', apps: 63, goals: 15 },
+      { years: '2016–2017', club: 'Real Madrid', apps: 26, goals: 15 },
+      { years: '2017–2019', club: 'Chelsea', apps: 47, goals: 16 },
+      { years: '2019–2024', club: 'Atlético Madrid / Juventus', apps: 175, goals: 62 },
+      { years: '2024–ปัจจุบัน', club: 'AC Milan', apps: 12, goals: 4 }
+    ]
+  },
+  {
+    id: 'cp_sterling',
+    answerName: 'Raheem Sterling',
+    flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+    position: 'FW',
+    aliases: ['sterling', 'สเตอร์ลิง', 'ราฮีม สเตอร์ลิง'],
+    hint: 'ปีกทีมชาติอังกฤษที่ผ่านการค้าแข้งกับ 4 สโมสรบิ๊กซิกซ์ของพรีเมียร์ลีก (Liverpool, Man City, Chelsea, Arsenal)',
+    steps: [
+      { years: '2012–2015', club: 'Liverpool', apps: 95, goals: 18 },
+      { years: '2015–2022', club: 'Manchester City', apps: 225, goals: 91 },
+      { years: '2022–2024', club: 'Chelsea', apps: 59, goals: 14 },
+      { years: '2024–ปัจจุบัน (ยืมตัว)', club: 'Arsenal', apps: 8, goals: 1 }
     ]
   }
 ];
