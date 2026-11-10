@@ -3406,10 +3406,9 @@ function handleApiAction(req, res, body) {
     if (existing) {
       existing.connected = true;
       if (body.playerName) existing.name = body.playerName.trim().slice(0, 24);
-      if (body.avatar) existing.avatar = body.avatar;
     } else {
       const name = (body.playerName || `ผู้เล่น ${room.players.length + 1}`).trim().slice(0, 24);
-      const avatar = body.avatar || AVATARS[room.players.length % AVATARS.length];
+      const avatar = AVATARS[room.players.length % AVATARS.length];
       room.players.push({
         id: pId,
         name,

@@ -630,14 +630,20 @@ function renderScoreboard(room) {
 
   const sorted = [...room.players].sort((a, b) => b.score - a.score);
   const targetScore = room.settings.targetScore || 0;
+  const gameMode = room.settings.gameMode || 'multi_club_pool';
+  const isTurnBasedPlaying =
+    room.state === 'PLAYING' &&
+    (gameMode === 'chain_link' || (gameMode === 'footy_grid' && room.players.length > 1));
+  const currentTurnId = room.modeData?.currentTurnPlayerId || null;
 
   sorted.forEach((p, idx) => {
     const item = document.createElement('div');
     const isMe = p.id === state.playerId;
+    const isCurrentTurn = isTurnBasedPlaying && currentTurnId === p.id;
     item.className =
       'player-item' +
       (isMe ? ' is-me' : '') +
-      (room.state === 'PLAYING' && p.hasSubmitted ? ' submitted' : '');
+      (room.state === 'PLAYING' && (p.hasSubmitted || isCurrentTurn) ? ' submitted' : '');
 
     let statusHtml = '';
     if (room.state === 'SELECTING_CLUB') {
@@ -647,7 +653,13 @@ function renderScoreboard(room) {
         statusHtml = `<div class="player-status">⏳ กำลังเลือกสโมสร...</div>`;
       }
     } else if (room.state === 'PLAYING') {
-      if (p.hasSubmitted) {
+      if (isTurnBasedPlaying) {
+        if (isCurrentTurn) {
+          statusHtml = `<div class="player-status locked">🟢 ถึงตาเล่น!</div>`;
+        } else {
+          statusHtml = `<div class="player-status">⚪ รอคิวเทิร์น...</div>`;
+        }
+      } else if (p.hasSubmitted) {
         const sec = p.submittedTimeMs ? (p.submittedTimeMs / 1000).toFixed(1) : '';
         statusHtml = `<div class="player-status locked">🔒 ตอบแล้ว! (${sec}s)</div>`;
       } else {
