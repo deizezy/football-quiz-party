@@ -598,7 +598,7 @@ function serializeModeDataForClients(room) {
   // MODE 9: CHAIN LINK (Turn-Based Player -> Shared Club -> Teammate -> Shared Club...)
   if (mode === 'chain_link') {
     if (!room.chainLinkHistory || room.chainLinkHistory.length === 0) {
-      const starter = pickChainStarterPlayer();
+      const starter = pickChainStarterPlayer(room);
       room.chainLinkHistory = [
         {
           step: 1,
@@ -988,25 +988,6 @@ function scheduleBotActions(room) {
             handlePlayerSubmission(room, bot.id, pick.name, pick.id);
           }
         }
-      } else if (curMode === 'chain_link') {
-        const hist = room.chainLinkHistory || [];
-        if (hist.length === 0) return;
-        const anchor = hist[hist.length - 1];
-        const anchorPlayer = PLAYERS.find((p) => p.id === anchor.playerId);
-        if (!anchorPlayer) return;
-        const usedPlayerIds = new Set(hist.map((h) => h.playerId));
-        const usedClubIds = new Set(room.chainUsedClubs || []);
-        const availClubs = (anchorPlayer.clubs || []).filter((cid) => !usedClubIds.has(cid));
-        const validNext = PLAYERS.filter(
-          (p) =>
-            !usedPlayerIds.has(p.id) &&
-            p.clubs.length >= 2 &&
-            p.clubs.some((cid) => availClubs.includes(cid))
-        );
-        if (validNext.length > 0 && Math.random() < 0.75) {
-          const pick = validNext[Math.floor(Math.random() * validNext.length)];
-          handlePlayerSubmission(room, bot.id, pick.name, pick.id);
-        }
       }
     }, 9500);
     return;
@@ -1189,7 +1170,7 @@ function handleChainTurnTimeout(room) {
   }
 
   // Start a fresh chain and pass the turn to the next player!
-  const starter = pickChainStarterPlayer();
+  const starter = pickChainStarterPlayer(room);
   room.chainLinkHistory = [
     {
       step: 1,
@@ -1821,7 +1802,7 @@ function handlePlayerSubmission(room, playerId, rawInput, selectedPlayerId, extr
       const pivotPlayer =
         pivotCandidates.length > 0
           ? pivotCandidates[Math.floor(Math.random() * pivotCandidates.length)]
-          : pickChainStarterPlayer();
+          : pickChainStarterPlayer(room);
       if (pivotPlayer) {
         hist.push({
           step: hist.length + 1,
@@ -3017,11 +2998,37 @@ function pickMysteryWordlePlayer(roomOrPrevId = null) {
   return chosen;
 }
 
-// Pick a well-connected starting player for Mode 9 (Chain Link: Player -> Club -> Teammate)
-function pickChainStarterPlayer() {
+// Pick a well-connected starting player for Mode 9 (Chain Link: Player -> Club -> Teammate) without repeating
+const globalUsedChainStarterIds = new Set();
+
+function pickChainStarterPlayer(room = null) {
   const multiClubStars = PLAYERS.filter((p) => Array.isArray(p.clubs) && p.clubs.length >= 3);
-  const pool = multiClubStars.length > 0 ? multiClubStars : PLAYERS;
-  return pool[Math.floor(Math.random() * pool.length)] || PLAYERS[0];
+  const basePool = multiClubStars.length > 0 ? multiClubStars : PLAYERS;
+  if (!room) {
+    return basePool[Math.floor(Math.random() * basePool.length)] || PLAYERS[0];
+  }
+  if (!Array.isArray(room.usedChainStarterIds)) room.usedChainStarterIds = [];
+  const usedSet = new Set(room.usedChainStarterIds);
+
+  let pool = basePool.filter((p) => !usedSet.has(p.id) && !globalUsedChainStarterIds.has(p.id));
+  if (pool.length === 0) {
+    globalUsedChainStarterIds.clear();
+    pool = basePool.filter((p) => !usedSet.has(p.id));
+  }
+  if (pool.length === 0) {
+    const lastId = room.usedChainStarterIds[room.usedChainStarterIds.length - 1];
+    room.usedChainStarterIds = lastId ? [lastId] : [];
+    pool = basePool.filter((p) => p.id !== lastId);
+  }
+  const shuffled = shuffleArray(pool.length > 0 ? pool : basePool);
+  const chosen = shuffled[0] || basePool[0] || PLAYERS[0];
+  if (chosen && !room.usedChainStarterIds.includes(chosen.id)) {
+    room.usedChainStarterIds.push(chosen.id);
+  }
+  if (chosen) {
+    globalUsedChainStarterIds.add(chosen.id);
+  }
+  return chosen;
 }
 function generateRandomValidFootyGrid(roundNum) {
   const clubOverlapWeight = new Map();
@@ -3267,7 +3274,7 @@ function startModeRound(room, options = {}) {
     room.chainTurnIndex =
       (room.players || []).length > 0 ? (room.roundNumber - 1) % room.players.length : 0;
     room.lastChainMoverId = null;
-    const starter = pickChainStarterPlayer();
+    const starter = pickChainStarterPlayer(room);
     room.chainLinkHistory = [
       {
         step: 1,
@@ -4107,8 +4114,27 @@ function handleApiAction(req, res, body) {
     room.pickedClubs = [];
     room.usedPlayers = [];
     room.unlockedLineupSlots = {};
+    room.hintedLineupSlots = {};
     room.unlockedTop10Ranks = {};
+    room.hintedTop10Ranks = {};
+    room.careerHintOpened = false;
     room.gridCells = Array(9).fill(null);
+    room.hintedGridCells = {};
+    room.awardedBingoLines = [];
+    room.gridTurnIndex = 0;
+    room.connectionsBoard = null;
+    room.wordleMysteryPlayer = null;
+    room.wordleGuesses = [];
+    room.wordleHintStep = 0;
+    room.wordleSolved = false;
+    room.wordleRevealed = false;
+    room.wordleSolvedBy = null;
+    room.wordlePointsAwarded = 0;
+    room.chainLinkHistory = [];
+    room.chainUsedClubs = [];
+    room.chainHintText = null;
+    room.chainTurnIndex = 0;
+    room.lastChainMoverId = null;
     room.lastWaveResults = [];
     room.state = 'LOBBY';
     broadcastRoom(code, 'scores_reset');
