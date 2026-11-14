@@ -873,7 +873,8 @@ function scheduleBotClubPicks(room) {
         if (alreadyPicked) return;
 
         const usedClubIds = new Set((room.pickedClubs || []).map((pc) => pc.clubId));
-        const available = CLUBS.filter((c) => !usedClubIds.has(c.id));
+        const primaryAvailable = CLUBS.slice(0, 32).filter((c) => !usedClubIds.has(c.id));
+        const available = primaryAvailable.length > 0 ? primaryAvailable : CLUBS.filter((c) => !usedClubIds.has(c.id));
         if (available.length === 0) return;
 
         const chosenClub = available[Math.floor(Math.random() * available.length)];

@@ -348,6 +348,42 @@ function mapApiTeamNameToClubId(teamName, espnTeamId = null) {
   if (norm.includes('napoli')) return 'napoli';
   if (norm.includes('lazio')) return 'lazio';
   if (norm.includes('fiorentina')) return 'fiorentina';
+  if (norm.includes('fulham')) return 'fulham';
+  if (norm.includes('crystal palace')) return 'crystal_palace';
+  if (norm.includes('wolverhampton') || norm === 'wolves') return 'wolves';
+  if (norm.includes('leicester')) return 'leicester';
+  if (norm.includes('leeds')) return 'leeds';
+  if (norm.includes('southampton')) return 'southampton';
+  if (norm.includes('athletic club') || norm.includes('athletic bilbao')) return 'athletic_bilbao';
+  if (norm.includes('real betis') || norm === 'betis') return 'betis';
+  if (norm.includes('celta')) return 'celta';
+  if (norm.includes('atalanta')) return 'atalanta';
+  if (norm.includes('torino')) return 'torino';
+  if (norm.includes('parma')) return 'parma';
+  if (norm.includes('udinese')) return 'udinese';
+  if (norm.includes('cagliari')) return 'cagliari';
+  if (norm.includes('empoli')) return 'empoli';
+  if (norm.includes('sampdoria')) return 'sampdoria';
+  if (norm.includes('wolfsburg')) return 'wolfsburg';
+  if (norm.includes('stuttgart')) return 'stuttgart';
+  if (norm.includes('monchengladbach') || norm.includes('gladbach')) return 'gladbach';
+  if (norm.includes('werder bremen')) return 'werder_bremen';
+  if (norm.includes('koln') || norm.includes('cologne')) return 'koln';
+  if (norm.includes('hamburger') || norm === 'hamburg') return 'hamburg';
+  if (norm.includes('hertha')) return 'hertha';
+  if (norm.includes('ogc nice') || norm === 'nice') return 'nice';
+  if (norm.includes('reims')) return 'reims';
+  if (norm.includes('saint-etienne') || norm.includes('saint etienne')) return 'saint_etienne';
+  if (norm.includes('sporting cp') || norm.includes('sporting lisbon')) return 'sporting_cp';
+  if (norm.includes('benfica')) return 'benfica';
+  if (norm.includes('fc porto') || norm === 'porto') return 'porto';
+  if (norm.includes('ajax')) return 'ajax';
+  if (norm.includes('psv')) return 'psv';
+  if (norm.includes('feyenoord')) return 'feyenoord';
+  if (norm.includes('celtic')) return 'celtic';
+  if (norm.includes('rangers')) return 'rangers';
+  if (norm.includes('palmeiras')) return 'palmeiras';
+  if (norm.includes('santos') && !norm.includes('santos laguna')) return 'santos';
 
   // Fallback fuzzy match for newly added 2026-27 clubs in CLUBS
   for (const club of CLUBS) {
@@ -742,8 +778,7 @@ async function initializeFootballApiData() {
 
   // Canonical alias map to merge known short/full name variants across ESPN, Seed & Wikidata
   const CANONICAL_MERGE_KEYS = {
-    'nicolas gonzalez': 'nico gonzalez',
-    'emerson palmieri': 'emerson',
+    'nico gonzalez': 'nicolas gonzalez',
     'pedro': 'pedro rodriguez',
     'ronaldo': 'ronaldo nazario'
   };
@@ -798,10 +833,11 @@ async function initializeFootballApiData() {
           const fullName = (ath.displayName || ath.fullName || '').trim();
           if (!fullName) continue;
 
-          const normName = resolvePlayerKey(normalizeText(fullName), [
-            ath.shortName || '',
-            ath.fullName || ''
-          ]);
+          const rawEspnNorm = normalizeText(fullName);
+          const normName =
+            rawEspnNorm === 'emerson' && livePlayerMap.has('emerson palmieri')
+              ? 'emerson palmieri'
+              : resolvePlayerKey(rawEspnNorm, [ath.shortName || '', ath.fullName || '']);
           const existing = livePlayerMap.get(normName);
           if (!existing) continue; // Skip unknown youth/reserve players not in our curated quiz pool
 

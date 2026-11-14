@@ -196,7 +196,7 @@ async function apiAction(action, payload = {}) {
   return data;
 }
 
-const DB_CACHE_KEY = 'fcq_db_cache_v4';
+const DB_CACHE_KEY = 'fcq_db_cache_v5';
 let isDatabaseLoading = false;
 
 function preparePlayerSearchIndex(players) {
@@ -805,7 +805,7 @@ function renderLeagueTabs() {
 
   const allBtn = document.createElement('button');
   allBtn.className = 'league-tab' + (state.selectedLeagueFilter === 'all' ? ' active' : '');
-  allBtn.innerHTML = '🌍 ทั้งหมด (5 ลีกใหญ่)';
+  allBtn.innerHTML = '🌍 ทั้งหมด (ทุกลีก)';
   allBtn.addEventListener('click', () => {
     state.selectedLeagueFilter = 'all';
     renderLeagueTabs();
@@ -2654,7 +2654,7 @@ function updateAutocomplete(query) {
       b.clubCount - a.clubCount ||
       a.player.name.localeCompare(b.player.name)
   );
-  const topMatches = matches.slice(0, 8);
+  const topMatches = matches.slice(0, 15);
 
   if (topMatches.length === 0) {
     hideAutocomplete();
